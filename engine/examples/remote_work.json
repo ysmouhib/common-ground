@@ -1,0 +1,17 @@
+{
+  "id": "remote-work-constructed",
+  "title": "Constructed example: a genuine contradiction",
+  "note": "Invented for testing and illustration. It has no sources and makes no claim about remote work. The two positions cannot both be held: the analysis lists exactly where they clash and the smallest ways out.",
+  "statements": [
+    {"id": "P1", "owner": "pro", "kind": "empirical", "fol": "ReducesCommute(remoteWork)", "text": "Remote work reduces commuting."},
+    {"id": "P2", "owner": "pro", "kind": "empirical", "fol": "∀p (ReducesCommute(p) → RaisesWellbeing(p))", "text": "Whatever reduces commuting raises wellbeing."},
+    {"id": "P3", "owner": "pro", "kind": "normative", "fol": "∀p (RaisesWellbeing(p) → ShouldAdopt(p))", "text": "Policies that raise wellbeing should be adopted."},
+    {"id": "P4", "owner": "pro", "kind": "empirical", "fol": "SavesOfficeCost(remoteWork)", "text": "Remote work saves office costs."},
+    {"id": "P5", "owner": "pro", "kind": "normative", "fol": "∀p (SavesOfficeCost(p) → ShouldAdopt(p))", "text": "Policies that save office costs should be adopted."},
+    {"id": "N1", "owner": "con", "kind": "empirical", "fol": "WeakensMentoring(remoteWork)", "text": "Remote work weakens mentoring."},
+    {"id": "N2", "owner": "con", "kind": "normative", "fol": "∀p (WeakensMentoring(p) → ¬ShouldAdopt(p))", "text": "Policies that weaken mentoring should not be adopted."},
+    {"id": "S1", "owner": "shared", "kind": "empirical", "fol": "∃p Policy(p)", "text": "There is at least one policy on the table."},
+    {"id": "Y1", "owner": "pro", "kind": "conclusion", "fol": "ShouldAdopt(remoteWork)"},
+    {"id": "Y2", "owner": "con", "kind": "conclusion", "fol": "¬ShouldAdopt(remoteWork)"}
+  ]
+}

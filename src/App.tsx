@@ -6,6 +6,7 @@ import { ProofLab } from "@/components/ProofLab";
 import { EvidenceView } from "@/components/EvidenceView";
 import { MethodView } from "@/components/MethodView";
 import { StatementDialog } from "@/components/StatementDialog";
+import { ReviewerAccess } from "@/components/ReviewerAccess";
 
 const views = [
   { id: "debate", label: "Debate", icon: Scale },
@@ -70,6 +71,8 @@ export default function App() {
               <span className="mt-1 block text-xs text-[#4c5260]">A public reason laboratory</span>
             </span>
           </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+          <ReviewerAccess access={workspace?.access} />
           <button
             type="button"
             onClick={exportAudit}
@@ -79,6 +82,7 @@ export default function App() {
             {exported ? <Check className="size-4 text-primary" aria-hidden="true" /> : <Download className="size-4" aria-hidden="true" />}
             {exported ? "Audit exported" : "Export JSON audit"}
           </button>
+          </div>
         </div>
         <nav className="content-wrap grid grid-cols-2 border-t border-[#d5d9df] sm:grid-cols-4" aria-label="Workspace views">
           {views.map((item) => (

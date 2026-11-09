@@ -12,6 +12,7 @@ import {
 import { ensureSeeded } from "@db/seed-logic";
 import { DEBATE_ID } from "@db/seed-data";
 import { buildLeanSource, buildNegativeControlSource } from "@contracts/lean";
+import { analysis as logic } from "@contracts/analysis.generated";
 import { getDb } from "./connection";
 
 function sourceHash(proof: typeof proofs.$inferSelect): string {
@@ -83,8 +84,15 @@ export async function getWorkspace() {
       sharedGroundActive: activeProofIds.has("proof-shared"),
       combinedActive: activeProofIds.has("proof-combined"),
       negativeControlRejected: negativeControl?.status === "failed" && negativeControl.hashCurrent,
-      disagreementKind:
-        activeProofIds.has("proof-advocate") && activeProofIds.has("proof-critic")
+      // Computed by the logic engine (engine/commonground/argmap.py) and stored in
+      // contracts/analysis.generated.ts; nothing below is asserted by hand.
+      // "Compatible" means: all premises of both positions have a common model.
+      positionsCompatible: logic.positions_compatible,
+      conflicts: logic.conflicts,
+      minimalConcessions: logic.minimal_concessions,
+      disagreementKind: !logic.positions_compatible
+        ? ("contradiction" as const)
+        : activeProofIds.has("proof-advocate") && activeProofIds.has("proof-critic")
           ? ("priority_not_contradiction" as const)
           : ("premises_under_review" as const),
     },

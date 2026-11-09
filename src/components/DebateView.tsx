@@ -185,7 +185,14 @@ export function DebateView({ workspace, onOpenStatement, onOpenProof }: Props) {
 
       <section aria-labelledby="disagreement-title" className="pb-12">
         <div className="section-label">Disagreement diagnosis</div>
-        <h2 id="disagreement-title" className="mt-2 text-2xl font-semibold">A priority dispute, not a direct contradiction.</h2>
+        <h2 id="disagreement-title" className="mt-2 text-2xl font-semibold">
+          {analysis.positionsCompatible ? "A priority dispute, not a direct contradiction." : "The two positions contradict each other."}
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm text-[#4c5260]">
+          {analysis.positionsCompatible
+            ? "Computed, not asserted: a solver found one model in which every premise of both positions holds, and an independent checker confirmed it. So neither side is logically forced to reject the other's premises."
+            : `Computed, not asserted: the premises cannot all hold together. The solver found ${analysis.conflicts.length} minimal conflict(s); the smallest ways out are listed in the audit export.`}
+        </p>
         <div className="mt-5 grid gap-px border border-[#c8cfdb] bg-[#c8cfdb] md:grid-cols-3">
           {[
             { id: "A2", label: "Empirical scope", text: "How much litter reduction is enough, and how far does the evidence generalize?" },

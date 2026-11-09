@@ -17,6 +17,7 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
   const [runMessage, setRunMessage] = useState("");
   const utils = trpc.useUtils();
   const proof = workspace.proofs.find((item) => item.id === selectedProofId) ?? workspace.proofs[0];
+  const canReview = workspace.access.isReviewer;
 
   const verify = trpc.proof.verify.useMutation({
     onSuccess: async (result) => {
@@ -75,7 +76,8 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
         <button
           type="button"
           onClick={() => verifyAll.mutate()}
-          disabled={verifyAll.isPending || verify.isPending}
+          disabled={!canReview || verifyAll.isPending || verify.isPending}
+          title={canReview ? undefined : "Re-running Lean needs reviewer access."}
           className="transition-ui inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-primary px-4 font-semibold text-primary hover:bg-secondary disabled:opacity-50"
         >
           <RotateCcw className={`size-4 ${verifyAll.isPending ? "animate-spin" : ""}`} aria-hidden="true" />
@@ -118,7 +120,8 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
             <button
               type="button"
               onClick={() => verify.mutate({ proofId: proof.id })}
-              disabled={verify.isPending || verifyAll.isPending}
+              disabled={!canReview || verify.isPending || verifyAll.isPending}
+              title={canReview ? undefined : "Re-running Lean needs reviewer access."}
               className="transition-ui inline-flex min-h-11 shrink-0 items-center justify-center gap-2 bg-primary px-4 font-semibold text-primary-foreground hover:bg-[#173f92] disabled:opacity-50"
             >
               <Play className="size-4" aria-hidden="true" />

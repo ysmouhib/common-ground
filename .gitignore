@@ -46,3 +46,15 @@ playwright-report/
 # Optional local Lean runtime (install externally or set LEAN_BIN)
 lean-runtime/
 public/lean-runtime/
+
+
+# Python (logic engine)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.hypothesis/
+*.egg-info/
+# The FOLIO dataset is fetched on demand and never committed (CC BY-SA 4.0, see README)
+data/

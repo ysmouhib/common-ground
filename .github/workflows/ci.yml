@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: No known vulnerability in what ships
+        run: npm audit --omit=dev --audit-level=moderate
+
+  engine:
+    runs-on: ubuntu-latest
+    env:
+      LEAN_VERSION: 4.35.0
+      LEAN_ZIP_SHA256: c8531faaa4a93d5a4dae0c742cbc1bd42a2993594d02f93a9d629ebf299fb2c8
+      FOLIO_REVISION: 5d7bb84c7edab3fb358e057d2807f19cf5cf5e2d
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r engine/requirements.txt
+      - name: Install Lean (pinned release, checksum verified)
+        run: |
+          curl -sSfL -o lean.zip "https://github.com/leanprover/lean4/releases/download/v${LEAN_VERSION}/lean-${LEAN_VERSION}-linux.zip"
+          echo "${LEAN_ZIP_SHA256}  lean.zip" | sha256sum -c -
+          unzip -q lean.zip -d "$RUNNER_TEMP"
+          echo "LEAN_BIN=$RUNNER_TEMP/lean-${LEAN_VERSION}-linux/bin/lean" >> "$GITHUB_ENV"
+      - name: The worked example's proofs are accepted by Lean, and the negative control is rejected
+        run: |
+          "$LEAN_BIN" proofs/CommonGround.lean
+          if "$LEAN_BIN" proofs/NegativeControl.lean; then echo "negative control was accepted" && exit 1; fi
+      - name: Fetch FOLIO at the revision the results were produced on
+        run: |
+          git clone --quiet https://github.com/Yale-LILY/FOLIO.git "$RUNNER_TEMP/FOLIO"
+          git -C "$RUNNER_TEMP/FOLIO" checkout --quiet "$FOLIO_REVISION"
+          echo "FOLIO_DIR=$RUNNER_TEMP/FOLIO" >> "$GITHUB_ENV"
+      - name: Engine tests, including a re-run of the published benchmark
+        working-directory: engine
+        run: python -m pytest -q

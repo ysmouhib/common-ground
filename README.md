@@ -1,120 +1,178 @@
 # Common Ground
 
-Common Ground is a source-grounded argument-integrity workspace. It reconstructs a public policy debate into explicit statements, lets people review the meaning of each formalization, and uses Lean 4 to check whether conclusions follow from the declared premises.
+Does a conclusion follow from the premises someone gave for it? And when two
+positions disagree, where exactly, and what could both still hold?
 
-The system certifies **conditional deductions, not political truth**. Evidence, semantic review, kernel verification, and premise approval remain separate trust layers.
+Common Ground answers those two questions for arguments written as first-order
+formulas, and says what backs each answer: an explicit model, a refutation, or a
+proof checked by the Lean 4 kernel. It certifies **deductions, not truth**. Whether
+a premise is true, and whether a formula says what a sentence meant, stay separate
+questions with separate evidence.
 
-## Included worked example
+It has two parts:
 
-The initial workspace reconstructs a debate about whether a city should adopt a well-designed single-use plastic bag policy. It includes:
+* `engine/`: a Python logic engine (parser, two solvers, Lean certificates,
+  conflict analysis, a benchmark);
+* a web app that walks through one sourced policy debate using the engine's output.
 
-- 15 statements owned by the advocate, critic, or shared workspace;
-- five sourced evidence records with findings, excerpts, and limitations;
-- four valid Lean certificates covering the advocate case, critic case, shared ground, and a conditional combined package;
-- a deliberately invalid negative control that must be rejected;
-- persistent human review events, verification runs, and AI interpretation drafts;
-- a JSON audit export and an installable, responsive web interface.
+## What has been shown, and by what
 
-The formalization is an editorial reconstruction, not a verbatim transcript. The facilitator-created bridge premise is labeled explicitly rather than presented as imported consensus.
+| Claim | Evidence | Reproduce |
+|---|---|---|
+| Given FOLIO's own formulas, the engine's verdict equals FOLIO's label on **195 of 204** validation examples (95.6 %) | run recorded in `results/folio-validation/` | `python -m commonground folio --out out --lean` |
+| The other 9 are places where the dataset's formulas do not yield the dataset's label | two re-checked models or a kernel-checked proof per example: [`AUDIT.md`](results/folio-validation/AUDIT.md) | same |
+| Every "follows" / "contradicts" verdict of that run is **certified by the Lean kernel: 128 of 128**, in about 2 s | `summary.json` → `lean` | same |
+| Lean accepted **0 of 278** false statements offered to it (the opposite of each verdict, both directions for the open ones) | `summary.json` → `lean` | same |
+| Every "does not follow either way" verdict (75) comes with two finite models, re-checked by an evaluator that imports no solver | `engine/commonground/model.py`, `per_example.csv` | same |
+| A second, independent engine (grounding to SAT) agrees on **201 of 201** examples where it is definite | `summary.json` → `second_engine` | same |
+| In the worked debate the two positions are compatible, and each proof's premise list is exactly the one minimal set that entails its conclusion | `contracts/analysis.generated.ts`, `contracts/analysis.test.ts` | `npm test` |
 
-## Stack
+The CI workflow re-runs all of it on every push, including the benchmark, and
+fails if a published number changes (`.github/workflows/ci.yml`).
 
-- React 19, TypeScript, Vite, Tailwind CSS, and shadcn/ui
-- Hono, tRPC, Drizzle ORM, and MySQL
-- Lean 4.35.0, using only the core library
-- AI SDK with server-side gateway credentials
-- vite-plugin-pwa for installability
+### What has not been shown
 
-## Project map
+* **No language model was run for these numbers.** The benchmark starts from the
+  dataset's formulas. It measures the logic back end and audits the annotations;
+  it is a ceiling for any formalizer scored against those labels, not a result
+  about formalization.
+* **The language-model formalizer (`engine/commonground/formalize.py`) has never
+  called a live model.** It is unit-tested against a scripted client and a local
+  HTTP stub. The row it would fill is empty:
 
-```text
-api/                       Hono/tRPC API, persistence, AI, and Lean runner
-contracts/lean.ts          Canonical declarations, theorem builders, and hashes
-contracts/lean.test.ts     Proof-shape and certificate integrity tests
-db/schema.ts               Debate, evidence, review, proof, and AI-draft tables
-db/seed-data.ts            Worked-example statements and evidence
-db/verification-snapshots.ts  Genuine captured Lean verification results
-proofs/                    Independently inspectable generated Lean files
-src/components/            Debate, proof lab, evidence, method, and review UI
-public/                    Icons and other static assets
+  | Mode | Accuracy on FOLIO validation | Accuracy when it answers |
+  |---|---|---|
+  | model answers directly | not run | not run |
+  | model formalizes, solver decides | not run | not run |
+
+  ```bash
+  export LLM_API_KEY=...   # any OpenAI-compatible endpoint
+  python -m commonground folio --mode direct --base-url https://… --model … --out results/direct
+  python -m commonground folio --mode llm    --base-url https://… --model … --out results/llm
+  ```
+* **Faithfulness is not certified by anything here.** A formula can be provably
+  entailed and still not say what the sentence meant.
+* The interface changes in this version were type-checked and built, not viewed in
+  a browser. The default `Dockerfile` has not been built, and the CI workflow has
+  not yet run on GitHub: until it has, "re-run by CI" below describes its
+  configuration, not an observed result.
+
+## How a verdict is produced
+
+```
+text (dataset / model / reviewer)
+   │  fol.py        strict grammar → syntax tree; anything else is rejected
+   ▼
+premises, conclusion
+   │  verdict.py    is "premises ∧ ¬conclusion" satisfiable? is "premises ∧ conclusion"?
+   │                 Z3, with grounding to SAT (PySAT) as second engine and fallback
+   ▼
+True / False / Uncertain / Inconsistent / Undecided
+   │  model.py      every "satisfiable" claim → explicit finite structure, re-evaluated
+   │  lean.py       every "unsatisfiable" claim → Lean 4 theorem, kernel-checked, axioms audited
+   ▼
+verdict with evidence
 ```
 
-## Local development
+Grounding is a decision procedure for sentences with no existential under a
+universal (the Bernays–Schönfinkel class): 200 of the 203 parsed FOLIO examples.
+Outside it, an "unsatisfiable" from grounding is reported as bounded, never as a
+proof (`engine/commonground/ground.py`).
 
-Requirements: Node.js 20.12 or later and a MySQL database.
+## Where two positions disagree
+
+`engine/commonground/argmap.py` treats a debate as a set of formal statements owned
+by positions and computes, by search:
+
+* whether the positions are **compatible** (all premises together have a model);
+* the **minimal conflicts** (minimal unsatisfiable subsets) when they are not;
+* the **smallest concessions** that restore consistency (minimal correction sets);
+* for each conclusion, every **minimal set of premises that entails it**.
+
+Enumeration is MARCO with a SAT solver proposing subsets. It is tested against
+brute force and against the hitting-set duality between conflicts and concessions.
 
 ```bash
-npm install
-cp .env.example .env
+cd engine
+python -m commonground analyze examples/plastic_bags.json   # the sourced worked example: compatible
+python -m commonground analyze examples/remote_work.json    # a constructed contradiction: 2 conflicts, 8 ways out
+python -m commonground check --premise "∀x (Human(x) → Mortal(x))" --premise "Human(socrates)" \
+                             --conclusion "Mortal(socrates)" --lean
 ```
 
-Fill in the required values in `.env`, then initialize the schema and start the development server:
+## The web app
+
+One debate (should a city adopt a well-designed single-use plastic bag policy?)
+reconstructed as 15 statements with five sourced evidence records, four Lean
+proofs and one negative control that Lean must reject. A certificate is active only
+while Lean accepted the exact current source, the stored hash matches and every
+premise it uses is approved; disputing a premise suspends the conclusions that
+depend on it.
+
+"A priority dispute, not a contradiction" used to be a sentence in the interface.
+It is now computed: the engine finds a model of all premises of both positions and
+the page says so, or lists the conflicts if there are any.
 
 ```bash
+npm ci
+cp .env.example .env          # DATABASE_URL (MySQL); REVIEWER_TOKEN to enable review
 npm run db:push
-npm run dev
+npm run dev                   # http://localhost:3000
+npm run lint && npm run check && npm test && npm run build
 ```
 
-The application uses `http://localhost:3000`. Seed data is inserted idempotently when the workspace is first loaded. Never commit `.env` or real gateway/database credentials.
+Without `REVIEWER_TOKEN` the app is read-only. Without a Lean executable
+(`LEAN_BIN`, Lean 4.35.0) it shows the stored certificates and reports live
+verification as unavailable; it never simulates a compiler result. CI runs Lean on
+`proofs/` on every push.
 
-### Environment variables
+## Security
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `APP_ID` | Yes | Application identifier used by the backend template |
-| `APP_SECRET` | Yes | Application secret |
-| `DATABASE_URL` | Yes | MySQL connection string |
-| `KIMI_AGENTGW_BASE_URL` | AI only | Server-side AI gateway endpoint |
-| `KIMI_AGENTGW_API_KEY` | AI only | Server-side AI gateway credential |
-| `LEAN_BIN` | Live verification only | Absolute path to a Lean 4.35.0 executable |
-| `PORT` | No | Production port; defaults to `3000` |
+Reading is public. Review decisions, AI drafts and Lean runs need a reviewer
+token; there are rate limits, a strict Content-Security-Policy, and no secret in
+the default container image. No text from a visitor or a model is ever passed to
+Lean. Details, tests and known limits: [`SECURITY.md`](SECURITY.md).
 
-AI interpretation checks degrade gracefully when the gateway is absent or unavailable. AI drafts cannot approve premises or mutate canonical statements and proofs.
+## Repository map
 
-## Verification and production checks
-
-```bash
-npm run lint
-npm run check
-npm run test
-npm run build
-npm start
+```
+engine/commonground/   fol.py parser · verdict.py · smt.py (Z3) · ground.py (SAT) · model.py (evaluator)
+                       lean.py (certificates) · argmap.py (conflicts) · formalize.py (model, not run) · bench.py
+engine/tests/          104 tests: properties, differential checks between engines, Lean soundness probes
+engine/examples/       two debates as formulas
+results/               benchmark output and the annotation audit
+api/                   Hono + tRPC server, access control, Lean runner, AI drafts
+contracts/             Lean sources, certificate hashes, generated analysis
+db/                    schema, worked-example data, stored Lean outputs
+proofs/                the worked example's Lean files
+src/                   React interface
 ```
 
-The production build writes the frontend to `dist/public` and the self-contained backend entry to `dist/boot.js`. The backend bundle must remain self-contained because production runtime files do not require `node_modules`.
+## How this was built
 
-A container can be built after `npm run build`:
+* The web app was scaffolded with Kimi's site builder; `api/ai-client.ts` and the
+  build setup are that platform's template code.
+* The logic engine, the access-control layer, the tests and this README were
+  written with Claude (Anthropic) in one working session on 9–10 November 2026,
+  following a review of the first version.
+* Every number above was produced by the commands shown, with Python 3.13, Z3
+  5.3.3, PySAT 1.9.dev21 and Lean 4.35.0. The CI workflow repeats the run.
 
-```bash
-docker build -t common-ground .
-docker run --rm -p 3000:3000 common-ground
-```
+## Limits
 
-## Lean verification boundary
+* One debate, entered by hand. There is no pipeline from prose to statements in
+  the web app.
+* First-order logic over one kind of object, without arithmetic or modality. Most
+  real arguments are not deductive; this tool only sees the part that is.
+* The conflict analysis enumerates all minimal conflicts, which is exponential in
+  the worst case. It is meant for tens of statements.
+* Limits and review state assume a single server process.
 
-The repository includes genuine stored verification snapshots and the exact generated source hashes. It does **not** include the large Lean toolchain.
+## Data and licence
 
-To enable live re-verification, install Lean 4.35.0 and set `LEAN_BIN` to its executable. The verifier runs Lean in an isolated temporary directory, blocks escape hatches such as `sorry` and added `axiom` declarations, hashes the exact source, and audits axiomatic dependencies.
-
-Without a Lean executable, the application preserves stored certificates and reports live verification as unavailable; it never simulates a compiler result.
-
-You can also inspect the worked proofs directly:
-
-```bash
-lean proofs/CommonGround.lean
-lean proofs/NegativeControl.lean  # intentionally fails with a type mismatch
-```
-
-A proof certificate becomes active only when:
-
-1. Lean accepted the exact current source;
-2. the stored source hash still matches; and
-3. every declared premise is currently approved.
-
-Disputing a premise therefore suspends dependent conclusions without deleting the underlying kernel result or review history.
-
-## Current scope and continuation notes
-
-This is a complete single-debate prototype, not yet a multi-tenant deliberation service. Evidence import is curated, the formal model is deliberately small, and authentication is not enabled. Stored AI drafts and review decisions persist in MySQL.
-
-Useful next engineering steps include authenticated workspaces, multiple debates, versioned statement editing, a reproducible Lean runtime image, and a reviewed evidence-import pipeline.
+* FOLIO (Han et al., *FOLIO: Natural Language Reasoning with First-Order Logic*)
+  is licensed CC BY-SA 4.0. It is downloaded on demand and not redistributed;
+  `results/` refers to examples by line number.
+* The five evidence records quote short excerpts from their sources, each linked
+  in the app.
+* This repository has no licence file yet.
