@@ -42,6 +42,7 @@ export function StatementDialog({ statement, workspace, open, onOpenChange, onOp
   });
 
   if (!statement) return null;
+  const canReview = workspace.access.isReviewer;
   const linkedEvidence = workspace.evidence.find((item) => item.id === statement.evidenceId);
   const dependentProofs = workspace.proofs.filter((proof) => proof.premiseIds.includes(statement.id));
   const drafts = workspace.aiDrafts.filter((draft) => draft.statementId === statement.id);
@@ -137,10 +138,15 @@ export function StatementDialog({ statement, workspace, open, onOpenChange, onOp
             {note.trim().length > 0 && note.trim().length < 3 && (
               <p className="mt-1 text-sm text-[#8a2d21]">Add at least three characters.</p>
             )}
+            {!canReview && (
+              <p className="mt-2 text-sm text-[#4c5260]">
+                {workspace.access.reviewEnabled ? "Unlock reviewer access (top of the page) to record a decision or request an AI draft." : "This deployment is read-only: review decisions and AI drafts are switched off."}
+              </p>
+            )}
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
-                disabled={note.trim().length < 3 || review.isPending}
+                disabled={!canReview || note.trim().length < 3 || review.isPending}
                 onClick={() => saveReview("approved")}
                 className="transition-ui inline-flex min-h-11 items-center justify-center gap-2 bg-primary px-4 font-semibold text-primary-foreground hover:bg-[#173f92] disabled:opacity-45"
               >
@@ -148,7 +154,7 @@ export function StatementDialog({ statement, workspace, open, onOpenChange, onOp
               </button>
               <button
                 type="button"
-                disabled={note.trim().length < 3 || review.isPending}
+                disabled={!canReview || note.trim().length < 3 || review.isPending}
                 onClick={() => saveReview("disputed")}
                 className="transition-ui inline-flex min-h-11 items-center justify-center gap-2 border border-[#a43b2c] px-4 font-semibold text-[#8a2d21] hover:bg-[#ffebe6] disabled:opacity-45"
               >
@@ -156,7 +162,7 @@ export function StatementDialog({ statement, workspace, open, onOpenChange, onOp
               </button>
               <button
                 type="button"
-                disabled={note.trim().length < 3 || review.isPending}
+                disabled={!canReview || note.trim().length < 3 || review.isPending}
                 onClick={() => saveReview("draft")}
                 className="transition-ui min-h-11 border border-[#8b93a2] px-4 font-semibold hover:bg-muted disabled:opacity-45"
               >
@@ -180,7 +186,7 @@ export function StatementDialog({ statement, workspace, open, onOpenChange, onOp
               <button
                 type="button"
                 onClick={() => critique.mutate({ statementId: statement.id })}
-                disabled={critique.isPending}
+                disabled={!canReview || critique.isPending}
                 className="transition-ui min-h-11 shrink-0 border border-primary px-4 font-semibold text-primary hover:bg-secondary disabled:opacity-50"
               >
                 {critique.isPending ? "Generating draft…" : "Test this encoding"}

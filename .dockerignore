@@ -1,4 +1,13 @@
+# Nothing secret and nothing prebuilt enters the build context.
+.env
+.env.*
+!.env.example
 node_modules
+dist
 .git
-*.swp
+.github
+engine
+results
+proofs
 *.log
+*.swp

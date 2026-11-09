@@ -3,13 +3,30 @@ import { bodyLimit } from "hono/body-limit";
 import type { HttpBindings } from "@hono/node-server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./router";
-import { createContext } from "./context";
+import { contextFor } from "./context";
 import { env } from "./lib/env";
 import { log } from "./lib/logger";
 import { handleClientLog } from "./lib/clientlog";
 import { REQUEST_ID_HEADER, runWithRequestId } from "./lib/requestcontext";
+import { clientKey, frameAncestorsFromEnv, rateLimit, securityHeaders } from "./lib/httpSecurity";
+import { RateLimiter } from "./lib/security";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
+
+// Response headers (CSP, no framing, no sniffing). Production only: the dev server
+// injects inline scripts for hot reload, which the policy would block. Registered
+// first so it also covers the static files added at the bottom of this file.
+if (env.isProduction) {
+  app.use("*", securityHeaders({ frameAncestors: frameAncestorsFromEnv() }));
+}
+
+// 240 requests a minute per client on the API. /api/log has its own, tighter limits.
+const apiLimiter = new RateLimiter(240, 60_000);
+app.use("/api/*", rateLimit(apiLimiter, (path) => path === "/api/log"));
+
+// A tRPC batch runs every procedure named in the URL. Requests here carry a few
+// short identifiers, so the body is capped at 64 KB and a batch at 10 calls.
+const MAX_BATCH = 10;
 
 // One middleware for both halves of request observability, because they need the
 // same scope and the same id:
@@ -56,13 +73,15 @@ app.use("*", async (c, next) => {
 // rebuild throw `TypeError: Cannot read private member #state ...`, so every
 // bodyless request (DELETE/PATCH on the app's own REST routes) 500s at dispatch.
 // /api/log keeps its own 64KB caps in lib/clientlog.ts, so it needs no middleware.
-app.use("/api/trpc/*", bodyLimit({ maxSize: 50 * 1024 * 1024 }));
+app.use("/api/trpc/*", bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: "Payload too large" }, 413) }));
 app.use("/api/trpc/*", async (c) => {
+  const procedures = c.req.path.slice("/api/trpc/".length).split(",").length;
+  if (procedures > MAX_BATCH) return c.json({ error: "Batch too large" }, 400);
   return fetchRequestHandler({
     endpoint: "/api/trpc",
     req: c.req.raw,
     router: appRouter,
-    createContext,
+    createContext: contextFor(clientKey(c)),
   });
 });
 // Browser-side log sink (see lib/clientlog.ts). Must be registered before the
