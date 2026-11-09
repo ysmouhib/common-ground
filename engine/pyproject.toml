@@ -1,0 +1,21 @@
+[project]
+name = "commonground-engine"
+version = "0.2.0"
+description = "First-order verdicts with checked evidence, Lean certificates and conflict analysis for arguments"
+requires-python = ">=3.10"
+dependencies = ["z3-solver>=4.13", "python-sat>=1.8.dev13"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "hypothesis>=6.100"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["commonground"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["lean: needs a Lean 4.35.0 executable (LEAN_BIN or PATH)"]

@@ -1,0 +1,22 @@
+{
+  "id": "plastic-bag-policy",
+  "title": "The plastic bag policy debate",
+  "note": "Formal content of the worked example shown in the web app. Statement ids match db/seed-data.ts. D1 is vocabulary and asserts nothing.",
+  "statements": [
+    {"id": "D1", "owner": "shared", "kind": "definition", "fol": null},
+    {"id": "A1", "owner": "advocate", "kind": "empirical", "fol": "Achieves(targetedBagPolicy, reducesBagUse)"},
+    {"id": "A2", "owner": "advocate", "kind": "empirical", "fol": "Achieves(targetedBagPolicy, reducesShorelineBagLitter)"},
+    {"id": "A3", "owner": "advocate", "kind": "design", "fol": "ResponsibleDesign(targetedBagPolicy)"},
+    {"id": "A4", "owner": "advocate", "kind": "normative", "fol": "∀p ((Achieves(p, reducesBagUse) ∧ Achieves(p, reducesShorelineBagLitter) ∧ ResponsibleDesign(p)) → ShouldAdopt(p))"},
+    {"id": "C1", "owner": "critic", "kind": "empirical", "fol": "¬SolvesPlasticPollutionAlone(targetedBagPolicy)"},
+    {"id": "C2", "owner": "critic", "kind": "empirical", "fol": "Achieves(productionCaps, addressesVirginProduction)"},
+    {"id": "C3", "owner": "critic", "kind": "design", "fol": "RequiresReuseAccounting(targetedBagPolicy)"},
+    {"id": "C4", "owner": "critic", "kind": "normative", "fol": "∀p (Achieves(p, addressesVirginProduction) → ShouldPrioritize(p))"},
+    {"id": "S1", "owner": "shared", "kind": "normative", "fol": "ShouldReducePlasticPollution"},
+    {"id": "B1", "owner": "shared", "kind": "bridge", "fol": "(ShouldAdopt(targetedBagPolicy) ∧ ShouldPrioritize(productionCaps)) → ShouldConsider(combinedPackage)"},
+    {"id": "X1", "owner": "advocate", "kind": "conclusion", "fol": "ShouldAdopt(targetedBagPolicy)"},
+    {"id": "X2", "owner": "critic", "kind": "conclusion", "fol": "ShouldPrioritize(productionCaps)"},
+    {"id": "X3", "owner": "shared", "kind": "conclusion", "fol": "Achieves(targetedBagPolicy, reducesShorelineBagLitter) ∧ ¬SolvesPlasticPollutionAlone(targetedBagPolicy) ∧ ShouldReducePlasticPollution"},
+    {"id": "X4", "owner": "shared", "kind": "conclusion", "fol": "ShouldConsider(combinedPackage)"}
+  ]
+}

@@ -1,0 +1,5 @@
+# Exact versions the published results were produced with.
+z3-solver==5.3.3.0
+python-sat==1.9.dev21
+pytest==9.2.0
+hypothesis==6.170.15
