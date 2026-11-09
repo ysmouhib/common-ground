@@ -31,7 +31,7 @@ export const evidenceSeed = [
     url: "https://www.britannica.com/procon/single-use-plastics-debate",
     sourceType: "debate_collection" as const,
     excerpt:
-      "So, are single-use plastic bans the most effective way to reduce plastic consumption and pollution? Explore the debate below.",
+      "So, are single-use plastic bans the most effective policy to reduce plastic consumption and pollution?",
     finding:
       "Provides the public pro/con structure from which the two positions in this demonstration are reconstructed.",
     limitation:
@@ -95,7 +95,7 @@ export const evidenceSeed = [
     title: "To stop plastic pollution, we must stop plastic production, scientists say",
     authors: "Mongabay; quotes Melanie Bergmann and other researchers",
     publisher: "Mongabay",
-    publishedAt: "29 Apr 2022",
+    publishedAt: "28 Apr 2022",
     url: "https://news.mongabay.com/2022/04/to-stop-plastic-pollution-we-must-stop-plastic-production-scientists-say/",
     sourceType: "news_analysis" as const,
     excerpt:
@@ -117,9 +117,9 @@ export const statementSeed = [
     title: "Shared vocabulary",
     body:
       "A targeted bag policy means a well-designed ban or fee on single-use checkout bags. A responsible design avoids a simple switch to another disposable material and considers access and substitute-bag impacts.",
-    formalText: "ResponsibleDesign Policy.targetedBagPolicy",
+    formalText: "(vocabulary only: introduces ResponsibleDesign and asserts nothing)",
     formalizationNote:
-      "An editorial definition synthesized from the sourced debate and life-cycle caveats. It deliberately narrows the question away from an unqualified ban on every plastic item.",
+      "An editorial definition synthesized from the sourced debate and life-cycle caveats. It deliberately narrows the question away from an unqualified ban on every plastic item. It carries no formal premise: whether the proposed policy is responsibly designed is claim A3.",
     evidenceId: "E0",
     sortOrder: 1,
     isWorkshop: false,
@@ -357,3 +357,29 @@ export const proofSeed = [
     isNegativeControl: true,
   }),
 ];
+
+
+/**
+ * Corrections to rows that an existing database may already hold. Seeding never
+ * overwrites a row, so a fix to the seed needs an explicit, guarded update: each
+ * entry applies only while the stored value is still exactly the old one.
+ */
+export const seedCorrections = {
+  evidenceExcerpt: [
+    {
+      id: "E0",
+      // The stored text was not the page's wording.
+      from: "So, are single-use plastic bans the most effective way to reduce plastic consumption and pollution? Explore the debate below.",
+      to: "So, are single-use plastic bans the most effective policy to reduce plastic consumption and pollution?",
+    },
+  ],
+  evidencePublishedAt: [{ id: "E4", from: "29 Apr 2022", to: "28 Apr 2022" }],
+  statementFormalText: [
+    {
+      id: "D1",
+      // A definition had been given the same formula as premise A3, so A3 had a silent duplicate.
+      from: "ResponsibleDesign Policy.targetedBagPolicy",
+      to: "(vocabulary only: introduces ResponsibleDesign and asserts nothing)",
+    },
+  ],
+};
