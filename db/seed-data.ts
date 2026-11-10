@@ -59,13 +59,13 @@ export const evidenceSeed = [
     id: "E2",
     debateId: DEBATE_ID,
     title: "Plastic Bag Bans Work",
-    authors: "Celeste Meiffren-Swango, Jenn Engstrom, and Louis Sokolow",
-    publisher: "Environment America Research & Policy Center",
-    publishedAt: "17 Jan 2024",
+    authors: "Louis Sokolow, Celeste Meiffren-Swango, and Jenn Engstrom",
+    publisher: "Environment America Research & Policy Center and U.S. PIRG Education Fund, with Frontier Group",
+    publishedAt: "Jan 2024",
     url: "https://environmentamerica.org/center/resources/plastic-bag-bans-work/",
     sourceType: "advocacy_report" as const,
     excerpt:
-      "Bans in five states and cities that cover more than 12 million people combined have cut single-use plastic bag consumption by about 6 billion bags per year.",
+      "Bans in five states and cities that cover more than 12 million people combined have cut single-use plastic bag consumption by about 6 billion bags per year […]",
     finding:
       "The report aggregates results from five jurisdictions and estimates that a similar well-designed ban could avoid roughly 300 bags per person per year.",
     limitation:
@@ -76,7 +76,7 @@ export const evidenceSeed = [
     id: "E3",
     debateId: DEBATE_ID,
     title: "Life Cycle Assessment of grocery carrier bags",
-    authors: "Valentina Bisinella, Paola Federica Albizzati, Thomas Fruergaard Astrup, and Anders Damgaard",
+    authors: "Valentina Bisinella, Paola Federica Albizzati, Thomas Fruergaard Astrup, and Anders Damgaard (editors)",
     publisher: "Danish Environmental Protection Agency / DTU Environment",
     publishedAt: "Feb 2018",
     url: "https://www2.mst.dk/udgiv/publications/2018/02/978-87-93614-73-4.pdf",
@@ -364,16 +364,48 @@ export const proofSeed = [
  * overwrites a row, so a fix to the seed needs an explicit, guarded update: each
  * entry applies only while the stored value is still exactly the old one.
  */
-export const seedCorrections = {
-  evidenceExcerpt: [
+export const seedCorrections: {
+  evidence: { id: string; field: "excerpt" | "publishedAt" | "authors" | "publisher"; from: string; to: string }[];
+  statementFormalText: { id: string; from: string; to: string }[];
+} = {
+  evidence: [
     {
       id: "E0",
+      field: "excerpt",
       // The stored text was not the page's wording.
       from: "So, are single-use plastic bans the most effective way to reduce plastic consumption and pollution? Explore the debate below.",
       to: "So, are single-use plastic bans the most effective policy to reduce plastic consumption and pollution?",
     },
+    { id: "E4", field: "publishedAt", from: "29 Apr 2022", to: "28 Apr 2022" },
+    // E2, as printed in the report: a month, this author order, two copyright holders and
+    // the first author's organisation. Its sentence goes on after "per year", so the quote is marked as cut.
+    { id: "E2", field: "publishedAt", from: "17 Jan 2024", to: "Jan 2024" },
+    {
+      id: "E2",
+      field: "authors",
+      from: "Celeste Meiffren-Swango, Jenn Engstrom, and Louis Sokolow",
+      to: "Louis Sokolow, Celeste Meiffren-Swango, and Jenn Engstrom",
+    },
+    {
+      id: "E2",
+      field: "publisher",
+      from: "Environment America Research & Policy Center",
+      to: "Environment America Research & Policy Center and U.S. PIRG Education Fund, with Frontier Group",
+    },
+    {
+      id: "E2",
+      field: "excerpt",
+      from: "Bans in five states and cities that cover more than 12 million people combined have cut single-use plastic bag consumption by about 6 billion bags per year.",
+      to: "Bans in five states and cities that cover more than 12 million people combined have cut single-use plastic bag consumption by about 6 billion bags per year […]",
+    },
+    {
+      id: "E3",
+      field: "authors",
+      // The report names them as its editors.
+      from: "Valentina Bisinella, Paola Federica Albizzati, Thomas Fruergaard Astrup, and Anders Damgaard",
+      to: "Valentina Bisinella, Paola Federica Albizzati, Thomas Fruergaard Astrup, and Anders Damgaard (editors)",
+    },
   ],
-  evidencePublishedAt: [{ id: "E4", from: "29 Apr 2022", to: "28 Apr 2022" }],
   statementFormalText: [
     {
       id: "D1",

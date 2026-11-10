@@ -4,27 +4,24 @@ import { log } from "../api/lib/logger";
 import { debates, evidence, proofs, statements } from "./schema";
 import { debateSeed, DEBATE_ID, evidenceSeed, proofSeed, seedCorrections, statementSeed } from "./seed-data";
 
-let correctionsApplied = false;
-
-/** Apply seedCorrections once per process. A failure is logged and never blocks a page load. */
-async function applyCorrections(): Promise<void> {
-  if (correctionsApplied) return;
-  correctionsApplied = true;
+/**
+ * Apply seedCorrections. Each update is guarded by the old value, so running it
+ * again, or on a row a reviewer has since changed, does nothing.
+ */
+export async function applyCorrections(): Promise<void> {
   const db = getDb();
-  try {
-    for (const fix of seedCorrections.evidenceExcerpt) {
-      await db.update(evidence).set({ excerpt: fix.to }).where(and(eq(evidence.id, fix.id), eq(evidence.excerpt, fix.from)));
-    }
-    for (const fix of seedCorrections.evidencePublishedAt) {
-      await db.update(evidence).set({ publishedAt: fix.to }).where(and(eq(evidence.id, fix.id), eq(evidence.publishedAt, fix.from)));
-    }
-    for (const fix of seedCorrections.statementFormalText) {
-      await db.update(statements).set({ formalText: fix.to }).where(and(eq(statements.id, fix.id), eq(statements.formalText, fix.from)));
-    }
-  } catch (error) {
-    log.error("seed corrections failed", { error: error instanceof Error ? error.message : String(error) });
+  for (const fix of seedCorrections.evidence) {
+    await db
+      .update(evidence)
+      .set({ [fix.field]: fix.to })
+      .where(and(eq(evidence.id, fix.id), eq(evidence[fix.field], fix.from)));
+  }
+  for (const fix of seedCorrections.statementFormalText) {
+    await db.update(statements).set({ formalText: fix.to }).where(and(eq(statements.id, fix.id), eq(statements.formalText, fix.from)));
   }
 }
+
+let correctionsDone = false;
 
 export async function ensureSeeded(): Promise<void> {
   const db = getDb();
@@ -35,5 +32,13 @@ export async function ensureSeeded(): Promise<void> {
   await db.insert(evidence).values(evidenceSeed).onDuplicateKeyUpdate({ set: { debateId: DEBATE_ID } });
   await db.insert(statements).values(statementSeed).onDuplicateKeyUpdate({ set: { debateId: DEBATE_ID } });
   await db.insert(proofs).values(proofSeed).onDuplicateKeyUpdate({ set: { debateId: DEBATE_ID } });
-  await applyCorrections();
+  // Once per process; a failure is logged and never blocks a page load.
+  if (!correctionsDone) {
+    correctionsDone = true;
+    try {
+      await applyCorrections();
+    } catch (error) {
+      log.error("seed corrections failed", { error: error instanceof Error ? error.message : String(error) });
+    }
+  }
 }
