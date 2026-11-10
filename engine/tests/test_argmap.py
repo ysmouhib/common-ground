@@ -54,6 +54,7 @@ def test_plastic_bag_debate_positions_are_compatible():
     _, statements = argmap.load_debate(str(EXAMPLES / "plastic_bags.json"))
     report = argmap.analyze(statements)
     assert report["positions_compatible"] is True and report["conflicts"] == []
+    assert report["minimal_concessions"] == []  # nothing has to be given up
     assert report["compatibility_witness"]["rechecked_by_independent_evaluator"] is True
     assert report["statements_without_formula"] == ["D1"]
     conclusions = report["conclusions"]

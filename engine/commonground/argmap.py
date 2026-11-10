@@ -182,7 +182,10 @@ def analyze(statements: list[Statement], timeout_ms: int = 5000, limit: int = 20
         return {"statements": members, "positions": sorted({owner[i] for i in members})}
 
     conflicts = sorted((describe(m) for m in muses), key=lambda d: (len(d["statements"]), d["statements"]))
-    concessions = sorted((describe(frozenset(ids) - m) for m in msses),
+    # A correction set is what must be withdrawn to reach a maximal consistent set. When
+    # everything is consistent the only one is empty: there is nothing to concede.
+    corrections = [frozenset(ids) - m for m in msses]
+    concessions = sorted((describe(c) for c in corrections if c),
                          key=lambda d: (len(d["statements"]), d["statements"]))
     in_every_mss = sorted(set(ids).intersection(*msses)) if msses else []
     return {
