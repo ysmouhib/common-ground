@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessFor, bearerToken, DailyBudget, Gate, MIN_TOKEN_LENGTH, RateLimiter, reviewerToken, tokensEqual } from "./security";
+import { accessFor, bearerToken, DailyBudget, Gate, MIN_TOKEN_LENGTH, RateLimiter, reviewerToken, reviewSetting, tokensEqual } from "./security";
 
 const TOKEN = "a-long-random-reviewer-token-0123456789";
 const request = (authorization?: string) =>
@@ -11,6 +11,22 @@ describe("reviewer token", () => {
     expect(reviewerToken({ REVIEWER_TOKEN: "short" })).toBeNull();
     expect(reviewerToken({ REVIEWER_TOKEN: "x".repeat(MIN_TOKEN_LENGTH - 1) })).toBeNull();
     expect(reviewerToken({ REVIEWER_TOKEN: `  ${TOKEN}  ` })).toBe(TOKEN);
+  });
+
+  it("is disabled when the value could never be sent as a token", () => {
+    // What `docker run --env-file` passes for a template line with a trailing comment.
+    const literal = "           # At least 24 characters. Treat it like a password.";
+    expect(reviewerToken({ REVIEWER_TOKEN: literal })).toBeNull();
+    expect(reviewerToken({ REVIEWER_TOKEN: `${TOKEN} ${TOKEN}` })).toBeNull();
+    expect(accessFor(request("Bearer #"), "c", { REVIEWER_TOKEN: literal }, new RateLimiter(10, 60_000)).reviewEnabled).toBe(false);
+  });
+
+  it("says at start-up which of the three states the deployment is in, without the token", () => {
+    expect(reviewSetting({}).note).toBe("read-only: no REVIEWER_TOKEN is set");
+    expect(reviewSetting({ REVIEWER_TOKEN: "short" }).note).toMatch(/^read-only: REVIEWER_TOKEN is set but cannot be used/);
+    const enabled = reviewSetting({ REVIEWER_TOKEN: TOKEN });
+    expect(enabled.note).toBe("review enabled: a reviewer token is configured");
+    expect(enabled.note).not.toContain(TOKEN);
   });
 
   it("is read only from a well-formed Bearer header", () => {
@@ -30,16 +46,48 @@ describe("reviewer token", () => {
 });
 
 describe("access", () => {
+  const fresh = () => new RateLimiter(10, 15 * 60_000);
+
   it("is read-only when no token is configured, whatever the request carries", () => {
-    expect(accessFor(request(`Bearer ${TOKEN}`), {})).toEqual({ reviewEnabled: false, isReviewer: false, presentedToken: true });
-    expect(accessFor(request(), {})).toEqual({ reviewEnabled: false, isReviewer: false, presentedToken: false });
+    expect(accessFor(request(`Bearer ${TOKEN}`), "c", {}, fresh()))
+      .toEqual({ reviewEnabled: false, isReviewer: false, presentedToken: true, lockedOut: false });
+    expect(accessFor(request(), "c", {}, fresh()))
+      .toEqual({ reviewEnabled: false, isReviewer: false, presentedToken: false, lockedOut: false });
   });
 
   it("grants review only to the exact token", () => {
     const env = { REVIEWER_TOKEN: TOKEN };
-    expect(accessFor(request(`Bearer ${TOKEN}`), env).isReviewer).toBe(true);
-    expect(accessFor(request(`Bearer ${TOKEN}x`), env)).toEqual({ reviewEnabled: true, isReviewer: false, presentedToken: true });
-    expect(accessFor(request(), env)).toEqual({ reviewEnabled: true, isReviewer: false, presentedToken: false });
+    expect(accessFor(request(`Bearer ${TOKEN}`), "c", env, fresh()).isReviewer).toBe(true);
+    expect(accessFor(request(`Bearer ${TOKEN}x`), "c", env, fresh()))
+      .toEqual({ reviewEnabled: true, isReviewer: false, presentedToken: true, lockedOut: false });
+    expect(accessFor(request(), "c", env, fresh()))
+      .toEqual({ reviewEnabled: true, isReviewer: false, presentedToken: false, lockedOut: false });
+  });
+
+  it("locks a client out after ten wrong tokens, and then refuses the right one too", () => {
+    const env = { REVIEWER_TOKEN: TOKEN };
+    const failures = fresh();
+    for (let i = 0; i < 10; i += 1) {
+      expect(accessFor(request(`Bearer guess-${i}`), "guesser", env, failures).lockedOut).toBe(false);
+    }
+    expect(accessFor(request(`Bearer ${TOKEN}`), "guesser", env, failures))
+      .toEqual({ reviewEnabled: true, isReviewer: false, presentedToken: true, lockedOut: true });
+    // Other clients are unaffected, and requests without a token never count.
+    expect(accessFor(request(`Bearer ${TOKEN}`), "someone-else", env, failures).isReviewer).toBe(true);
+    const quiet = fresh();
+    for (let i = 0; i < 50; i += 1) accessFor(request(), "reader", env, quiet);
+    expect(accessFor(request(`Bearer ${TOKEN}`), "reader", env, quiet).isReviewer).toBe(true);
+  });
+
+  it("a right token does not reset or extend a lockout window", () => {
+    let now = 0;
+    const failures = new RateLimiter(10, 15 * 60_000, 100, () => now);
+    const env = { REVIEWER_TOKEN: TOKEN };
+    for (let i = 0; i < 10; i += 1) accessFor(request("Bearer wrong"), "c", env, failures);
+    expect(accessFor(request(`Bearer ${TOKEN}`), "c", env, failures).lockedOut).toBe(true);
+    now = 15 * 60_000;
+    expect(accessFor(request(`Bearer ${TOKEN}`), "c", env, failures))
+      .toEqual({ reviewEnabled: true, isReviewer: true, presentedToken: true, lockedOut: false });
   });
 });
 

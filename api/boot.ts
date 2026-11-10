@@ -9,7 +9,7 @@ import { log } from "./lib/logger";
 import { handleClientLog } from "./lib/clientlog";
 import { REQUEST_ID_HEADER, runWithRequestId } from "./lib/requestcontext";
 import { clientKey, frameAncestorsFromEnv, rateLimit, securityHeaders } from "./lib/httpSecurity";
-import { RateLimiter } from "./lib/security";
+import { RateLimiter, reviewSetting } from "./lib/security";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 
@@ -119,5 +119,9 @@ if (env.isProduction) {
   const port = parseInt(process.env.PORT || "3000");
   serve({ fetch: app.fetch, port }, () => {
     log.info(`Server running on http://localhost:${port}/`);
+    // One line an operator can check: is this deployment read-only, and if so, why.
+    const review = reviewSetting();
+    if (review.token === null && process.env.REVIEWER_TOKEN?.trim()) log.warn(review.note);
+    else log.info(review.note);
   });
 }

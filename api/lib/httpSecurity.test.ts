@@ -62,10 +62,24 @@ describe("rate limiting", () => {
     const app = new Hono();
     const seen: string[] = [];
     app.get("/who", (c) => {
-      seen.push(clientKey(c, {}), clientKey(c, { TRUST_PROXY: "1" }));
+      seen.push(clientKey(c, {}), clientKey(c, { TRUST_PROXY: "0" }), clientKey(c, { TRUST_PROXY: "yes" }));
       return c.text("ok");
     });
-    await app.request("/who", { headers: { "x-forwarded-for": "203.0.113.9, 10.0.0.1" } });
-    expect(seen).toEqual(["unknown", "203.0.113.9"]);
+    await app.request("/who", { headers: { "x-forwarded-for": "203.0.113.9" } });
+    expect(seen).toEqual(["unknown", "unknown", "unknown"]);
+  });
+
+  it("takes the address the trusted proxy saw, not what the caller wrote in front of it", async () => {
+    const app = new Hono();
+    const seen: string[] = [];
+    app.get("/who", (c) => {
+      seen.push(clientKey(c, { TRUST_PROXY: "1" }), clientKey(c, { TRUST_PROXY: "2" }), clientKey(c, { TRUST_PROXY: "3" }));
+      return c.text("ok");
+    });
+    // The caller sent "1.2.3.4"; one proxy appended the address it really saw.
+    await app.request("/who", { headers: { "x-forwarded-for": "1.2.3.4, 198.51.100.7" } });
+    // One hop: the appended entry. Two hops: the entry before it. Three: the chain is
+    // too short to have passed three proxies, so the header is not used at all.
+    expect(seen).toEqual(["198.51.100.7", "1.2.3.4", "unknown"]);
   });
 });

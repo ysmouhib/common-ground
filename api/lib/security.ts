@@ -13,10 +13,27 @@ export const MIN_TOKEN_LENGTH = 24;
 
 type Env = Record<string, string | undefined>;
 
-/** The configured reviewer token, or null when review is disabled (missing or too short to be a secret). */
+/**
+ * What REVIEWER_TOKEN amounts to: a usable token, or none, with a sentence for the
+ * start-up log. A value with a space in it can never be sent as a Bearer token, and
+ * it is what a container gets when a template line such as
+ * `REVIEWER_TOKEN=   # a comment` is passed literally, so it counts as not set.
+ */
+export function reviewSetting(env: Env = process.env): { token: string | null; note: string } {
+  const value = env.REVIEWER_TOKEN?.trim() ?? "";
+  if (!value) return { token: null, note: "read-only: no REVIEWER_TOKEN is set" };
+  if (value.length < MIN_TOKEN_LENGTH || /\s/.test(value)) {
+    return {
+      token: null,
+      note: `read-only: REVIEWER_TOKEN is set but cannot be used (it needs at least ${MIN_TOKEN_LENGTH} characters and no spaces)`,
+    };
+  }
+  return { token: value, note: "review enabled: a reviewer token is configured" };
+}
+
+/** The configured reviewer token, or null when review is disabled. */
 export function reviewerToken(env: Env = process.env): string | null {
-  const token = env.REVIEWER_TOKEN?.trim() ?? "";
-  return token.length >= MIN_TOKEN_LENGTH ? token : null;
+  return reviewSetting(env).token;
 }
 
 export function bearerToken(req: Request): string | null {
@@ -34,21 +51,35 @@ export function tokensEqual(a: string, b: string): boolean {
 export interface Access {
   /** A reviewer token is configured on this deployment. */
   reviewEnabled: boolean;
-  /** This request carries the right token. */
+  /** This request carries the right token, and its client is not locked out. */
   isReviewer: boolean;
   /** This request carried a token, right or wrong. */
   presentedToken: boolean;
+  /** This client sent too many wrong tokens; no token is accepted from it until the window ends. */
+  lockedOut: boolean;
 }
 
-export function accessFor(req: Request, env: Env = process.env): Access {
+/**
+ * Decide what one HTTP request may do. Called once per request, for every route,
+ * so a wrong token counts as a failed attempt whether it arrives on a public query
+ * or on a mutation: there is no endpoint on which a token can be tested for free.
+ * While a client is locked out even the right token is refused, so the lockout
+ * tells a guesser nothing.
+ */
+export function accessFor(
+  req: Request,
+  clientKey: string,
+  env: Env = process.env,
+  failures: RateLimiter = authFailures,
+): Access {
   const expected = reviewerToken(env);
   const given = bearerToken(req);
-  if (!expected) return { reviewEnabled: false, isReviewer: false, presentedToken: given !== null };
-  return {
-    reviewEnabled: true,
-    isReviewer: given !== null && tokensEqual(given, expected),
-    presentedToken: given !== null,
-  };
+  const presentedToken = given !== null;
+  if (!expected) return { reviewEnabled: false, isReviewer: false, presentedToken, lockedOut: false };
+  if (failures.blocked(clientKey)) return { reviewEnabled: true, isReviewer: false, presentedToken, lockedOut: true };
+  const isReviewer = given !== null && tokensEqual(given, expected);
+  if (presentedToken && !isReviewer) failures.take(clientKey);
+  return { reviewEnabled: true, isReviewer, presentedToken, lockedOut: false };
 }
 
 /** Fixed-window counter per key, with a bounded number of keys so it cannot be used to exhaust memory. */

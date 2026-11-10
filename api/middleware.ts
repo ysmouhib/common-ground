@@ -2,7 +2,6 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
 import { log } from "./lib/logger";
-import { authFailures } from "./lib/security";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -34,9 +33,11 @@ export const publicQuery = t.procedure;
  * Procedures that change state, spend the AI quota or start a Lean process.
  *
  * - No reviewer token configured: the deployment is read-only (FORBIDDEN).
- * - Wrong or missing token: UNAUTHORIZED, and the failure is counted per client.
- *   A client that keeps guessing is locked out for the rest of the window, even
- *   if a later guess is right, so the lockout leaks nothing about the token.
+ * - Client locked out after repeated wrong tokens: TOO_MANY_REQUESTS, whatever it sends.
+ * - Wrong or missing token: UNAUTHORIZED.
+ *
+ * Counting failed attempts happens where access is decided (lib/security.ts), not
+ * here, so it covers public queries too.
  */
 export const reviewerMutation = t.procedure.use(({ ctx, next }) => {
   if (!ctx.access.reviewEnabled) {
@@ -45,14 +46,13 @@ export const reviewerMutation = t.procedure.use(({ ctx, next }) => {
       message: "This deployment is read-only: no reviewer token is configured.",
     });
   }
-  if (authFailures.blocked(ctx.clientKey)) {
+  if (ctx.access.lockedOut) {
     throw new TRPCError({
       code: "TOO_MANY_REQUESTS",
       message: "Too many failed attempts. Try again later.",
     });
   }
   if (!ctx.access.isReviewer) {
-    if (ctx.access.presentedToken) authFailures.take(ctx.clientKey);
     throw new TRPCError({ code: "UNAUTHORIZED", message: "A valid reviewer token is required." });
   }
   return next();

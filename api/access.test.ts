@@ -8,15 +8,17 @@ vi.mock("./queries/workspace", () => ({
 }));
 
 import { appRouter } from "./router";
-import { accessFor } from "./lib/security";
+import { contextFor } from "./context";
 import { verifyProof } from "./proofVerifier";
 
 const TOKEN = "a-long-random-reviewer-token-0123456789";
 let client = 0;
 
+/** A caller whose context is built by the same function the HTTP handler uses: one context per request. */
 function caller(authorization?: string, key = `client-${(client += 1)}`) {
   const req = new Request("http://localhost/api/trpc/x", { headers: authorization ? { authorization } : {} });
-  return appRouter.createCaller({ req, resHeaders: new Headers(), access: accessFor(req), clientKey: key });
+  const context = contextFor(key)({ req, resHeaders: new Headers(), info: undefined as never });
+  return appRouter.createCaller(() => context);
 }
 
 const mutations = (api: ReturnType<typeof caller>) => [
@@ -34,7 +36,9 @@ describe("who may do what", () => {
 
   it("anyone can read", async () => {
     await expect(caller().ping()).resolves.toMatchObject({ ok: true });
-    await expect(caller().workspace.get()).resolves.toMatchObject({ access: { reviewEnabled: false, isReviewer: false } });
+    await expect(caller().workspace.get()).resolves.toMatchObject({
+      access: { reviewEnabled: false, isReviewer: false, lockedOut: false },
+    });
   });
 
   it("with no token configured every mutation is refused, even with a token in the request", async () => {
@@ -72,6 +76,24 @@ describe("who may do what", () => {
     }
     await expect(caller(`Bearer ${TOKEN}`, key).proof.verifyAll()).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS" });
     await expect(caller(`Bearer ${TOKEN}`, "another-client").proof.verifyAll()).resolves.toHaveLength(5);
+  });
+
+  it("a token cannot be tested for free on a public query", async () => {
+    process.env.REVIEWER_TOKEN = TOKEN;
+    const key = "probing-client";
+    // Ten wrong guesses sent to a read-only endpoint...
+    for (let i = 0; i < 10; i += 1) {
+      await expect(caller(`Bearer guess-${i}`, key).workspace.get()).resolves.toMatchObject({
+        access: { isReviewer: false, lockedOut: false },
+      });
+    }
+    // ...lock the client out exactly as ten failed mutations would,
+    await expect(caller(`Bearer ${TOKEN}`, key).workspace.get()).resolves.toMatchObject({
+      access: { reviewEnabled: true, isReviewer: false, lockedOut: true },
+    });
+    await expect(caller(`Bearer ${TOKEN}`, key).proof.verifyAll()).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS" });
+    // and reading stays open throughout.
+    await expect(caller(undefined, key).ping()).resolves.toMatchObject({ ok: true });
   });
 
   it("only one Lean verification runs at a time", async () => {
