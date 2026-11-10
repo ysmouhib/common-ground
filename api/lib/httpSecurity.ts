@@ -4,15 +4,28 @@
 import type { Context, MiddlewareHandler } from "hono";
 import { RateLimiter } from "./security";
 
+/** How many reverse proxies the operator runs in front of the app (TRUST_PROXY=n); 0 when none is declared. */
+export function trustedProxyHops(env: Record<string, string | undefined> = process.env): number {
+  const hops = Number.parseInt(env.TRUST_PROXY ?? "", 10);
+  return Number.isInteger(hops) && hops >= 1 && hops <= 10 ? hops : 0;
+}
+
 /**
- * Who is calling, for rate limiting. The socket address by default. Forwarding
- * headers are client-controlled unless a trusted proxy sets them, so they are used
- * only when TRUST_PROXY=1 says such a proxy is in front.
+ * Who is calling, for rate limits and the token lockout. The socket address by
+ * default. X-Forwarded-For is written by the caller except for the entries that
+ * the operator's own proxies append, so it is read only when TRUST_PROXY=n declares
+ * n such proxies, and then only the n-th entry from the right: the address the
+ * outermost trusted proxy saw. Everything to its left is the caller's own text.
  */
 export function clientKey(c: Context, env: Record<string, string | undefined> = process.env): string {
-  if (env.TRUST_PROXY === "1") {
-    const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
-    if (forwarded) return forwarded.slice(0, 64);
+  const hops = trustedProxyHops(env);
+  if (hops > 0) {
+    const chain = (c.req.header("x-forwarded-for") ?? "")
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    const entry = chain[chain.length - hops];
+    if (entry) return entry.slice(0, 64);
   }
   const incoming = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming;
   return incoming?.socket?.remoteAddress ?? "unknown";

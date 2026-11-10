@@ -34,7 +34,13 @@ def test_fenced_reply_is_accepted():
 
 @pytest.mark.parametrize("bad, problem", [
     ("I think it follows.", "no JSON object"),
-    (json.dumps({"premises": ["Human(socrates)"], "conclusion": "Mortal(socrates)"}), "expected 2 premise formulas"),
+    (json.dumps({"premises": ["Human(socrates)"], "conclusion": "Mortal(socrates)"}), "expected 2 premise entries"),
+    (json.dumps({"premises": [[], []], "conclusion": "Mortal(socrates)"}), "at least one premise formula"),
+    (json.dumps({"premises": [["Human(socrates)"] * 9, []], "conclusion": "Mortal(socrates)"}), "more than 8 formulas"),
+    (json.dumps({"premises": [{"formula": "Human(socrates)"}, []], "conclusion": "Mortal(socrates)"}),
+     "premise 1 must be a formula or a list of formulas"),
+    (json.dumps({"premises": ["Human(socrates) ∧ " * 150 + "Human(socrates)", []], "conclusion": "Mortal(socrates)"}),
+     "premise 1 is longer than"),
     (json.dumps({"premises": ["∀x (Human(x) → Mortal(x)", "Human(socrates)"], "conclusion": "Mortal(socrates)"}),
      "premise 1 is not a well-formed formula"),
     (json.dumps({"premises": ["Human(x) → Mortal(x)", "Human(socrates)"], "conclusion": "Mortal(socrates)"}),
@@ -50,6 +56,17 @@ def test_bad_reply_is_sent_back_with_the_reason_then_repaired(bad, problem):
     result = formalize.formalize(client, PREMISES, CONCLUSION)
     assert result.attempts == 2
     assert problem in client.calls[1][1]  # the second request quotes what was wrong
+
+
+def test_a_sentence_may_give_several_formulas_or_none_and_stays_traceable():
+    """One entry per sentence keeps every formula attributable to the sentence it came from."""
+    reply = json.dumps({"premises": [["∀x (Human(x) → Mortal(x))", "Human(socrates)"], []],
+                        "conclusion": "Mortal(socrates)"})
+    verdict, result = formalize.answer(Scripted(reply), ["All humans are mortal, and Socrates", "is a human."],
+                                       CONCLUSION)
+    assert verdict.label == "True" and len(result.premises) == 2
+    assert result.by_sentence == [["∀x (Human(x) → Mortal(x))", "Human(socrates)"], []]
+    assert result.premises_text == ["∀x (Human(x) → Mortal(x))", "Human(socrates)"]
 
 
 def test_gives_up_after_the_allowed_attempts_and_keeps_the_history():
@@ -126,7 +143,33 @@ def test_client_sends_a_standard_chat_completion_request(stub):
     request = handler.seen[0]
     assert request["path"] == "/v1/chat/completions" and request["auth"] == "Bearer secret-key"
     assert request["body"]["model"] == "some-model" and request["body"]["temperature"] == 0
+    assert request["body"]["response_format"] == {"type": "json_object"} and request["body"]["max_tokens"] == 2000
     assert [m["role"] for m in request["body"]["messages"]] == ["system", "user"]
+
+
+def test_client_can_leave_out_what_a_provider_rejects_and_says_so_in_its_description(stub):
+    handler, url = stub
+    handler.script = [_ok(GOOD)]
+    client = formalize.OpenAICompatible(url, "some-model", "secret-key", json_mode=False, temperature=None,
+                                        max_tokens=4000)
+    assert client.complete("s", "u")[0] == GOOD
+    body = handler.seen[0]["body"]
+    assert "temperature" not in body and "response_format" not in body and body["max_tokens"] == 4000
+    described = client.describe()
+    assert described["json_mode"] is False and described["temperature"] is None and described["max_tokens"] == 4000
+    assert described["model"] == "some-model" and described["host"].startswith("127.0.0.1:")
+    assert "secret-key" not in str(described)
+
+
+def test_a_reply_without_text_is_an_unusable_answer_not_a_provider_failure(stub):
+    handler, url = stub
+    empty = (200, {"choices": [{"message": {"role": "assistant", "content": None}, "finish_reason": "length"}]})
+    handler.script = [empty, empty, empty, empty]
+    client = formalize.OpenAICompatible(url, "m", "k")
+    assert formalize.direct(client, PREMISES, CONCLUSION)[0] == "Invalid"
+    with pytest.raises(formalize.FormalizationError):
+        formalize.formalize(client, PREMISES, CONCLUSION)
+    assert len(handler.seen) == 4  # one direct question, three formalization attempts
 
 
 def test_client_retries_overload_but_not_a_rejected_request(stub):

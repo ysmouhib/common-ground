@@ -9,8 +9,10 @@ function required(name: string): string {
 }
 
 export const env = {
-  appId: required("APP_ID"),
-  appSecret: required("APP_SECRET"),
+  // Set by the platform the app was scaffolded on. Nothing in the app reads them,
+  // so they are not required: the app must start elsewhere without them.
+  appId: process.env.APP_ID ?? "",
+  appSecret: process.env.APP_SECRET ?? "",
   isProduction: process.env.NODE_ENV === "production",
   databaseUrl: required("DATABASE_URL"),
 };

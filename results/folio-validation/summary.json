@@ -10,14 +10,15 @@
     "z3": "5.3.3",
     "pysat": "1.9.dev21",
     "lean": "4.35.0",
-    "engine_sha256": "bd5747205dbf3833cc48b6005a098022c626ab912ec51a28d914144ce9169d6b"
+    "engine_sha256": "6179ce90cc046e2f159846f1136a475b964dfab7a2866fcf9b20935b3fe72f15"
   },
   "parsing": {
     "examples_parsed": 203,
     "examples_with_a_malformed_formula": 1,
     "examples_needing_bracket_repair": 4,
     "examples_with_unbound_variables_closed": 0,
-    "examples_with_ambiguous_bracketing": 3
+    "examples_with_ambiguous_bracketing": 3,
+    "examples_with_unequal_sentence_and_formula_counts": 10
   },
   "agreement_with_labels": {
     "agree": 195,
@@ -53,10 +54,10 @@
       "Quot.sound",
       "propext"
     ],
-    "seconds": 2.1,
+    "seconds": 1.9,
     "false_statements_offered": 278,
     "false_statements_accepted": 0,
-    "probe_seconds": 11.8
+    "probe_seconds": 13.5
   },
   "agreement_by_reading_convention": {
     "auto/standard": 195,
@@ -66,7 +67,7 @@
     "wide/standard": 195,
     "wide/flat-right": 197
   },
-  "solver_seconds": 3.0,
+  "solver_seconds": 3.8,
   "disagreements": [
     5,
     27,

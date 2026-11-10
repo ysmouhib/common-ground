@@ -1,5 +1,7 @@
 # Common Ground
 
+[![ci](https://github.com/ysmouhib/common-ground/actions/workflows/ci.yml/badge.svg)](https://github.com/ysmouhib/common-ground/actions/workflows/ci.yml)
+
 Does a conclusion follow from the premises someone gave for it? And when two
 positions disagree, where exactly, and what could both still hold?
 
@@ -25,10 +27,15 @@ It has two parts:
 | Lean accepted **0 of 278** false statements offered to it (the opposite of each verdict, both directions for the open ones) | `summary.json` → `lean` | same |
 | Every "does not follow either way" verdict (75) comes with two finite models, re-checked by an evaluator that imports no solver | `engine/commonground/model.py`, `per_example.csv` | same |
 | A second, independent engine (grounding to SAT) agrees on **201 of 201** examples where it is definite | `summary.json` → `second_engine` | same |
+| The path a language model's reply takes (JSON, validation, solver) adds no error of its own: fed the dataset's formulas, it returns the reference verdict on all 203 examples whose formulas parse, and no answer on the malformed one | `engine/tests/test_bench.py` | `FOLIO_DIR=… python -m pytest tests/test_bench.py` |
+| In 10 of the 204 examples the dataset has a different number of sentences and formulas, so "one formula per sentence" cannot be met on them | [`AUDIT.md`](results/folio-validation/AUDIT.md) | same as the first row |
 | In the worked debate the two positions are compatible, and each proof's premise list is exactly the one minimal set that entails its conclusion | `contracts/analysis.generated.ts`, `contracts/analysis.test.ts` | `npm test` |
+| The web app does what this page says for a visitor and for a reviewer: 33 checks over real HTTP, MySQL, Lean and a browser, and 8 more on a deployment with no reviewer token | `e2e/run.mjs` | `npm run e2e` (below) |
 
-The CI workflow re-runs all of it on every push, including the benchmark, and
-fails if a published number changes (`.github/workflows/ci.yml`).
+The CI workflow (`.github/workflows/ci.yml`) re-runs all of it on every pull
+request and on every push to `main`: the test suites, the benchmark (it fails if
+a published number changes), and the end-to-end checks against the container
+image built from the `Dockerfile`. The badge above shows the last run on `main`.
 
 ### What has not been shown
 
@@ -37,8 +44,8 @@ fails if a published number changes (`.github/workflows/ci.yml`).
   it is a ceiling for any formalizer scored against those labels, not a result
   about formalization.
 * **The language-model formalizer (`engine/commonground/formalize.py`) has never
-  called a live model.** It is unit-tested against a scripted client and a local
-  HTTP stub. The row it would fill is empty:
+  called a live model.** It is tested with scripted clients, a local HTTP stub and
+  a replay of the dataset's own formulas. The rows it would fill are empty:
 
   | Mode | Accuracy on FOLIO validation | Accuracy when it answers |
   |---|---|---|
@@ -46,16 +53,30 @@ fails if a published number changes (`.github/workflows/ci.yml`).
   | model formalizes, solver decides | not run | not run |
 
   ```bash
-  export LLM_API_KEY=...   # any OpenAI-compatible endpoint
+  export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions
   python -m commonground folio --mode direct --base-url https://… --model … --out results/direct
   python -m commonground folio --mode llm    --base-url https://… --model … --out results/llm
+  python -m commonground report results/direct results/llm
   ```
+
+  `report` prints both accuracies with 95 % Wilson intervals and an exact McNemar
+  test on the examples where exactly one of the two runs is right. With 204
+  examples an interval reaches 3 to 7 points to each side, so a small difference
+  between two runs is not evidence of anything, and the report shows that in
+  numbers. A run is resumable, names its
+  model and settings in `config.json`, and stops instead of scoring a provider
+  outage as wrong answers. Providers differ: add `--no-json-mode` or
+  `--no-temperature` for one that rejects `response_format=json_object` or any
+  temperature but its default.
+
+  The same three commands run from the repository's Actions tab: workflow
+  `model-benchmark`, "Run workflow". It needs a repository secret `LLM_API_KEY`
+  and uploads every reply and verdict.
 * **Faithfulness is not certified by anything here.** A formula can be provably
   entailed and still not say what the sentence meant.
-* The interface changes in this version were type-checked and built, not viewed in
-  a browser. The default `Dockerfile` has not been built, and the CI workflow has
-  not yet run on GitHub: until it has, "re-run by CI" below describes its
-  configuration, not an observed result.
+* **The container image has been built only by CI**, not on a developer machine.
+  The hosted copy on the original platform has not been redeployed from this
+  version.
 
 ## How a verdict is produced
 
@@ -121,31 +142,61 @@ npm run dev                   # http://localhost:3000
 npm run lint && npm run check && npm test && npm run build
 ```
 
-Without `REVIEWER_TOKEN` the app is read-only. Without a Lean executable
+Without `REVIEWER_TOKEN` the app is read-only, and its first log lines say so. Without a Lean executable
 (`LEAN_BIN`, Lean 4.35.0) it shows the stored certificates and reports live
-verification as unavailable; it never simulates a compiler result. CI runs Lean on
-`proofs/` on every push.
+verification as unavailable; it never simulates a compiler result. A Lean run that
+does not finish in time (`LEAN_TIMEOUT_MS`, 60 s by default) is reported as "no
+verdict" and leaves the stored certificate as it was.
+
+### End-to-end checks
+
+```bash
+npm run build && npm start &                       # the production build, with .env as above
+E2E_REVIEWER_TOKEN=<the same token> npm run e2e    # add E2E_BASE_URL=… if not http://127.0.0.1:3000
+```
+
+They go through the real server, database and a Chromium browser
+(`npx playwright install chromium` once): what an anonymous visitor can and cannot
+do, a dispute suspending exactly the certificates that depend on the premise, a live
+Lean batch, the response headers, the limits, and the page on a phone-sized screen.
+The last check locks the address the checks ran from out for 15 minutes, to read
+the message a locked-out reviewer gets, so restart the server before repeating
+them. `E2E_READ_ONLY=1 npm run e2e` checks a server started without a token.
+
+### Container
+
+```bash
+docker build -t common-ground .
+docker run --env-file .env -p 3000:3000 common-ground
+```
+
+The image is built from source, holds no configuration and runs as an
+unprivileged user. It contains no Lean, so it serves the stored certificates.
 
 ## Security
 
 Reading is public. Review decisions, AI drafts and Lean runs need a reviewer
-token; there are rate limits, a strict Content-Security-Policy, and no secret in
-the default container image. No text from a visitor or a model is ever passed to
-Lean. Details, tests and known limits: [`SECURITY.md`](SECURITY.md).
+token; ten wrong tokens lock a client out; there are rate limits, a strict
+Content-Security-Policy, and no secret in the default container image. No text
+from a visitor or a model is ever passed to Lean. Each control, the test that
+covers it and the known limits: [`SECURITY.md`](SECURITY.md).
 
 ## Repository map
 
 ```
 engine/commonground/   fol.py parser · verdict.py · smt.py (Z3) · ground.py (SAT) · model.py (evaluator)
                        lean.py (certificates) · argmap.py (conflicts) · formalize.py (model, not run) · bench.py
-engine/tests/          104 tests: properties, differential checks between engines, Lean soundness probes
+engine/tests/          122 tests: properties, differential checks between engines, Lean soundness probes,
+                       the model path with scripted clients
 engine/examples/       two debates as formulas
 results/               benchmark output and the annotation audit
 api/                   Hono + tRPC server, access control, Lean runner, AI drafts
-contracts/             Lean sources, certificate hashes, generated analysis
+contracts/             Lean sources, certificate hashes, generated analysis (with api/: 43 tests)
 db/                    schema, worked-example data, stored Lean outputs
 proofs/                the worked example's Lean files
 src/                   React interface
+e2e/                   end-to-end checks against a running build
+.github/workflows/     ci.yml (tests, benchmark, container, end-to-end) · model-benchmark.yml (manual)
 ```
 
 ## How this was built
@@ -153,8 +204,9 @@ src/                   React interface
 * The web app was scaffolded with Kimi's site builder; `api/ai-client.ts` and the
   build setup are that platform's template code.
 * The logic engine, the access-control layer, the tests and this README were
-  written with Claude (Anthropic) in one working session on 9–10 November 2026,
-  following a review of the first version.
+  written with Claude (Anthropic) in working sessions on 9–10 November 2026,
+  following a review of the first version. I directed the work and decide what is
+  claimed here.
 * Every number above was produced by the commands shown, with Python 3.13, Z3
   5.3.3, PySAT 1.9.dev21 and Lean 4.35.0. The CI workflow repeats the run.
 
@@ -174,5 +226,9 @@ src/                   React interface
   is licensed CC BY-SA 4.0. It is downloaded on demand and not redistributed;
   `results/` refers to examples by line number.
 * The five evidence records quote short excerpts from their sources, each linked
-  in the app.
+  in the app. Each excerpt, date and author line was compared with the source
+  page or PDF on 9–10 November 2026 and changed where it differed: one excerpt
+  was not the source's wording, one stops before its sentence ends and is now
+  marked as cut, one date was a day off, and one record's author, publisher and
+  date lines now follow what the report prints.
 * This repository has no licence file yet.

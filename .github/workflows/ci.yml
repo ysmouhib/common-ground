@@ -2,17 +2,26 @@ name: ci
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to the commit their release tag pointed to when this file was
+# written, so a moved tag cannot change what runs here.
+
 jobs:
   web:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -26,13 +35,14 @@ jobs:
 
   engine:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       LEAN_VERSION: 4.35.0
       LEAN_ZIP_SHA256: c8531faaa4a93d5a4dae0c742cbc1bd42a2993594d02f93a9d629ebf299fb2c8
       FOLIO_REVISION: 5d7bb84c7edab3fb358e057d2807f19cf5cf5e2d
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.13"
       - run: pip install -r engine/requirements.txt
@@ -54,3 +64,107 @@ jobs:
       - name: Engine tests, including a re-run of the published benchmark
         working-directory: engine
         run: python -m pytest -q
+
+  # The application as a visitor and a reviewer meet it: the container image built
+  # from the Dockerfile, a real MySQL, real HTTP and a real browser. Then the same
+  # checks against a server that has Lean, and against one with no reviewer token.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LEAN_VERSION: 4.35.0
+      LEAN_ZIP_SHA256: c8531faaa4a93d5a4dae0c742cbc1bd42a2993594d02f93a9d629ebf299fb2c8
+      # Throwaway values for servers that exist only inside this job.
+      DATABASE_URL: mysql://root:ci-only-root-password@127.0.0.1:3306/common_ground
+      E2E_REVIEWER_TOKEN: ci-only-reviewer-token-0123456789
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-only-root-password
+          MYSQL_DATABASE: common_ground
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -pci-only-root-password --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Create the tables
+        run: npx drizzle-kit push --force
+
+      - name: Build the container image from the Dockerfile
+        run: docker build -t common-ground .
+      - name: The image carries no configuration file and does not run as root
+        run: |
+          test "$(docker run --rm common-ground id -u)" != "0"
+          docker run --rm common-ground sh -c 'test ! -e /app/.env && test ! -d /app/node_modules && ls -A /app'
+      - name: Start the container the documented way, from the environment template
+        run: |
+          sed -e "s|^DATABASE_URL=.*|DATABASE_URL=$DATABASE_URL|" \
+              -e "s|^REVIEWER_TOKEN=.*|REVIEWER_TOKEN=$E2E_REVIEWER_TOKEN|" .env.example > "$RUNNER_TEMP/container.env"
+          docker run -d --name app --network host --env-file "$RUNNER_TEMP/container.env" common-ground
+          for attempt in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3000/api/trpc/ping > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          docker logs app
+          exit 1
+      - name: Install the browser the checks drive
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end checks against the container (it has no Lean)
+        run: npm run e2e
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_EXPECT_LEAN: "0"
+      - name: Container log
+        if: always()
+        run: |
+          docker logs app 2>&1 | tail -n 100 || true
+          docker rm -f app || true
+
+      - name: Install Lean (pinned release, checksum verified)
+        run: |
+          curl -sSfL -o lean.zip "https://github.com/leanprover/lean4/releases/download/v${LEAN_VERSION}/lean-${LEAN_VERSION}-linux.zip"
+          echo "${LEAN_ZIP_SHA256}  lean.zip" | sha256sum -c -
+          unzip -q lean.zip -d "$RUNNER_TEMP"
+          echo "LEAN_BIN=$RUNNER_TEMP/lean-${LEAN_VERSION}-linux/bin/lean" >> "$GITHUB_ENV"
+      - name: Start a server with Lean, and one with no usable reviewer token
+        env:
+          # What a container gets from a template line with a trailing comment: it must not become a token.
+          UNUSABLE_TOKEN: "           # At least 24 characters. Treat it like a password."
+        run: |
+          "$LEAN_BIN" proofs/CommonGround.lean  # also reads the toolchain from disk once, so the first live run is not the slow one
+          npm run build
+          NODE_ENV=production PORT=3001 REVIEWER_TOKEN="$E2E_REVIEWER_TOKEN" nohup node dist/boot.js > server-lean.log 2>&1 &
+          env -u LEAN_BIN NODE_ENV=production PORT=3002 REVIEWER_TOKEN="$UNUSABLE_TOKEN" nohup node dist/boot.js > server-read-only.log 2>&1 &
+          for port in 3001 3002; do
+            for attempt in $(seq 1 30); do
+              if curl -sf "http://127.0.0.1:$port/api/trpc/ping" > /dev/null; then continue 2; fi
+              sleep 1
+            done
+            cat server-*.log
+            exit 1
+          done
+      - name: End-to-end checks with live Lean verification
+        run: npm run e2e
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3001
+          E2E_EXPECT_LEAN: "1"
+      - name: End-to-end checks of the read-only deployment
+        run: |
+          grep -q "read-only: REVIEWER_TOKEN is set but cannot be used" server-read-only.log
+          npm run e2e
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3002
+          E2E_READ_ONLY: "1"
+      - name: Server logs
+        if: always()
+        run: tail -n 60 server-*.log || true

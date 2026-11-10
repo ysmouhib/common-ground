@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Self-contained image: built from source, no secret inside, runs as an unprivileged user.
 # Configuration is given at run time:  docker run --env-file .env -p 3000:3000 common-ground
-# (not yet built in CI: check it once on your machine before relying on it)
+# CI builds this file and runs the end-to-end checks against the result (.github/workflows/ci.yml).
 
 FROM node:22-alpine AS build
 WORKDIR /app

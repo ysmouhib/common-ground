@@ -10,7 +10,11 @@ export const workspaceRouter = createRouter({
   get: publicQuery.query(async ({ ctx }) => ({
     ...(await getWorkspace()),
     // Lets the interface show review controls only to someone who can use them.
-    access: { reviewEnabled: ctx.access.reviewEnabled, isReviewer: ctx.access.isReviewer },
+    access: {
+      reviewEnabled: ctx.access.reviewEnabled,
+      isReviewer: ctx.access.isReviewer,
+      lockedOut: ctx.access.lockedOut,
+    },
   })),
   setStatementStatus: reviewerMutation
     .input(

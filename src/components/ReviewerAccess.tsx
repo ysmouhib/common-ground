@@ -5,8 +5,16 @@ import { trpc } from "@/providers/trpc";
 import { setReviewerToken } from "@/lib/reviewer";
 
 interface Props {
-  access: { reviewEnabled: boolean; isReviewer: boolean } | undefined;
+  access: { reviewEnabled: boolean; isReviewer: boolean; lockedOut: boolean } | undefined;
 }
+
+type Problem = "wrong" | "locked" | "unreachable" | null;
+
+const MESSAGES: Record<Exclude<Problem, null>, string> = {
+  wrong: "That token was not accepted.",
+  locked: "Too many wrong tokens were sent from this network. No token is accepted for up to 15 minutes.",
+  unreachable: "The server could not be reached. The token was not checked.",
+};
 
 /**
  * Review decisions, Lean runs and AI drafts need the deployment's reviewer token.
@@ -15,7 +23,8 @@ interface Props {
 export function ReviewerAccess({ access }: Props) {
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");
-  const [rejected, setRejected] = useState(false);
+  const [problem, setProblem] = useState<Problem>(null);
+  const [checking, setChecking] = useState(false);
   const utils = trpc.useUtils();
 
   if (!access) return null;
@@ -27,19 +36,31 @@ export function ReviewerAccess({ access }: Props) {
     );
   }
 
+  // One request per attempt: the server counts every wrong token, so the answer to
+  // this request is the check. It also replaces the cached workspace, which is what
+  // the rest of the page reads its access from.
   async function apply(next: string) {
+    setChecking(true);
     setReviewerToken(next);
-    const fresh = await utils.workspace.get.fetch(undefined, { staleTime: 0 });
-    await utils.workspace.get.invalidate();
-    if (next && !fresh.access.isReviewer) {
+    try {
+      const fresh = await utils.workspace.get.fetch(undefined, { staleTime: 0 });
+      if (next && !fresh.access.isReviewer) {
+        setReviewerToken("");
+        setProblem(fresh.access.lockedOut ? "locked" : "wrong");
+        return;
+      }
+      setProblem(null);
+      setToken("");
+      setOpen(false);
+    } catch {
       setReviewerToken("");
-      setRejected(true);
-      return;
+      setProblem("unreachable");
+    } finally {
+      setChecking(false);
     }
-    setRejected(false);
-    setToken("");
-    setOpen(false);
   }
+
+  const shown: Problem = problem ?? (access.lockedOut ? "locked" : null);
 
   return (
     <>
@@ -71,16 +92,19 @@ export function ReviewerAccess({ access }: Props) {
               type="password"
               autoComplete="off"
               value={token}
-              onChange={(event) => setToken(event.target.value)}
+              onChange={(event) => {
+                setToken(event.target.value);
+                setProblem(null);
+              }}
               className="mt-2 w-full border border-[#aeb8c9] bg-[#f8f8f8] p-3 text-base text-foreground"
             />
-            {rejected && <p role="alert" className="mt-2 text-sm text-[#8a2d21]">That token was not accepted.</p>}
+            {shown && <p role="alert" className="mt-2 text-sm text-[#8a2d21]">{MESSAGES[shown]}</p>}
             <button
               type="submit"
-              disabled={token.trim().length === 0}
+              disabled={checking || token.trim().length === 0}
               className="transition-ui mt-4 inline-flex min-h-11 items-center justify-center bg-primary px-4 font-semibold text-primary-foreground hover:bg-[#173f92] disabled:opacity-45"
             >
-              Unlock review
+              {checking ? "Checking…" : "Unlock review"}
             </button>
           </form>
         </DialogContent>

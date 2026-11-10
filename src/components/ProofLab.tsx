@@ -22,7 +22,7 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
   const verify = trpc.proof.verify.useMutation({
     onSuccess: async (result) => {
       setRunMessage(
-        !result.runtimeAvailable
+        !result.runtimeAvailable || result.timedOut
           ? result.output
           : result.expectedOutcome
             ? result.accepted
@@ -37,13 +37,16 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
   const verifyAll = trpc.proof.verifyAll.useMutation({
     onSuccess: async (results) => {
       const available = results.some((result) => result.runtimeAvailable);
+      const unfinished = results.filter((result) => result.timedOut).length;
       const allExpected = available && results.length === 5 && results.every((result) => result.expectedOutcome);
       setRunMessage(
         allExpected
           ? "Verification batch finished: four valid certificates were accepted and the invalid inference was rejected."
-          : available
-            ? "Unexpected verifier outcome in the batch. Inspect each certificate’s diagnostics before trusting the result."
-            : "No live Lean runtime is available. Stored build-time certificates were left unchanged.",
+          : unfinished > 0
+            ? `Lean did not finish ${unfinished} of ${results.length} runs in time, so those have no verdict and their stored certificates are unchanged. The first batch after a restart is the slowest: run it again.`
+            : available
+              ? "Unexpected verifier outcome in the batch. Inspect each certificate’s diagnostics before trusting the result."
+              : "No live Lean runtime is available. Stored build-time certificates were left unchanged.",
       );
       await utils.workspace.get.invalidate();
     },
@@ -130,7 +133,7 @@ export function ProofLab({ workspace, selectedProofId, onSelectProof, onOpenStat
           </div>
 
           {runMessage && (
-            <p role="status" className={`mt-5 border p-4 text-sm ${runMessage.includes("Unexpected") || runMessage.includes("unavailable") ? "border-[#d7ae4a] bg-[#fff0c2] text-[#694b00]" : "border-[#9cadd7] bg-[#eaf0ff] text-[#173f92]"}`}>
+            <p role="status" className={`mt-5 border p-4 text-sm ${runMessage.includes("Unexpected") || runMessage.includes("unavailable") || runMessage.includes("did not finish") ? "border-[#d7ae4a] bg-[#fff0c2] text-[#694b00]" : "border-[#9cadd7] bg-[#eaf0ff] text-[#173f92]"}`}>
               {runMessage}
             </p>
           )}
