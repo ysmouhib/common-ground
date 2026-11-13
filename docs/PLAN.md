@@ -1,117 +1,285 @@
 # Plan and state for Common Ground v2
 
-This file carries the state between sessions (CLAUDE.md, "Session economy"). The
-phases are defined in [`v2-build-brief.md`](v2-build-brief.md) §8 and are not repeated
-here.
+This file carries the state between sessions (AGENTS.md, Task protocol) and is
+the schedule of record. The phases are defined in
+[`v2-build-brief.md`](v2-build-brief.md) §8 and are not repeated here. The task
+queue below decomposes each phase into tasks sized to one sitting (1–3 h, max 2
+files, at most 1 unclear decision each). Estimated total: ~45 sessions.
 
-## State on 13 November 2026
+Every task is subject to the Definition of Done in `AGENTS.md`: pytest exits 0
+on the full suite, the e2e checks pass, changes committed with a conventional
+message, README evidence tables updated if a shown number changed. Where a
+command cannot run in the current environment, record "not run" and the reason
+— never a fabricated result.
+
+## Current state (13 November 2026, first session after the handoff)
 
 | Phase | Status |
 |---|---|
-| 0 Baseline | **Not recorded.** This file did not exist when Phase R opened. No test suite was run in the Phase R session, so nothing here confirms that the README numbers reproduce, and the PR-sized mapping of phases 1 to 9 that Phase 0 asks for is not written. |
-| R Scientific grounding | **In progress: session 1 of 4 done.** |
-| 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8). |
+| 0 Baseline | In progress. Engine suite green on this machine: **117 passed, 5 skipped** (skips are the Lean-marked tests; no Lean binary here), exit 0. `npm test` / e2e: **not run** — no node/npm, no docker in this environment. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
+| R Scientific grounding | Session 1 of 4 done (details below). Sessions 2–4 and the `THEORY.md` review are **owner tasks**: research is off-limits to the worker (AGENTS.md, Evidence discipline). |
+| 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8; gate CGR-5). |
 
-Nothing is committed. `CLAUDE.md` and `docs/` are untracked in git.
+Git: `main` is at `7b8736d` ("prepare the architecture for v2"); the handoff from
+the previous agent was already committed, the tree was clean at session start.
+`CLAUDE.md` and `docs/` are tracked. Canonical instructions now live in
+`AGENTS.md`; `CLAUDE.md` points there.
 
-## Phase R
+Machine notes for reproducing runs here: Python 3.12.10 with `pytest 9.2.0`,
+`z3-solver 5.4.1`, `python-sat`, `hypothesis` installed `--user`; no node/npm,
+no docker, no Lean (`LEAN_BIN` unset, lean-marked tests skip).
 
-### Rules set by the owner (13 November 2026)
+## Task queue
 
-1. Act as senior researcher, not as coder. No Phase 1 code in a Phase R session.
-2. Verify every pack entry before citing it. Never invent a citation. What cannot be
-   verified is tagged `[unverified]` and stays out of `THEORY.md`.
-3. Answer RQ1 to RQ6 in writing, each grounded only in sources read or verified in the
-   session that writes the answer.
-4. Critique the pack: mark what is wrong, weak or superseded, and add what is missing
-   (pack §I), above all the 2025–2026 search for any system that combines enthymeme
-   reconstruction with formal verification over whole corpora.
-5. Produce `THEORY.md`: definitions, H1 to H9 with citations, limits, open problems.
-6. One phase per session; update this file as you go.
+### Phase 0 — Baseline
 
-### Files
+- [ ] **CG0-1** — Run the engine test suite and record the result.
+  Files: `docs/PLAN.md` (record only). Deps: none.
+  Done-when: `python -m pytest` in `engine/` executed; exit code and counts
+  recorded verbatim in the session log; exit 0 expected.
+- [ ] **CG0-2** — Run the app unit tests, typecheck and lint; record.
+  Files: `docs/PLAN.md`. Deps: node/npm available.
+  Done-when: `npm test`, `npm run check`, `npm run lint` results recorded, or
+  "not run" with the reason.
+- [ ] **CG0-3** — Run the e2e suite against a production build, with and without
+  `REVIEWER_TOKEN` (33 + 8 checks). Files: `docs/PLAN.md`. Deps: CG0-2, MySQL.
+  Done-when: check counts recorded, or "not run" with the reason.
+- [ ] **CG0-4** — Reproduce the README "What has been shown" numbers (FOLIO
+  validation run; contracts via `npm test`). Files: `docs/PLAN.md`.
+  Deps: CG0-1..CG0-3. Done-when: every README row has a recorded outcome
+  matching the published number, or a recorded discrepancy (→ `docs/BACKLOG.md`,
+  escalate if it survives 2 fix attempts).
+- [x] **CG0-5** — Write this task queue (the PR-sized mapping of phases 0–9).
+  Files: `docs/PLAN.md`. Done-when: committed. Done in the install session.
 
-| File | Role | State |
-|---|---|---|
-| `docs/research/sources.md` | The owner's source pack. Corrected in place when an entry is verified; log in its §K. | B1, B2, B5, C2 verified |
-| `docs/research/RESEARCH.md` | Verified annotated bibliography, answers to the research questions, critique of the pack, proposed amendments. | RQ1, RQ3 drafted |
-| `docs/research/THEORY.md` | The theory document that code and interface will cite. | Draft: definitions, F1–F5, H2–H4 |
+### Phase R — Scientific grounding (owner-only; the worker must not verify citations, edit `docs/research/sources.md`, or write `THEORY.md`)
 
-### Sessions (pack §J)
+- [x] **CGR-1** — Session 1, formal core: Lin 2001, Hobbs et al. 1993, Liffiton &
+  Sakallah 2008 read and verified; RQ1/RQ3 drafted; 19 supporting sources
+  checked. Done in the Phase R session.
+- [ ] **CGR-2** — Session 2, reconstruction precedent (owner): novelty search
+  2025–2026 (ArgMining, COMMA, ACL, EMNLP, AAAI); A3, A4, A1; answer RQ2;
+  terminology decision; verify `[classic, verify]` entries in Themes A, B, C
+  (A1, A2, B3, B4, C1 incl. Schlobach & Cornet and Peñaloza, C3); carried
+  items: Ng & Mooney 1990, Charniak & Shimony 1994, Doherty et al. 2001 page
+  range, Reiter & de Kleer 1987. Files: `docs/research/RESEARCH.md`. Deps: none.
+  Done-when: owner records the session in this file.
+- [ ] **CGR-3** — Session 3, psychology (owner): D1, E1, E3, E5; RQ4, RQ5;
+  draft H6, H8; coverage measure; load vs. centrality; plausibility elicitation
+  protocol. Files: `docs/research/RESEARCH.md`, `docs/research/THEORY.md`.
+  Deps: CGR-2. Done-when: owner records the session.
+- [ ] **CGR-4** — Session 4, evaluation (owner): A6, D2, D3, G3; RQ6; Phase 7
+  annotation protocol; finish `THEORY.md` within two pages; list every
+  remaining `[unverified]`. Deps: CGR-3. Done-when: owner records the session.
+- [ ] **CGR-5** — Owner review of the finished `THEORY.md`. Gates CG3-1.
+  Deps: CGR-4. Done-when: owner approval recorded here.
 
-- [x] **Session 1, formal core.** Lin 2001, Hobbs et al. 1993 and Liffiton & Sakallah
-  2008 read and verified; RQ1 and RQ3 drafted; 19 supporting sources checked and one
-  left `[unverified]`; seven amendments to brief §4 proposed.
-- [ ] **Session 2, reconstruction precedent.** In this order:
-  1. The novelty search (pack §I.3): ArgMining, COMMA, ACL, EMNLP, AAAI, 2025–2026.
-  2. A3 (Sviridova et al.), then A4, then A1 skim. Answer RQ2.
-  3. Decide the terminology: axiom, warrant or implicit premise (brief §3, question 1).
-  4. Verify every `[classic, verify]` entry in Themes A, B and C: A1, A2, B3, B4, C1
-     (with Schlobach & Cornet and Peñaloza), C3.
-  5. Carried from session 1: read Ng & Mooney 1990 and Charniak & Shimony 1994
-     themselves; settle the page range of Doherty et al. 2001; verify Reiter & de Kleer
-     1987.
-- [ ] **Session 3, psychology.** D1, E1, E3, E5. Answer RQ4 and RQ5. Draft H6 and H8.
-  Also: the coverage measure for records that admit no axiom system (starting point:
-  `RESEARCH.md` §2.4, existence); whether load is a defensible reading of Converse's
-  centrality (brief §3, question 3); whether a model's plausibility estimate can be
-  treated as a probability, and the elicitation protocol (pack §I.5).
-- [ ] **Session 4, evaluation.** A6, D2, D3, G3. Answer RQ6. Define the Phase 7
-  annotation protocol. Finish `THEORY.md` within two pages. List every remaining
-  `[unverified]`. Then: ESCALATE for the final review of `THEORY.md` (CLAUDE.md,
-  escalation item 6).
+### Phase 1 — The formalizer goes live
 
-### The brief's six questions and where they are answered
+- [ ] **CG1-1** — Run `folio --mode direct` and `--mode llm` against the
+  configured endpoint; publish both README rows with 95% Wilson intervals and
+  the exact McNemar test via `python -m commonground report`.
+  Files: `README.md`, `results/direct/`, `results/llm/`. Deps: LLM endpoint
+  credentials supplied by the owner. Done-when: README rows filled from actual
+  runs (or "not run" recorded); pytest exits 0.
+- [ ] **CG1-2** — Confirm `.github/workflows/model-benchmark.yml` matches the
+  recorded run (config.json provenance). Files:
+  `.github/workflows/model-benchmark.yml`, `README.md`. Deps: CG1-1.
+  Done-when: workflow validated; CI green or "not run" locally with reason.
 
-| Brief §3 question | Answered in |
-|---|---|
-| 1. Terminology decision | Session 2 |
-| 2. Is weighted parsimony the accepted formalization? | `RESEARCH.md` §3 (draft): an accepted form, among four; the values are not grounded |
-| 3. Is load a defensible operationalization of centrality? | Session 3 |
-| 4. Closest prior art and our differentiation | Session 2 |
-| 5. Failure modes of model-based implicit-premise extraction | Sessions 2 to 4 |
-| 6. Evaluation designs of comparable systems | Session 4 |
+### Phase 2 — Text to statements
 
-### Decisions waiting for the owner
+- [ ] **CG2-1** — Extraction core: verbatim quotes and spans, schema
+  validation, resumable, provider-agnostic client reusing the `formalize.py`
+  harness patterns (config provenance, outage ≠ wrong answer,
+  `--no-json-mode` / `--no-temperature`). Files: `engine/commonground/extract.py`,
+  `engine/tests/test_extract.py`. Deps: none. Done-when: pytest exits 0.
+- [ ] **CG2-2** — Property tests: every span exists in the source text,
+  atomicity heuristics, determinism at temperature 0, scripted-client outage
+  handling. Files: `engine/tests/test_extract.py`. Deps: CG2-1.
+  Done-when: pytest exits 0.
+- [ ] **CG2-3** — CLI wiring (`python -m commonground extract …`) and README
+  evidence row. Files: `engine/commonground/__main__.py`, `README.md`.
+  Deps: CG2-2. Done-when: pytest exits 0; README row with reproduce command or
+  "not run".
 
-**Owner's instruction, 13 November 2026 (after Session 1):** "start next phase
-(following the upgrade decisions mentioned here)". Read as: continue with Session 2 and
-proceed on the proposed amendments A1 to A7. They are adopted for drafting and remain
-subject to the owner's review of the finished `THEORY.md`. Items 1 and 3 below were not
-answered explicitly and keep their defaults: files stay under `docs/research/`, and
-Phase 0 stays unrecorded.
+### Phase 3 — The abduction engine (blocked on CGR-5; [PLAN] on the design)
 
-1. **Location of the two documents.** The brief and CLAUDE.md say `docs/RESEARCH.md`
-   and `docs/THEORY.md`; the Phase R instruction said `docs/research/THEORY.md`. Both
-   files are under `docs/research/` for now. Moving them is one `git mv` each.
-2. **Amendments A1 to A7 to brief §4** (`RESEARCH.md` §5). The ones that change what
-   Phase 3 builds: A1 (minimality means no sufficient proper subset), A3 (size counted
-   on a normal form, because a single conjunction of all claims otherwise wins), A4 (a
-   floor or a logarithmic charge on plausibility, because five claims replaced buys any
-   axiom at λ = 0.3), A5 (report the hull and λ-intervals instead of one λ).
-3. **Phase 0.** Whether to run and record the baseline before Phase R continues. The
-   research does not depend on it; Phase 1 does.
+- [ ] **CG3-1 [PLAN]** — Design doc first: candidate generation, sufficiency /
+  consistency / negation checking, cost function, cost-minimal search,
+  certificates, negative controls; soundness and termination notes; cites
+  `THEORY.md`. Files: `docs/design/abduction.md`. Deps: CGR-5.
+  Done-when: step-by-step plan produced in-session; owner approves before code.
+- [ ] **CG3-2** — LLM-independent candidate-generation interface in
+  `abduce.py` (scripted clients for tests). Files:
+  `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-1.
+  Done-when: pytest exits 0.
+- [ ] **CG3-3 [PLAN: Lean integration edge cases]** — Sufficiency / consistency
+  / negation checking via the existing solvers (`smt.py`, `ground.py`,
+  `model.py`) plus Lean certificates for sufficiency proofs. Files:
+  `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-2.
+  Done-when: pytest exits 0; lean-marked tests pass with `LEAN_BIN` or skip
+  with the reason recorded.
+- [ ] **CG3-4** — Cost-minimal search over certified subsets
+  (branch-and-bound), cross-checked against brute force in tests, mirroring how
+  `argmap.py` is tested. Files: `engine/commonground/abduce.py`,
+  `engine/tests/test_abduce.py`. Deps: CG3-3. Done-when: pytest exits 0.
+- [ ] **CG3-5** — Negative controls: for a certified axiom set, Lean must
+  reject the negations; adversarial self-checks (a claim not entailed, a
+  smuggled contradiction, a redundant axiom, a violated rejection). Files:
+  `engine/tests/test_abduce.py`, `engine/commonground/abduce.py`. Deps: CG3-4.
+  Done-when: pytest exits 0.
 
-### Pack entries that look wrong at a glance
+### Phase 4 — Load analysis and per-camp reports
 
-Noticed while reading, **not checked**. They say where to look first; do not copy them
-as corrections.
+- [ ] **CG4-1** — Load metric: which axioms are load-bearing, computed from
+  `argmap.py` minimal premise sets over each camp's certified system. Files:
+  `engine/commonground/load.py`, `engine/tests/test_load.py`. Deps: CG3-5.
+  Done-when: pytest exits 0.
+- [ ] **CG4-2** — Per-camp report (CLI): statements → axioms → load ranking →
+  certificate statuses, human-readable and JSON. Files:
+  `engine/commonground/__main__.py`, one engine test file. Deps: CG4-1.
+  Done-when: pytest exits 0; sample output recorded in the session log.
 
-- B3: the second author's initial.
-- B4: the volume and the year do not seem to belong together.
-- F2: the journal and pages may belong to a different paper by the same author.
-- G1 and G2: the pack itself asks for the venue and the canonical citation.
+### Phase 5 — Cross-camp analysis: common ground, reduced disagreement ([PLAN] on the algorithm)
 
-### How verification was done on this machine
+- [ ] **CG5-1 [PLAN]** — Design doc: common ground (claims entailed by both
+  camps' systems) and reduced disagreement as MUS/MCS over the union of the
+  camps' axiom systems (sources pack C1–C3); fault-line output format. Files:
+  `docs/design/cross-camp.md`. Deps: CG4-2, CGR-5. Done-when: owner-approved
+  plan before code.
+- [ ] **CG5-2** — Common-ground computation with solver checks. Files:
+  `engine/commonground/crosscamp.py`, `engine/tests/test_crosscamp.py`.
+  Deps: CG5-1. Done-when: pytest exits 0.
+- [ ] **CG5-3** — Reduced disagreement (minimal differing axiom subsets via
+  MARCO in `argmap.py`) + CLI report. Files: `engine/commonground/crosscamp.py`,
+  `engine/tests/test_crosscamp.py`. Deps: CG5-2. Done-when: pytest exits 0.
 
-- Crossref's REST API answers plain `curl` requests with a generic user agent and gives
-  volume, issue and pages. DBLP, ScienceDirect and DTIC refuse automated requests.
-- For older *Artificial Intelligence* papers the authors' pages often hold a PostScript
-  preprint. There is no Ghostscript here; dvips output can be turned into readable text
-  by a short script that tracks the font of each string.
-- `pdftotext` is on the path and works for PDFs with ordinary fonts. PDF pages cannot
-  be rendered as images here.
+### Phase 6 — Web app
 
-## To resume
+- [ ] **CG6-1** — API routers (tRPC) for extract / abduce / cross-camp with
+  the existing access control: public reads, reviewer token for mutations,
+  schema validation, timeouts, provider outage never scored as a wrong answer.
+  Files: one `api/` router file, one contracts test. Deps: CG3-5, CG5-3.
+  Done-when: `npm test` and e2e pass.
+- [ ] **CG6-2** — Statement and camp input UI (paste texts, assign camps).
+  Files: two `src/` files. Deps: CG6-1. Done-when: `npm test` and e2e pass.
+- [ ] **CG6-3** — Axiom review queue UI (proposed axioms with evidence quotes,
+  approve/reject; no LLM output reaches Lean without human approval). Files:
+  two `src/` files. Deps: CG6-2. Done-when: `npm test` and e2e pass.
+- [ ] **CG6-4** — Camp comparison view: provable common ground and exact fault
+  lines. Files: two `src/` files. Deps: CG6-3. Done-when: `npm test` and e2e
+  pass.
+- [ ] **CG6-5** — Extend the e2e suite (currently 33 + 8 checks) for the new
+  flow; update README check counts. Files: `e2e/run.mjs`, `README.md`.
+  Deps: CG6-4. Done-when: e2e passes; README updated.
 
-Read `CLAUDE.md`, this file, and `RESEARCH.md` §5 and §6. Then start Session 2, item 1.
+### Phase 7 — Golden dataset (Swiss CO2-law votation, 13 June 2021, vote 644)
+
+- [ ] **CG7-1** — Corpus skeleton: source list, camp definitions, first
+  hand-worked statement lists. Files: `examples/co2-2021/README.md`,
+  `examples/co2-2021/statements.json`. Deps: campaign materials from
+  swissvotes.ch (owner supplies if web access is unavailable). Done-when:
+  committed; pytest exits 0.
+- [ ] **CG7-2** — Hand-worked golden reconstruction: formalizations, candidate
+  axioms, expected load ranking. Files: `examples/co2-2021/golden.json`,
+  `examples/co2-2021/README.md`. Deps: CG7-1. Done-when: committed and
+  reviewable.
+- [ ] **CG7-3** — Pipeline reproduces the golden reconstruction; every
+  divergence becomes an `AUDIT.md` error-taxonomy entry. Files:
+  `engine/tests/test_golden.py`, `AUDIT.md`. Deps: CG7-2, CG3-5.
+  Done-when: pytest exits 0.
+- [ ] **CG7-4** — CLI runs both bundled examples (plastic-bag regression +
+  CO2) headless, end to end. Files: `engine/commonground/__main__.py`,
+  `README.md`. Deps: CG7-3, CG5-3. Done-when: runs recorded; pytest exits 0.
+
+### Phase 8 — Evaluation
+
+- [ ] **CG8-1** — Abduction benchmark on FOLIO: hide premises, check whether
+  the system recovers *sufficient* premises; reuse the Wilson-interval /
+  McNemar harness. Files: `engine/commonground/folio.py`,
+  `engine/tests/test_folio.py`. Deps: CG3-5. Done-when: pytest exits 0;
+  numbers recorded or "not run".
+- [ ] **CG8-2** — CO2 holdout test: remove published statements of a camp,
+  extract axioms from the rest, check the extracted system still derives the
+  withheld statements. Files: `engine/tests/test_golden.py`, `results/`.
+  Deps: CG7-3. Done-when: pytest exits 0; README row added.
+- [ ] **CG8-3** — Publish all evaluation numbers README-style with reproduce
+  commands; update "What has not been shown". Files: `README.md`. Deps:
+  CG8-1, CG8-2. Done-when: README updated; CI number guard green.
+
+### Phase 9 — Release readiness
+
+- [ ] **CG9-1** — MIT `LICENSE`. Files: `LICENSE`. Done-when: committed.
+- [ ] **CG9-2** — `CONTRIBUTING.md` (dev setup, test commands, PR checklist,
+  reproducible-numbers rule). Files: `CONTRIBUTING.md`. Done-when: committed.
+- [ ] **CG9-3** — `CODE_OF_CONDUCT.md` (Contributor Covenant) + PR template.
+  Files: `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
+  Done-when: committed.
+- [ ] **CG9-4** — Issue templates: bug report + feature request. Files:
+  `.github/ISSUE_TEMPLATE/bug.md`, `.github/ISSUE_TEMPLATE/feature.md`.
+  Done-when: committed.
+- [ ] **CG9-5** — Issue template: research question. Files:
+  `.github/ISSUE_TEMPLATE/research.md`. Done-when: committed.
+- [ ] **CG9-6** — `CHANGELOG.md` (Keep a Changelog) and tag `v2.0.0`. Files:
+  `CHANGELOG.md`. Done-when: committed; tag created (push only with owner
+  approval).
+- [ ] **CG9-7** — README release pass: badges (CI, MIT, Python/Node versions),
+  quickstart, demo media, links to `THEORY.md` / `RESEARCH.md`. Files:
+  `README.md`. Deps: CG9-1..CG9-6. Done-when: quickstart verified on a clean
+  clone or "not run" recorded; every badge and claim true.
+- [ ] **CG9-8** — Engine packaging for PyPI; name decision recorded here.
+  Files: `engine/pyproject.toml`, `docs/PLAN.md`. Done-when: build works or
+  "not run" recorded.
+- [ ] **CG9-9** — CI publishes the container to GHCR. Files:
+  `.github/workflows/ci.yml` (or a new release workflow). Done-when: workflow
+  validated; green or "not run" locally.
+- [ ] **CG9-10** — `SECURITY.md` refresh + `examples/` index. Files:
+  `SECURITY.md`, `examples/README.md`. Done-when: committed.
+- [ ] **CG9-11** — Final acceptance: a person outside the project clones on a
+  clean machine and completes an analysis in under 10 minutes following only
+  the README. Files: `docs/PLAN.md` (record). Deps: all above. Done-when:
+  outcome recorded.
+
+## Phase R detail carried from the previous sessions (for the owner's research tool)
+
+Rules set by the owner (13 November 2026): act as senior researcher, not coder;
+verify every pack entry before citing it, never invent a citation, tag what
+cannot be verified `[unverified]`; answer RQ1–RQ6 each grounded only in sources
+read or verified in the session that writes the answer; critique the pack
+(pack §I), above all the 2025–2026 search for any system combining enthymeme
+reconstruction with formal verification over whole corpora; produce
+`THEORY.md`; one phase per session.
+
+Files: `docs/research/sources.md` (the owner's pack; B1, B2, B5, C2 verified,
+log in its §K), `docs/research/RESEARCH.md` (RQ1, RQ3 drafted; amendments A1–A7
+to brief §4 proposed, adopted for drafting, subject to owner review),
+`docs/research/THEORY.md` (draft: definitions, F1–F5, H2–H4).
+
+Decisions waiting for the owner: (1) location of RESEARCH.md/THEORY.md (both
+under `docs/research/` for now; moving is one `git mv` each); (2) amendments
+A1–A7 to brief §4 — A1 minimality = no sufficient proper subset, A3 size
+counted on a normal form, A4 floor/logarithmic charge on plausibility, A5
+report the hull and λ-intervals; (3) Phase 0 — whether to run and record the
+baseline before Phase R continues (partly answered by CG0-1's recorded run).
+
+Pack entries that looked wrong at a glance (not checked; do not copy as
+corrections): B3 second author's initial; B4 volume/year mismatch; F2 journal
+and pages; G1/G2 venue and canonical citation.
+
+How verification was done on this machine: Crossref REST API answers plain
+`curl` with a generic user agent; DBLP, ScienceDirect, DTIC refuse automated
+requests; authors' pages hold PostScript preprints for older *AI* papers (no
+Ghostscript here; dvips output readable via a font-tracking script); `pdftotext`
+works for ordinary PDFs.
+
+To resume (owner's research sessions): read `AGENTS.md`, this file,
+`RESEARCH.md` §5–§6, then start CGR-2 item 1.
+
+## Session log
+
+- 2026-11-13 — install session (PART 1 of the handoff prompt): created
+  `AGENTS.md` (canonical rules), pointed `CLAUDE.md` at it, created
+  `docs/BACKLOG.md`, confirmed the tree was clean (handoff already committed as
+  `7b8736d`), restructured this file into the task queue (CG0-5 done). Engine
+  suite run once: 117 passed, 5 skipped (Lean), exit 0. Next task: CG0-1.

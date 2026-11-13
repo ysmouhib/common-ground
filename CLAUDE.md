@@ -33,3 +33,4 @@
   outage shown as outage.
 - No telemetry, analytics, or tracking. Local-first privacy: document
   exactly what leaves the machine (only calls to the configured LLM endpoint).
+Canonical instructions live in AGENTS.md.
