@@ -33,7 +33,7 @@ no docker, no Lean (`LEAN_BIN` unset, lean-marked tests skip).
 
 ### Phase 0 — Baseline
 
-- [ ] **CG0-1** — Run the engine test suite and record the result.
+- [x] **CG0-1** — Run the engine test suite and record the result.
   Files: `docs/PLAN.md` (record only). Deps: none.
   Done-when: `python -m pytest` in `engine/` executed; exit code and counts
   recorded verbatim in the session log; exit 0 expected.
@@ -283,3 +283,9 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   `docs/BACKLOG.md`, confirmed the tree was clean (handoff already committed as
   `7b8736d`), restructured this file into the task queue (CG0-5 done). Engine
   suite run once: 117 passed, 5 skipped (Lean), exit 0. Next task: CG0-1.
+- 2026-11-13 — CG0-1: engine suite run on this machine: `python -m pytest` in
+  `engine/` exits 0 — 117 passed, 5 skipped (3 Lean, no LEAN_BIN; 2 FOLIO_DIR,
+  no dataset clone), 80.66 s. `npm test` and e2e: not run, no node/npm/docker
+  in this environment (CG0-2, CG0-3 stay pending). Record committed in this
+  session. Escalations: none. Proposed next task: CG0-2 (needs a machine with
+  node/npm; record "not run" here until then).
