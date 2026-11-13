@@ -96,7 +96,7 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
 
 ### Phase 2 — Text to statements
 
-- [ ] **CG2-1** — Extraction core: verbatim quotes and spans, schema
+- [x] **CG2-1** — Extraction core: verbatim quotes and spans, schema
   validation, resumable, provider-agnostic client reusing the `formalize.py`
   harness patterns (config provenance, outage ≠ wrong answer,
   `--no-json-mode` / `--no-temperature`). Files: `engine/commonground/extract.py`,
@@ -324,3 +324,11 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   LEAN_BIN set: exit 0, 122 passed, 0 skipped (208 s). Committed as this
   session's commit. Escalations: none. Proposed next task: CG1-1 (needs an
   LLM endpoint from the owner) or CG2-1 (no endpoint needed).
+- 2026-11-13 — CG2-1: added `engine/commonground/extract.py` (statement extraction with
+  verbatim quotes + character spans validated against the source, repair loop, resumable
+  `run()` with config.json/runs.jsonl provenance, outage stops the run unscored) and
+  `engine/tests/test_extract.py` (28 tests: scripted clients, local HTTP stub, resume,
+  config mismatch, prompt-injection-as-data). Full engine suite with FOLIO_DIR+LEAN_BIN:
+  exit 0, 150 passed, 0 skipped (206 s). e2e unaffected (no app/api changes; green in
+  CG0-3). Committed as this session's commit. Escalations: none. Proposed next task:
+  CG2-2.
