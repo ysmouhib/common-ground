@@ -184,3 +184,94 @@ def test_extraction_works_over_real_http_with_the_standard_client(stub):
     assert request["path"] == "/v1/chat/completions" and request["auth"] == "Bearer secret-key"
     assert request["body"]["temperature"] == 0 and request["body"]["response_format"] == {"type": "json_object"}
     assert json.loads(request["body"]["messages"][1]["content"]) == {"document_id": "doc1", "text": DOC}
+
+
+# ------------------------------------------------------------- property tests (CG2-2)
+
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+TEXTS = st.text(alphabet="abc ABC.!", min_size=1, max_size=200).filter(lambda t: t.strip())
+
+
+def _span(doc):
+    return st.tuples(st.integers(0, len(doc)), st.integers(0, len(doc))).map(
+        lambda p: (min(p), max(p))).filter(lambda p: p[0] < p[1] and doc[p[0]:p[1]].strip())
+
+
+def _reply(doc, spans):
+    return json.dumps({"statements": [{"text": doc[s:e], "span": [s, e]} for s, e in spans]})
+
+
+@given(TEXTS, st.data())
+@settings(max_examples=150, deadline=None)
+def test_every_accepted_span_is_verbatim_in_the_source(doc, data):
+    """Whatever the document, a well-formed reply is accepted in one attempt and every
+    statement's quote equals the source at its span."""
+    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: p, max_size=5))
+    result = extract.extract(Scripted(_reply(doc, spans)), "doc", doc)
+    assert result.attempts == 1
+    assert [(s.start, s.end) for s in result.statements] == spans
+    for s in result.statements:
+        assert doc[s.start:s.end] == s.text
+
+
+@given(TEXTS, st.data())
+@settings(max_examples=150, deadline=None)
+def test_a_span_off_by_one_is_rejected_with_the_reason(doc, data):
+    """A quote that does not match the source at its span never passes validation."""
+    s, e = data.draw(_span(doc))
+    broken_end = min(e + 1, len(doc)) if e < len(doc) else e - 1  # stay in range, change the slice
+    bad = json.dumps({"statements": [{"text": doc[s:e], "span": [s, broken_end]}]})
+    with pytest.raises(extract.ExtractionError) as caught:
+        extract.extract(Scripted(bad), "doc", doc, max_repairs=0)
+    problem = caught.value.history[0]["problem"]
+    assert "does not match the source" in problem or "outside the document" in problem
+
+
+@given(TEXTS)
+@settings(max_examples=200, deadline=None)
+def test_atomicity_notes_match_a_reference_and_never_raise(text):
+    notes = extract.atomicity_notes(text)
+    reference = []
+    if text.count(".") + text.count("!") + text.count("?") > 1:
+        reference.append("several sentences in one quote")
+    if " and " in f" {text} " or " but " in f" {text} ":
+        reference.append("coordinating conjunction")
+    assert notes == reference
+
+
+def test_the_default_client_configuration_is_deterministic():
+    client = OpenAICompatible("http://127.0.0.1:9/v1", "some-model", "secret-key")
+    described = client.describe()
+    assert described["temperature"] == 0 and described["json_mode"] is True
+    assert "secret-key" not in str(described)
+
+
+def test_two_runs_with_the_same_deterministic_client_produce_identical_rows(tmp_path):
+    documents = [("doc1", DOC), ("doc2", DOC)]
+    first = extract.run(Scripted(GOOD, GOOD), documents, tmp_path / "a")
+    second = extract.run(Scripted(GOOD, GOOD), documents, tmp_path / "b")
+    strip = lambda rows: [{k: v for k, v in r.items() if k != "seconds"}
+                          for r in rows]
+    rows_a = [json.loads(l) for l in (tmp_path / "a" / "runs.jsonl").read_text(encoding="utf-8").splitlines()]
+    rows_b = [json.loads(l) for l in (tmp_path / "b" / "runs.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert strip(rows_a) == strip(rows_b)
+    assert (tmp_path / "a" / "config.json").read_text(encoding="utf-8") == \
+           (tmp_path / "b" / "config.json").read_text(encoding="utf-8")
+    keys = lambda s: {k: v for k, v in s.items() if k not in ("environment",)}
+    assert keys(first) == keys(second)
+
+
+@pytest.mark.parametrize("outage_at", range(4))
+def test_an_outage_at_any_position_leaves_exactly_the_finished_rows_then_resumes(tmp_path, outage_at):
+    documents = [(f"doc{i}", DOC) for i in range(4)]
+    replies = [GOOD] * outage_at + [ProviderError("provider unavailable", 503)]
+    with pytest.raises(ProviderError):
+        extract.run(Scripted(*replies), documents, tmp_path)
+    rows = (tmp_path / "runs.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(rows) == outage_at  # nothing scored for the outage, finished rows kept
+    summary = extract.run(Scripted(*([GOOD] * (4 - outage_at))), documents, tmp_path)
+    assert summary["documents"] == 4 and summary["failed"] == 0
+    rows = (tmp_path / "runs.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(rows) == 4

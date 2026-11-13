@@ -101,7 +101,7 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
   harness patterns (config provenance, outage ≠ wrong answer,
   `--no-json-mode` / `--no-temperature`). Files: `engine/commonground/extract.py`,
   `engine/tests/test_extract.py`. Deps: none. Done-when: pytest exits 0.
-- [ ] **CG2-2** — Property tests: every span exists in the source text,
+- [x] **CG2-2** — Property tests: every span exists in the source text,
   atomicity heuristics, determinism at temperature 0, scripted-client outage
   handling. Files: `engine/tests/test_extract.py`. Deps: CG2-1.
   Done-when: pytest exits 0.
@@ -332,3 +332,12 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   exit 0, 150 passed, 0 skipped (206 s). e2e unaffected (no app/api changes; green in
   CG0-3). Committed as this session's commit. Escalations: none. Proposed next task:
   CG2-2.
+- 2026-11-13 — CG2-2: property tests added to `engine/tests/test_extract.py` (now 37
+  tests): hypothesis — every accepted span is verbatim in the source (150 examples),
+  an off-by-one span is always rejected with the reason (150), `atomicity_notes` matches
+  a reference on arbitrary text (200); determinism — default client config pins
+  temperature 0 / json_mode, two runs with a deterministic client give identical
+  rows/config/summary; outage — parametrized at every position of a 4-document run,
+  leaves exactly the finished rows and resumes. Full engine suite with
+  FOLIO_DIR+LEAN_BIN: exit 0, 159 passed, 0 skipped (216 s). Committed as this
+  session's commit. Escalations: none. Proposed next task: CG2-3.
