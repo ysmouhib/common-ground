@@ -16,7 +16,7 @@ command cannot run in the current environment, record "not run" and the reason
 
 | Phase | Status |
 |---|---|
-| 0 Baseline | In progress. Engine suite green on this machine: **117 passed, 5 skipped**, exit 0 (skips: 3 Lean, no `LEAN_BIN`; 2 FOLIO, no `FOLIO_DIR`). App suite (portable node v26.13.1): `npm run check` and `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — all in `api/proofVerifier.test.ts` "running Lean", which spawns `#!/bin/sh` fakes that Windows cannot execute (ENOENT); they pass on Linux CI (see `docs/BACKLOG.md`). e2e: **not run** — no MySQL, no docker, no browser here. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
+| 0 Baseline | In progress, all local suites recorded. Engine: **117 passed, 5 skipped**, exit 0 (skips: 3 Lean, 2 FOLIO_DIR). App (portable node v26.13.1): `npm run check` and `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — all in `api/proofVerifier.test.ts` "running Lean", which spawns `#!/bin/sh` fakes that Windows cannot execute (ENOENT); passes on Linux CI (see `docs/BACKLOG.md`). e2e against a local production build + MySQL 8.0.44 + Chromium: **33 passed, 0 failed, 0 skipped** with a reviewer token (no Lean), **33 passed** again with Lean 4.35.0 (`E2E_EXPECT_LEAN=1`), and **8 passed** on the read-only deployment (no reviewer token) — matching the README. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
 | R Scientific grounding | Session 1 of 4 done (details below). Sessions 2–4 and the `THEORY.md` review are **owner tasks**: research is off-limits to the worker (AGENTS.md, Evidence discipline). |
 | 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8; gate CGR-5). |
 
@@ -26,10 +26,15 @@ the previous agent was already committed, the tree was clean at session start.
 `AGENTS.md`; `CLAUDE.md` points there.
 
 Machine notes for reproducing runs here: Python 3.12.10 with `pytest 9.2.0`,
-`z3-solver 5.4.1`, `python-sat`, `hypothesis` installed `--user`; portable
-node v26.13.1 + npm 11.20.0 extracted to `~/node-install/` (add its dir to
-`PATH`; `npm ci` already run, `node_modules/` present); no docker, no Lean
-(`LEAN_BIN` unset, lean-marked tests skip), no MySQL, no browser.
+`z3-solver 5.4.1`, `python-sat`, `hypothesis` installed `--user`. Portable
+node v26.13.1 + npm 11.20.0 in `~/node-install/` (`npm ci` done,
+`node_modules/` present; `npm run build` done, `dist/` present). Portable
+MySQL 8.0.44 in `~/mysql-install/` (datadir `~/mysql-data`, port 3306,
+root password `ci-only-root-password`, database `common_ground`; MariaDB
+11.8 was tried first and rejected — see `docs/BACKLOG.md`). Lean 4.35.0 via
+elan: `LEAN_BIN=/c/Users/youne/.elan/toolchains/leanprover--lean4---v4.35.0/bin/lean.exe`.
+Playwright chromium installed (`npx playwright install chromium`). No docker.
+Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci-only-root-password@127.0.0.1:3306/common_ground REVIEWER_TOKEN=<24+ chars> node dist/boot.js`.
 
 ## Task queue
 
@@ -43,7 +48,7 @@ node v26.13.1 + npm 11.20.0 extracted to `~/node-install/` (add its dir to
   Files: `docs/PLAN.md`. Deps: node/npm available.
   Done-when: `npm test`, `npm run check`, `npm run lint` results recorded, or
   "not run" with the reason.
-- [ ] **CG0-3** — Run the e2e suite against a production build, with and without
+- [x] **CG0-3** — Run the e2e suite against a production build, with and without
   `REVIEWER_TOKEN` (33 + 8 checks). Files: `docs/PLAN.md`. Deps: CG0-2, MySQL.
   Done-when: check counts recorded, or "not run" with the reason.
 - [ ] **CG0-4** — Reproduce the README "What has been shown" numbers (FOLIO
@@ -299,3 +304,11 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   `docs/BACKLOG.md`). Engine pytest re-run this session: exit 0, 117 passed,
   5 skipped. e2e (CG0-3) still not run: no MySQL/docker/browser here.
   Escalations: none. Proposed next task: CG0-3.
+- 2026-11-13 — CG0-3: e2e run for real on this machine (production build,
+  MySQL 8.0.44 portable, Chromium via playwright): reviewer-token server
+  `E2E_EXPECT_LEAN=0`: 33 passed, 0 failed, 0 skipped, exit 0; Lean 4.35.0
+  server `E2E_EXPECT_LEAN=1`: 33 passed, 0 failed, 0 skipped, exit 0 (Lean
+  accepted `proofs/CommonGround.lean`, rejected the negative control);
+  read-only server (no token): 8 passed, 0 failed, 0 skipped, exit 0.
+  Engine pytest re-run: exit 0, 117 passed, 5 skipped. Committed as this
+  session's commit. Escalations: none. Proposed next task: CG0-4.
