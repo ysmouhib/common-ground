@@ -2,6 +2,7 @@
 
     check     decide one argument given as formulas
     analyze   conflicts, concessions and justifications for a debate file
+    extract   extract the statements of text files, with verbatim spans
     folio     run the FOLIO benchmark (reference formalizations, or a language model)
     compare   paired comparison of two language-model runs, as JSON
     report    the same comparison as a Markdown summary
@@ -135,6 +136,40 @@ def _folio(args) -> int:
     return 0
 
 
+def _extract(args) -> int:
+    from . import extract as extract_mod
+    from .formalize import OpenAICompatible, ProviderError
+    key = os.environ.get(args.api_key_env, "")
+    if not (args.base_url and args.model and key):
+        print(f"--base-url, --model and the {args.api_key_env} environment variable are required", file=sys.stderr)
+        return 2
+    try:
+        client = OpenAICompatible(args.base_url, args.model, key, json_mode=not args.no_json_mode,
+                                  temperature=None if args.no_temperature else args.temperature,
+                                  max_tokens=args.max_tokens)
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    try:
+        documents = [(path, Path(path).read_text(encoding="utf-8")) for path in args.files]
+    except OSError as exc:
+        print(f"cannot read a document: {exc}", file=sys.stderr)
+        return 2
+    out_dir = Path(args.out)
+    try:
+        summary = extract_mod.run(client, documents, out_dir)
+    except ValueError as exc:  # a configuration mismatch, or a document that fails validation
+        print(exc, file=sys.stderr)
+        return 2
+    except ProviderError as exc:
+        # The run stops instead of scoring an outage; the same command resumes it.
+        print(f"stopped: {exc}\nfinished documents are kept in {out_dir / 'runs.jsonl'}; "
+              "run the same command again to resume", file=sys.stderr)
+        return 3
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    return 0
+
+
 def _compare(args) -> int:
     try:
         if args.command == "report":
@@ -163,6 +198,20 @@ def main(argv: list[str] | None = None) -> int:
     analyze.add_argument("debate")
     analyze.add_argument("--out")
     analyze.set_defaults(run=_analyze)
+
+    ex = commands.add_parser("extract", help="extract the statements of text files, with verbatim spans")
+    ex.add_argument("files", nargs="+", help="text files; each file is one document, id = the path as given")
+    ex.add_argument("--out", required=True, help="output directory: runs.jsonl, config.json, summary.json")
+    ex.add_argument("--base-url")
+    ex.add_argument("--model")
+    ex.add_argument("--api-key-env", default="LLM_API_KEY", help="name of the variable holding the key")
+    ex.add_argument("--no-json-mode", action="store_true",
+                    help="do not send response_format=json_object (for providers that reject it)")
+    ex.add_argument("--temperature", type=float, default=0.0, help="sampling temperature (default 0)")
+    ex.add_argument("--no-temperature", action="store_true",
+                    help="send no temperature (for models that accept only their default)")
+    ex.add_argument("--max-tokens", type=int, default=2000, help="reply length limit (default 2000)")
+    ex.set_defaults(run=_extract)
 
     fol = commands.add_parser("folio", help="run the FOLIO benchmark")
     fol.add_argument("--data", default="data/FOLIO", help="where the dataset repository is (cloned if absent)")

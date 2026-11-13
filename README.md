@@ -72,6 +72,18 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   The same three commands run from the repository's Actions tab: workflow
   `model-benchmark`, "Run workflow". It needs a repository secret `LLM_API_KEY`
   and uploads every reply and verdict.
+* **The statement extractor (`engine/commonground/extract.py`) has never called a live
+  model either.** It is tested with scripted clients and a local HTTP stub, including a
+  full CLI run against the stub. Every statement it returns is validated to be a verbatim
+  span of the source text. To run it against a real endpoint:
+
+  ```bash
+  export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions
+  python -m commonground extract file1.txt file2.txt --base-url https://… --model … --out results/extract
+  ```
+
+  The run is resumable and writes `runs.jsonl`, `config.json` (model and settings) and
+  `summary.json` to the output directory; a provider outage stops it, never scores it.
 * **Faithfulness is not certified by anything here.** A formula can be provably
   entailed and still not say what the sentence meant.
 * **The container image has been built only by CI**, not on a developer machine.

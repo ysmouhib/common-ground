@@ -105,7 +105,7 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
   atomicity heuristics, determinism at temperature 0, scripted-client outage
   handling. Files: `engine/tests/test_extract.py`. Deps: CG2-1.
   Done-when: pytest exits 0.
-- [ ] **CG2-3** — CLI wiring (`python -m commonground extract …`) and README
+- [x] **CG2-3** — CLI wiring (`python -m commonground extract …`) and README
   evidence row. Files: `engine/commonground/__main__.py`, `README.md`.
   Deps: CG2-2. Done-when: pytest exits 0; README row with reproduce command or
   "not run".
@@ -341,3 +341,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   leaves exactly the finished rows and resumes. Full engine suite with
   FOLIO_DIR+LEAN_BIN: exit 0, 159 passed, 0 skipped (216 s). Committed as this
   session's commit. Escalations: none. Proposed next task: CG2-3.
+- 2026-11-13 — CG2-3: `extract` subcommand wired into `engine/commonground/__main__.py`
+  (same provider flags as `folio`: --base-url/--model/--api-key-env/--no-json-mode/
+  --no-temperature/--temperature/--max-tokens; missing endpoint exits 2; outage exits 3
+  and resumes). Verified end to end: full CLI run against a local HTTP stub
+  (`python -m commonground extract doc1.txt doc2.txt --base-url http://127.0.0.1:8399/v1
+  --model stub --out ~/extract-out`) exit 0, 2 documents, 5 statements, all spans
+  verbatim, config.json pins temperature 0.0. README "What has not been shown" gained
+  the extractor row with the reproduce command (live model: not run, no endpoint here).
+  Full engine suite: exit 0, 159 passed, 0 skipped (215 s). Committed as this
+  session's commit. Escalations: none. Proposed next task: CG1-1 (blocked on an LLM
+  endpoint from the owner) — next runnable without one: CG7-1.
