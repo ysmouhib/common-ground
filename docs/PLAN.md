@@ -16,7 +16,7 @@ command cannot run in the current environment, record "not run" and the reason
 
 | Phase | Status |
 |---|---|
-| 0 Baseline | In progress. Engine suite green on this machine: **117 passed, 5 skipped** (skips are the Lean-marked tests; no Lean binary here), exit 0. `npm test` / e2e: **not run** — no node/npm, no docker in this environment. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
+| 0 Baseline | In progress. Engine suite green on this machine: **117 passed, 5 skipped**, exit 0 (skips: 3 Lean, no `LEAN_BIN`; 2 FOLIO, no `FOLIO_DIR`). App suite (portable node v26.13.1): `npm run check` and `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — all in `api/proofVerifier.test.ts` "running Lean", which spawns `#!/bin/sh` fakes that Windows cannot execute (ENOENT); they pass on Linux CI (see `docs/BACKLOG.md`). e2e: **not run** — no MySQL, no docker, no browser here. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
 | R Scientific grounding | Session 1 of 4 done (details below). Sessions 2–4 and the `THEORY.md` review are **owner tasks**: research is off-limits to the worker (AGENTS.md, Evidence discipline). |
 | 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8; gate CGR-5). |
 
@@ -26,8 +26,10 @@ the previous agent was already committed, the tree was clean at session start.
 `AGENTS.md`; `CLAUDE.md` points there.
 
 Machine notes for reproducing runs here: Python 3.12.10 with `pytest 9.2.0`,
-`z3-solver 5.4.1`, `python-sat`, `hypothesis` installed `--user`; no node/npm,
-no docker, no Lean (`LEAN_BIN` unset, lean-marked tests skip).
+`z3-solver 5.4.1`, `python-sat`, `hypothesis` installed `--user`; portable
+node v26.13.1 + npm 11.20.0 extracted to `~/node-install/` (add its dir to
+`PATH`; `npm ci` already run, `node_modules/` present); no docker, no Lean
+(`LEAN_BIN` unset, lean-marked tests skip), no MySQL, no browser.
 
 ## Task queue
 
@@ -37,7 +39,7 @@ no docker, no Lean (`LEAN_BIN` unset, lean-marked tests skip).
   Files: `docs/PLAN.md` (record only). Deps: none.
   Done-when: `python -m pytest` in `engine/` executed; exit code and counts
   recorded verbatim in the session log; exit 0 expected.
-- [ ] **CG0-2** — Run the app unit tests, typecheck and lint; record.
+- [x] **CG0-2** — Run the app unit tests, typecheck and lint; record.
   Files: `docs/PLAN.md`. Deps: node/npm available.
   Done-when: `npm test`, `npm run check`, `npm run lint` results recorded, or
   "not run" with the reason.
@@ -289,3 +291,11 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   in this environment (CG0-2, CG0-3 stay pending). Record committed in this
   session. Escalations: none. Proposed next task: CG0-2 (needs a machine with
   node/npm; record "not run" here until then).
+- 2026-11-13 — CG0-2: app suite run with portable node v26.13.1 (`npm ci`, then
+  the package scripts): `npm run check` (tsc -b) exit 0; `npm run lint` (eslint .)
+  exit 0; `npm test` (vitest run) exit 1 — 39 passed, 4 failed, all 4 in
+  `api/proofVerifier.test.ts` "running Lean" (spawns `#!/bin/sh` fakes; Windows
+  `spawn` gives ENOENT — platform limitation, passes on Linux CI; logged in
+  `docs/BACKLOG.md`). Engine pytest re-run this session: exit 0, 117 passed,
+  5 skipped. e2e (CG0-3) still not run: no MySQL/docker/browser here.
+  Escalations: none. Proposed next task: CG0-3.
