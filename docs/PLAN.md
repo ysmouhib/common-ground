@@ -16,7 +16,7 @@ command cannot run in the current environment, record "not run" and the reason
 
 | Phase | Status |
 |---|---|
-| 0 Baseline | In progress, all local suites recorded. Engine: **117 passed, 5 skipped**, exit 0 (skips: 3 Lean, 2 FOLIO_DIR). App (portable node v26.13.1): `npm run check` and `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — all in `api/proofVerifier.test.ts` "running Lean", which spawns `#!/bin/sh` fakes that Windows cannot execute (ENOENT); passes on Linux CI (see `docs/BACKLOG.md`). e2e against a local production build + MySQL 8.0.44 + Chromium: **33 passed, 0 failed, 0 skipped** with a reviewer token (no Lean), **33 passed** again with Lean 4.35.0 (`E2E_EXPECT_LEAN=1`), and **8 passed** on the read-only deployment (no reviewer token) — matching the README. The PR-sized phase mapping Phase 0 asked for is this task queue (CG0-5, done). |
+| 0 Baseline | **Recorded locally, all suites.** Engine: **122 passed, 0 skipped**, exit 0 with `FOLIO_DIR` + `LEAN_BIN` set (117 passed / 5 skipped without them). App: `npm run check`, `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — Windows-only shebang-spawn failures in `api/proofVerifier.test.ts` (pass on Linux CI; `docs/BACKLOG.md`). e2e: **33 + 33 (with Lean) + 8 (read-only) passed**, exit 0. README numbers reproduced exactly: FOLIO 195/204, disagreements [5,27,29,47,87,112,114,138,139], Lean 128/128 certified and 0/278 false accepted, second engine 201/201, 75 uncertain, 10/204 unequal counts. |
 | R Scientific grounding | Session 1 of 4 done (details below). Sessions 2–4 and the `THEORY.md` review are **owner tasks**: research is off-limits to the worker (AGENTS.md, Evidence discipline). |
 | 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8; gate CGR-5). |
 
@@ -33,7 +33,7 @@ MySQL 8.0.44 in `~/mysql-install/` (datadir `~/mysql-data`, port 3306,
 root password `ci-only-root-password`, database `common_ground`; MariaDB
 11.8 was tried first and rejected — see `docs/BACKLOG.md`). Lean 4.35.0 via
 elan: `LEAN_BIN=/c/Users/youne/.elan/toolchains/leanprover--lean4---v4.35.0/bin/lean.exe`.
-Playwright chromium installed (`npx playwright install chromium`). No docker.
+Playwright chromium installed (`npx playwright install chromium`). FOLIO clone at the CI-pinned revision in `~/datasets/FOLIO` (`FOLIO_DIR=/c/Users/youne/datasets/FOLIO`). No docker.
 Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci-only-root-password@127.0.0.1:3306/common_ground REVIEWER_TOKEN=<24+ chars> node dist/boot.js`.
 
 ## Task queue
@@ -51,7 +51,7 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
 - [x] **CG0-3** — Run the e2e suite against a production build, with and without
   `REVIEWER_TOKEN` (33 + 8 checks). Files: `docs/PLAN.md`. Deps: CG0-2, MySQL.
   Done-when: check counts recorded, or "not run" with the reason.
-- [ ] **CG0-4** — Reproduce the README "What has been shown" numbers (FOLIO
+- [x] **CG0-4** — Reproduce the README "What has been shown" numbers (FOLIO
   validation run; contracts via `npm test`). Files: `docs/PLAN.md`.
   Deps: CG0-1..CG0-3. Done-when: every README row has a recorded outcome
   matching the published number, or a recorded discrepancy (→ `docs/BACKLOG.md`,
@@ -312,3 +312,15 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   read-only server (no token): 8 passed, 0 failed, 0 skipped, exit 0.
   Engine pytest re-run: exit 0, 117 passed, 5 skipped. Committed as this
   session's commit. Escalations: none. Proposed next task: CG0-4.
+- 2026-11-13 — CG0-4: README numbers reproduced on this machine. FOLIO at
+  pinned revision 5d7bb84, `python -m commonground folio --data ~/datasets/FOLIO
+  --out ~/results-check-folio --lean` exit 0: agreement 195/204 (95.6%),
+  disagreements [5,27,29,47,87,112,114,138,139], verdicts 68 True/60 False/75
+  Uncertain/1 ParseError, parsing 203/204 with 10 unequal sentence/formula
+  counts, Lean 128/128 certified + 0/278 false accepted, second engine
+  201/201 — all identical to `results/folio-validation/summary.json` (only
+  timings and environment differ: python 3.12.10 vs 3.13.18, z3 5.4.1 vs
+  5.3.3.0, pysat 1.9.dev22 vs 1.9.dev21). Full engine suite with FOLIO_DIR +
+  LEAN_BIN set: exit 0, 122 passed, 0 skipped (208 s). Committed as this
+  session's commit. Escalations: none. Proposed next task: CG1-1 (needs an
+  LLM endpoint from the owner) or CG2-1 (no endpoint needed).
