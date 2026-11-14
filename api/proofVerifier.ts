@@ -12,7 +12,7 @@ import { getDb } from "./queries/connection";
 
 const FORBIDDEN_CONSTRUCTS = /\b(sorry|admit|axiom|unsafe|native_decide|extern|implemented_by)\b/;
 
-function leanExecutable(): string | undefined {
+export function leanExecutable(): string | undefined {
   const candidates = [
     process.env.LEAN_BIN,
     "/tmp/lean-runtime/lean-4.35.0-linux/bin/lean",
