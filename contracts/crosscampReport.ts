@@ -46,7 +46,7 @@ export const crosscampReportSchema = z.object({
     stated: z.looseObject({
       agreed: z.array(agreedSchema),
       union_consistent: checkSchema,
-      camp_consistency: z.array(z.looseObject({ camp: z.string() })),
+      camp_consistency: z.array(z.looseObject({ camp: z.string(), ...checkSchema.shape })),
       vacuous_camps: z.array(z.string()),
       pending_camps: z.array(z.string()),
       unformalized: z.array(unformalizedSchema),
