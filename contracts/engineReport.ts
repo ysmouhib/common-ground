@@ -11,7 +11,7 @@ import { z } from "zod";
 
 // One certified check of one system (abduce.Check.to_json). The evidence models and
 // the Lean certificate stay in the engine's report.json on disk.
-const checkSchema = z.object({
+export const checkSchema = z.object({
   kind: z.string(),
   claim: z.string(),
   outcome: z.enum(["holds", "fails", "pending"]),

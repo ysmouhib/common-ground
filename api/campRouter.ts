@@ -7,7 +7,7 @@ import { createRouter, reviewerMutation } from "./middleware";
 import { engineGate, runCampReport } from "./engineRunner";
 
 /** A camp name the engine accepts as a directory name (mirrors __main__._camp_dir). */
-const campName = z
+export const campName = z
   .string()
   .min(1)
   .max(64)
@@ -22,9 +22,9 @@ const campName = z
     "the camp name must be a plain directory name",
   );
 
-const span = z.tuple([z.number().int().min(0), z.number().int().min(0)]);
+export const span = z.tuple([z.number().int().min(0), z.number().int().min(0)]);
 
-const recordSchema = z.object({
+export const recordSchema = z.object({
   camp: campName,
   documents: z
     .array(z.object({ id: z.string().min(1).max(200), text: z.string().min(1).max(50_000) }))
@@ -43,7 +43,7 @@ const recordSchema = z.object({
     .max(100),
 });
 
-const candidatesSchema = z.object({
+export const candidatesSchema = z.object({
   candidates: z
     .array(
       z.object({
@@ -56,7 +56,7 @@ const candidatesSchema = z.object({
     .max(64),
 });
 
-const plausibility = z
+export const plausibility = z
   .union([z.number().min(0).max(1), z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)])])
   .refine((value) => typeof value === "number" || value[0] <= value[1], "a plausibility range must satisfy min <= max");
 
