@@ -350,7 +350,7 @@ class SystemChecks:
     sufficiency: list[Check]        # one per endorsed statement
     firm_rejections: list[Check]    # one per firm rejection: A ⊨ ¬r
     soft_rejections: list[Check]    # one per soft rejection: A ⊭ r
-    minimality: list[Check]         # one per axiom: A without it no longer suffices (S4)
+    minimality: list[Check]         # one per axiom: A without it no longer suffices over E⁺ (S4)
 
     @property
     def certified(self) -> bool:
@@ -404,15 +404,16 @@ def check_system(axioms: list[Formula], record: Record, timeout_ms: int = 5000,
                               "no reviewed formalization for this statement"))
         else:
             soft.append(non_entailment_check(axioms, formula, "soft_rejection", timeout_ms))
-    endorsed = [st.formula() for st in record.statements
-                if st.stance == STANCE_ENDORSED and st.formula() is not None]
+    # S4 is over E⁺ (THEORY.md §2): removing an axiom must break the entailment of some
+    # endorsed claim or some negated firm rejection, not only an endorsed claim
+    eps_targets = _targets(record)
     minimality: list[Check] = []
     for a in axioms:
         rest = [x for x in axioms if fol.to_text(x) != fol.to_text(a)]
         needed = False
         undecided = False
         witness = ""
-        for e in endorsed:
+        for e in eps_targets:
             v = _solver_entailment(rest, e, timeout_ms)
             if v.label in ("False", "Uncertain"):
                 needed = True
@@ -715,13 +716,12 @@ def baseline_system(record: Record, timeout_ms: int = 5000, lean_bin: str | None
                if st.stance == STANCE_FIRM and st.formula() is not None]
     stated_checks = check_system(stated, record, timeout_ms, lean_bin)
     # a minimal sufficient subset of E⁺: greedily drop any axiom whose removal keeps
-    # every endorsed claim entailed (solver checks; ties are not enumerated here)
+    # every E⁺ target entailed (solver checks; ties are not enumerated here)
     minimal = list(stated)
     for a in list(stated):
         rest = [x for x in minimal if fol.to_text(x) != fol.to_text(a)]
         if all(_solver_entailment(rest, e, timeout_ms).label in ("True", "Inconsistent")
-               for e in [st.formula() for st in record.statements
-                         if st.stance == STANCE_ENDORSED and st.formula() is not None]):
+               for e in _targets(record)):
             minimal = rest
     minimal_checks = check_system(minimal, record, timeout_ms, lean_bin)
     return {"stated": stated_checks, "minimal_stated": minimal_checks,
