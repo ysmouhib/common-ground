@@ -941,10 +941,12 @@ def _coverage(record: Record, timeout_ms: int) -> dict:
 DEFAULT_PLAUSIBILITY = 0.5   # the anchored mid level, used for a candidate nobody scored — and reported
 
 
-def _normalize_plausibilities(plausibilities: dict) -> dict[str, float]:
-    """Estimates keyed by canonical FOL text. A key may be written in any spelling the
-    grammar accepts; one that is no formula is an error, never a silent miss."""
-    out: dict[str, float] = {}
+def _normalize_plausibilities(plausibilities: dict) -> dict[str, tuple[float, float]]:
+    """Estimates keyed by canonical FOL text, as (min, max) ranges. A scalar is a point
+    range; a two-element list is a sampled range (RESEARCH.md §15.3: k samples reported as
+    min/max). A key may be written in any spelling the grammar accepts; one that is no
+    formula is an error, never a silent miss. Ranges must lie in [0, 1] with min ≤ max."""
+    out: dict[str, tuple[float, float]] = {}
     for key, p in plausibilities.items():
         if not isinstance(key, str):
             raise ValueError(f"plausibility estimates are keyed by FOL text, got {key!r}")
@@ -952,10 +954,27 @@ def _normalize_plausibilities(plausibilities: dict) -> dict[str, float]:
             canon = fol.to_text(fol.parse(key))
         except ValueError as exc:
             raise ValueError(f"plausibility key {key!r} is not a formula: {exc}") from None
-        if canon in out and out[canon] != p:
+        if isinstance(p, (list, tuple)):
+            if len(p) != 2:
+                raise ValueError(f"the plausibility range of {key!r} must have two numbers [min, max], got {p!r}")
+            lo, hi = p
+            rng = (lo, hi)
+        else:
+            rng = (p, p)
+        for v in rng:
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or not 0.0 <= v <= 1.0:
+                raise ValueError(f"the plausibility estimate of {key!r} must be in [0, 1], got {p!r}")
+        if rng[0] > rng[1]:
+            raise ValueError(f"the plausibility range of {key!r} has min > max: {p!r}")
+        if canon in out and out[canon] != rng:
             raise ValueError(f"two different plausibility estimates for {canon}")
-        out[canon] = p
+        out[canon] = rng
     return out
+
+
+def _point_plausibilities(ranges: dict[str, tuple[float, float]]) -> dict[str, float]:
+    """The point estimate driving the main selection: the midpoint of each range."""
+    return {t: (lo + hi) / 2 for t, (lo, hi) in ranges.items()}
 
 
 def _existence(record: Record, exhausted: bool, timeout_ms: int) -> dict:
@@ -1040,7 +1059,8 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
                 max_checks: int = MAX_CHECKS) -> dict:
     """The full per-camp report as plain JSON-able data (design §2)."""
     record.validate()
-    plausibilities = _normalize_plausibilities(plausibilities or {})
+    ranges = _normalize_plausibilities(plausibilities or {})
+    plausibilities = _point_plausibilities(ranges)
     validate_parameters(plausibilities, lam)
     pool_result = collect(source, record)
     stated = _targets(record)
@@ -1055,12 +1075,15 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
     # p = 1 for stated claims (THEORY.md §2): an estimate keyed by a stated claim's text — one
     # that came with a duplicate candidate, say — is not applied, and the report says so
     ignored_for_stated = {t: plausibilities.pop(t) for t in list(plausibilities) if t in stated_texts}
+    for t in ignored_for_stated:
+        ranges.pop(t, None)
     pool = stated + [c.formula for c in pool_result.candidates]
     defaulted = []
     for c in pool_result.candidates:
         text = fol.to_text(c.formula)
         if text not in plausibilities:
             plausibilities[text] = DEFAULT_PLAUSIBILITY
+            ranges.setdefault(text, (DEFAULT_PLAUSIBILITY, DEFAULT_PLAUSIBILITY))
             defaulted.append(text)
     # brute force gives the hull all certified systems; beyond 12 pool items the
     # branch-and-bound search is used and the hull covers only what it found
@@ -1071,6 +1094,25 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
         sel = select(pool, record, plausibilities, lam, timeout_ms, max_checks)
         search = "branch-and-bound"
     search_complete = not sel.exhausted
+    # plausibility sensitivity (CG8-4, design abduction.md §2): recompute the selection at the
+    # minimum and the maximum of every sampled range — never a single silent pick
+    sensitivity = None
+    nontrivial = {t: (lo, hi) for t, (lo, hi) in ranges.items() if lo < hi}
+    if nontrivial:
+        def _search_at(point: dict[str, float]) -> Selection:
+            if len(pool) <= 12:
+                return select_bruteforce(pool, record, point, lam, timeout_ms, max_checks)
+            return select(pool, record, point, lam, timeout_ms, max_checks)
+        sel_lo = _search_at({t: lo for t, (lo, hi) in ranges.items()})
+        sel_hi = _search_at({t: hi for t, (lo, hi) in ranges.items()})
+        complete = not (sel_lo.exhausted or sel_hi.exhausted)
+        main_sets = sorted(map(sorted, sel.systems))
+        stable = (complete and sorted(map(sorted, sel_lo.systems)) == main_sets
+                  == sorted(map(sorted, sel_hi.systems)))
+        sensitivity = {"ranges": {t: [lo, hi] for t, (lo, hi) in nontrivial.items()},
+                       "at_min": {"systems": sel_lo.systems, "search_complete": not sel_lo.exhausted},
+                       "at_max": {"systems": sel_hi.systems, "search_complete": not sel_hi.exhausted},
+                       "stable": stable if complete else None}
     by_text = {fol.to_text(f): f for f in pool}
     hull = hull_intervals(sel.all_certified, pool, plausibilities)
     targets = _targets(record)
@@ -1108,6 +1150,7 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
                          "ignored_for_stated": ignored_for_stated},
         "warnings": _formula_warnings(record, pool_result.candidates),
         "selection": sel.to_json(), "search": search,
+        "plausibility_sensitivity": sensitivity,
         # complete: every subset was examined, so "cost-minimal" is established; the hull and the
         # margin cover every certified system only after a complete brute-force search
         "search_complete": search_complete,
@@ -1216,6 +1259,20 @@ def render_markdown(report: dict) -> str:
         else:
             lines += [f"Margin to the runner-up at λ = {report['lam']}: at most "
                       f"{report['margin_to_runner_up']:.4f} (the true runner-up may not have been checked).", ""]
+    sens = report.get("plausibility_sensitivity")
+    if sens:
+        lines += ["## Plausibility sensitivity (selection recomputed at each range's min and max)", ""]
+        for t, (lo, hi) in sens["ranges"].items():
+            lines.append(f"- `{t}`: plausibility range [{lo}, {hi}]")
+        if sens["stable"] is True:
+            lines += ["", "The selected system is the same at every range extreme: **stable**.", ""]
+        elif sens["stable"] is False:
+            lines += ["", "The selected system **changes** across the ranges:", "",
+                      f"- at min: {sens['at_min']['systems']}",
+                      f"- at max: {sens['at_max']['systems']}", ""]
+        else:
+            lines += ["", "Pending: a sensitivity search hit the check budget, so stability is "
+                      "not established.", ""]
     base = report["baseline"]
     lines += ["## Symbolic baseline (A = E(C), same certified checks)", "",
               f"Stated system certified: {base['stated_certified']}; "

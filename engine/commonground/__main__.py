@@ -156,7 +156,15 @@ def _load_plausibilities(path: str | None) -> dict:
         return {}
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(data, dict):
-        raise ValueError("the plausibilities file must be a JSON object mapping FOL text to a number in [0, 1]")
+        raise ValueError("the plausibilities file must be a JSON object mapping FOL text to a number in [0, 1] "
+                         "or a two-element range [min, max]")
+    for key, value in data.items():
+        ok = (isinstance(value, (int, float)) and not isinstance(value, bool)) or \
+             (isinstance(value, list) and len(value) == 2 and all(
+                 isinstance(v, (int, float)) and not isinstance(v, bool) for v in value))
+        if not ok:
+            raise ValueError(f"the plausibility of {key!r} must be a number in [0, 1] or a [min, max] range, "
+                             f"got {value!r}")
     return data
 
 
@@ -403,7 +411,7 @@ def main(argv: list[str] | None = None) -> int:
     camp.add_argument("record", help="camp record JSON (camp, documents, statements with stances/spans)")
     camp.add_argument("--candidates", required=True,
                       help="JSON file of scripted unstated candidates: {\"candidates\": [{\"fol\", \"quotes\": [...]}]}")
-    camp.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate")
+    camp.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate: a number in [0, 1] or a [min, max] range")
     camp.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     camp.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     camp.add_argument("--max-checks", type=int, default=4000,
@@ -416,7 +424,7 @@ def main(argv: list[str] | None = None) -> int:
     xc.add_argument("records", nargs="+", help="camp record JSONs (two or more)")
     xc.add_argument("--candidates", nargs="+", required=True,
                     help="one scripted-candidates JSON per record, in the same order")
-    xc.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate")
+    xc.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate: a number in [0, 1] or a [min, max] range")
     xc.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     xc.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     xc.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")

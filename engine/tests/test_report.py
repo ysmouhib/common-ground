@@ -392,3 +392,56 @@ def test_cli_summary_line_says_whether_the_search_finished(tmp_path, capsys):
     assert run_camp_cli(tmp_path, candidates=cands, extra=("--max-checks", "1")) == 0
     summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
     assert summary["search_complete"] is False and summary["abstention"] is None
+
+
+# --- CG8-4: plausibility ranges and selection sensitivity ---
+
+
+def camp_with_candidate():
+    import tempfile, pathlib
+    with tempfile.TemporaryDirectory() as tmp:
+        rp = pathlib.Path(tmp) / "record.json"
+        write_record(rp, good_statements())
+        record = abduce.load_record(str(rp))
+    src = abduce.ScriptedSource([abduce.Candidate(C1, [("dx", "Socrates is human.",
+                                                         tuple(span_of("Socrates is human.")))])])
+    return record, src
+
+
+def test_plausibility_range_that_changes_the_selection_is_reported():
+    # C1 replaces 2 stated claims: preferred when p > 1 − λ = 0.7 at λ = 0.3, so the range
+    # [0.4, 0.9] straddles the threshold — the selection must change between min and max
+    record, src = camp_with_candidate()
+    report = abduce.report_camp(record, src, {C1T: [0.4, 0.9]}, lam=0.3)
+    sens = report["plausibility_sensitivity"]
+    assert sens and sens["ranges"] == {C1T: [0.4, 0.9]}
+    assert sens["at_min"]["search_complete"] and sens["at_max"]["search_complete"]
+    assert C1T not in {a for s in sens["at_min"]["systems"] for a in s}
+    assert any(C1T in s for s in sens["at_max"]["systems"])
+    assert sens["stable"] is False
+    md = abduce.render_markdown(report)
+    assert "Plausibility sensitivity" in md and "changes" in md
+
+
+def test_plausibility_range_that_keeps_the_selection_is_stable():
+    record, src = camp_with_candidate()
+    report = abduce.report_camp(record, src, {C1T: [0.8, 0.95]}, lam=0.3)
+    sens = report["plausibility_sensitivity"]
+    assert sens["stable"] is True
+    assert "stable" in abduce.render_markdown(report)
+
+
+def test_point_estimates_have_no_sensitivity_section():
+    record, src = camp_with_candidate()
+    report = abduce.report_camp(record, src, {C1T: 0.9}, lam=0.3)
+    assert report["plausibility_sensitivity"] is None
+
+
+def test_invalid_plausibility_ranges_are_errors():
+    record, src = camp_with_candidate()
+    with pytest.raises(ValueError, match="min > max"):
+        abduce.report_camp(record, src, {C1T: [0.9, 0.4]}, lam=0.3)
+    with pytest.raises(ValueError, match="\\[0, 1\\]"):
+        abduce.report_camp(record, src, {C1T: [-0.1, 0.5]}, lam=0.3)
+    with pytest.raises(ValueError, match="not a formula"):
+        abduce.report_camp(record, src, {"not a formula": 0.5}, lam=0.3)
