@@ -46,6 +46,7 @@ The canonical survey of the argument mining field: component tasks (claim/premis
 → *Design implication:* our pipeline inherits the standard decomposition (segment, classify, link) but adds the layers the field lacks: axiom proposal and formal verification.
 
 **A6. Large Language Models in Argument Mining: A Survey (2025).** https://arxiv.org/abs/2506.16383 `[✓ web-verified]` `[S]`
+> **S4.** Authors: Li, H., Schlegel, V., Sun, Y., Batista-Navarro, R., & Nenadic, G. (2025), arXiv:2506.16383. PDF read (abstract, sections 1-3, 4.1.5); coverage to 2025-09-27 confirmed in the text. The passage on implied claims the pack attributes to it is quoted verbatim in `RESEARCH.md` section 18.
 Covers literature to 2025-09-27. Documents the shift from supervised pipelines to LLM-driven approaches and states the open problem we attack: systems are effective on explicit clause-level claims but fail when claims are implied through presupposition, metaphor, or narrative framing; implicit claim phenomena are systematically underrepresented in evaluation.
 → *Design implication:* honest limitations section. Quote this survey when we state that claim extraction from implicit text is unreliable, hence the human review queue.
 
@@ -106,10 +107,12 @@ The founding result of political psychology. A belief system is "a configuration
 → *Design implication (double-edged):* (a) Converse legitimates the concept of constraint between beliefs, which is what our entailment checks exploit; (b) but he also warns that for most people, a *perfectly consistent* axiom system will not exist. This is why the design already separates firm rejections (verified non-entailment) from soft ones, and why we report the *best systematization* of a corpus, never claim to have found "the person's actual beliefs". THEORY.md must confront Converse explicitly; the two-layer language ("sufficient to explain", not "what they believe") is the correct response and must be justified here.
 
 **D2. A benchmark for zero-shot belief inference in large language models (2025).** https://arxiv.org/abs/2511.18616 `[✓ web-verified]` `[S]`
+> **S4 correction.** The title is wrong. The paper at this address is Malone, J., Aiyappa, R., Lee, B., Kwak, H., An, J., & Ahn, Y.-Y. (2025), "What helps language models predict human beliefs: Demographics or prior stances?", arXiv:2511.18616. Abstract read. See `RESEARCH.md` section 17-18.
 Evaluates how well LLMs predict individuals' beliefs across topics from text and context. Finds real capacity and real limits; provides a reproducible benchmark for LLM emulation of human belief reasoning.
 → *Design implication:* empirical precedent that inferring beliefs from text with an LLM is a measurable, bounded task. Justifies our abduce.py step while its documented limits justify our verification layer and uncertainty reporting.
 
 **D3. Ma, A., & Powell, D. et al. Evaluating large language models for belief inference. *Findings of EMNLP 2025*, pp. 20787-20795.** https://aclanthology.org/2025.findings-emnlp.1132/ `[✓ web-verified]` `[S]`
+> **S4 correction.** First author is Papakonstantinou, T. (with Zhiteneva, A., Ma, A. Y., Powell, D., Horne, Z.). Title: "Evaluating Large Language Models for Belief Inference: Mapping Belief Networks at Scale". *Findings of EMNLP 2025*, 20787-20795, doi:10.18653/v1/2025.findings-emnlp.1132. Abstract read. Pages confirmed.
 Systematic evaluation of LLM belief inference capabilities.
 → *Design implication:* cite alongside D2 when reporting how much trust the LLM proposal layer has earned; use their evaluation methodology ideas for our own abduce.py validation (Phase 8).
 
@@ -169,17 +172,21 @@ When shown mixed evidence, opposing camps polarize: same evidence, different ass
 ## Theme G. Evaluation precedents and corpora `[answers RQ6]`
 
 **G1. Wachsmuth, H., et al. (2017). Building an argument search engine for the web (args.me).** `[classic, verify, find venue: COMMA 2017]` `[S]`
+> **S4 correction.** Venue is the 4th Workshop on Argument Mining (ArgMining @ ACL 2017), Copenhagen, pp. 49-59, doi:10.18653/v1/W17-5106 — not COMMA 2017. The abstract says "nearly 300k arguments", not 384,527. Full author list in `RESEARCH.md` section 17.
 Large-scale argument corpus (384,527 arguments from debate portals) and search engine; the standard resource of the field.
 → *Design implication:* candidate external corpus if the Swiss votation golden set proves too small; but note it lacks axiom-level annotations (nothing does; that is why we must build our own golden corpus in Phase 7).
 
 **G2. FOLIO benchmark** (already referenced in `formalize.py` with empty rows and Wilson intervals). `[in-repo, verify the canonical citation: Han et al., 2024?)` `[R]`
+> **S4.** Canonical citation confirmed: Han, S., Schoelkopf, H., Zhao, Y., et al. (2024), *Proc. EMNLP 2024*, 22017-22031, doi:10.18653/v1/2024.emnlp-main.1229 (arXiv:2209.00840). Record verified, content not read. See `RESEARCH.md` section 17.
 First-order logic reasoning over text. Our existing benchmark harness already reports Wilson intervals and McNemar tests; keep that statistical discipline.
 → *Design implication:* the Phase 7 golden corpus evaluation should reuse the same statistical apparatus (Wilson intervals on per-axiom accuracy, McNemar when comparing two formalizers), so numbers stay comparable across versions.
 
 **G3. Proceedings of the 12th Argument Mining Workshop (ArgMining @ ACL 2025).** https://aclanthology.org/volumes/2025.argmining-1/ `[✓ web-verified]` `[S]`
+> **S4.** Volume page verified at aclanthology.org/volumes/2025.argmining-1/. `RESEARCH.md` section 17.
 Where this community publishes evaluation methods now; scan for implicit-premise and LLM-evaluation protocols we can borrow for Phase 8.
 
 **G4. Swiss votation materials (swissvotes.ch, vote 644, CO2 law, June 2021).** Primary sources: official voting booklets, campaign texts. `[to collect in Phase 7]`
+> **S4.** In-repo as `examples/co2-2021/` with booklet pages per statement; the annotation protocol for it is `RESEARCH.md` section 19.
 Our golden corpus: camps with authentic public argumentation, known outcome, bilingual (FR/DE), and a policy domain where value divergence is documented. Human-annotate a subset (Younes + at least one other annotator; report inter-annotator agreement, e.g., Cohen's kappa) to measure abduce.py's per-axiom precision/recall against the annotation.
 
 ---
@@ -219,3 +226,5 @@ Session 4 (evaluation): A6, D2, D3, G3 skim; answer RQ6; define the Phase 7 gold
 - **Session 2, 13–14 November 2026.** A3, A4, B3, B4, C1 and C3 checked and corrected in place above (A1, A2, A5, A6 verified as records). Four more pack errors: A4's first author, B3's author initial and title, B4's venue and pages, C3's pages. The novelty claim under A3 does not hold as worded: reconstruction of unstated premises with a formal check was published by two groups in 2026, and optimization over a whole argument map in 2025. RQ2, the terminology decision, the systems found and the limits of the search are in `RESEARCH.md` §7–§10. A3 and A4 still need full texts from the owner.
 
 - **Session 3, 14 November 2026.** D1, D4, E1–E5 and F1–F3 checked; D4, E2, E5, F2 and F3 annotated in place above. Three pack errors: D4's address is a system paper, not the task overview; E5 is misdescribed (it cites the pathologies it is said to document); F2 is in *Psychological Bulletin*, not *JPSP*. RQ4, RQ5, load against centrality, the coverage measures and the plausibility protocol are in `RESEARCH.md` §12–§16; H6 and H8 are in `THEORY.md`. Brief §3's expectation that Converse justifies load as centrality is not met (`RESEARCH.md` §14.1).
+
+- **Session 4, 14 November 2026.** A6, D2, D3, G1, G2, G3 checked and annotated in place above; G4 recorded as in-repo. Four pack errors: D2's title, D3's first author, G1's venue and corpus size; G2's guess (Han et al. 2024) confirmed with pages. RQ6 answered in `RESEARCH.md` section 18; the Phase 7 annotation protocol is section 19; H1, H5, H7, H9 and the terminology decision (proposed) are in section 20 and written into `THEORY.md`, which is cut to two pages with all derivations left in `RESEARCH.md`. Still unverified or under-read: listed in `RESEARCH.md` section 20 (A3/A4 full texts, Charniak & Shimony 1994, the SemEval-2026 Task 11 overview, the 2026 venue volumes, abstract-only psychology entries, FOLIO content).

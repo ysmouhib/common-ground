@@ -1166,3 +1166,52 @@ Biesterbos et al. (2026) as illustration and the unverified task overview left o
 | F3 | Record correct, subtitle missing. The entry's caution is supported by the abstract. |
 | H5–H8 | H6 and H8 redrafted above. H5 demoted to a hypothesis under test. H7 stands on the architecture. |
 | I.1, I.2, I.5 | Answered in 14.3, 13.2 (item 4) and 15.3. |
+## 17. Session 4: sources (14 November 2026)
+
+| Entry | Record, verified 2026-11-14 | Tag | Note |
+|---|---|---|---|
+| A6 | Li, H., Schlegel, V., Sun, Y., Batista-Navarro, R., & Nenadic, G. (2025). Large language models in argument mining: A survey. arXiv:2506.16383. | `[read]` | arXiv PDF fetched and text-extracted (`papers/a6pdf`); abstract and sections 1–3 read; the passage quoted in section 18 is from §4.1.5. The line "This survey covers literature up to September 27, 2025" is in the PDF, so the pack's coverage date is confirmed. The pack gave no authors; the title is correct. |
+| D2 | Malone, J., Aiyappa, R., Lee, B., Kwak, H., An, J., & Ahn, Y.-Y. (2025). What helps language models predict human beliefs: Demographics or prior stances? arXiv:2511.18616. | `[abstract]` | Abstract read from the arXiv page (`web/d2abs`). **Pack error:** the pack's title ("A benchmark for zero-shot belief inference in large language models") is not this paper's title. The paper studies which inputs — demographics or prior stances — help LLMs predict human beliefs. |
+| D3 | Papakonstantinou, T., Zhiteneva, A., Ma, A. Y., Powell, D., & Horne, Z. (2025). Evaluating large language models for belief inference: Mapping belief networks at scale. *Findings of EMNLP 2025*, 20787–20795. doi:10.18653/v1/2025.findings-emnlp.1132 | `[abstract]` | Abstract and bib read from the ACL Anthology page (`web/d3`); pages 20787–20795 confirmed. **Pack error:** the first author is Papakonstantinou; Ma and Powell are co-authors. The evaluation design is used in section 18. |
+| G1 | Wachsmuth, H., Potthast, M., Al-Khatib, K., Ajjour, Y., Puschmann, J., Qu, J., Dorsch, J., Morari, V., Bevendorff, J., & Stein, B. (2017). Building an argument search engine for the web. *Proc. 4th Workshop on Argument Mining (ArgMining @ ACL 2017)*, Copenhagen, 49–59. doi:10.18653/v1/W17-5106 | `[abstract]` | Abstract and bib read from the ACL Anthology page (`web/argsme`); venue also confirmed by Crossref. **Pack errors:** the venue is ArgMining @ ACL 2017, not COMMA 2017; the abstract says "an initial, freely accessible index of nearly 300k arguments", not 384,527. |
+| G2 | Han, S., Schoelkopf, H., Zhao, Y., Qi, Z., Riddell, M., Zhou, W., et al. (2024). FOLIO: Natural language reasoning with first-order logic. *Proc. EMNLP 2024*, 22017–22031. doi:10.18653/v1/2024.emnlp-main.1229 (arXiv:2209.00840). | `[bib]` | Record verified on the ACL Anthology page (`web/folio2024`) and via OpenAlex; content not read. The pack's guess "Han et al. 2024" is confirmed, with pages. This is the canonical citation for the FOLIO dataset the engine benchmarks on. |
+| G3 | *Proceedings of the 12th Argument Mining Workshop* (ArgMining @ ACL 2025), ACL Anthology volume 2025.argmining-1. | `[bib]` | Volume page fetched (`web/argmining25`); title verified. Individual papers cited from it are in section 7.4. |
+| G4 | swissvotes.ch, vote 644 (CO2 law, 13 June 2021): the official voting booklet and the campaign texts of both camps. | in-repo | Primary source. The corpus is `examples/co2-2021/`; booklet pages are recorded per statement in `statements.json`. No bibliographic check applies. |
+
+## 18. RQ6. What corpora and evaluation designs do comparable systems use, and where does our holdout stand?
+
+**What comparable systems evaluate, from sources read.** Enthymeme and warrant reconstruction is graded per argument against fixed gold annotations: ARCT (about 2,000 news-comment arguments with crowd-sourced warrants, posed as a binary warrant choice; Habernal et al. 2018, `[abstract]`); Debatepedia and ARCT for GUARD's per-pair proofs (Quan et al. 2026, `[read]`); Microtext, ARCT and ANLI for the SAT-relaxed pipeline (Feng & Hunter 2026, `[read]`). Belief inference is graded against human data: D2 `[abstract]` measures what helps LLMs predict human beliefs; D3 `[abstract]` evaluates a fine-tuned GPT-4o belief-network pipeline against human-annotated data and human survey data. The dataset landscape (Li et al. 2025 §3, `[read]`) shows task-first corpora giving way to integrated multi-label corpora with incompatible annotation units across corpora — and the survey's own warning, quoted from its §4.1.5: "Existing systems are effective for explicit, clause-level claims, yet often fail when claims are implied through presupposition, metaphor, or narrative framing. This limitation reflects a deeper issue: current benchmarks overwhelmingly favour well-formed, explicit annotations, leaving implicit claim phenomena systematically underrepresented in evaluation."
+
+**The common shape.** Every one of these evaluations grades a *component* — a warrant choice, the entailment of one premise–claim pair, a belief prediction — against a gold annotation, reporting accuracy or F1 and inter-annotator agreement. None reconstructs a whole axiom system for a body of text and grades it.
+
+**Where our holdout stands.** It has the same shape at the system level: withhold reviewed statements of a camp, rebuild the system from the rest, count the withheld endorsements it re-derives (a sample proportion, reported with a Wilson interval as the FOLIO harness does, §14.2) and the withheld rejections it wrongly derives (§3.4 item 5: over-generation is measured, not only sufficiency). Around it: consistent coverage κ and derived share δ describe one record (§14.3); the hull of (size, implausibility) with each system's λ-interval and the margin to the runner-up replaces a single λ (amendment A5); the plausibility estimate is a range and the selection is recomputed at both ends of it (§15.3 item 7).
+
+**What can be claimed.** That a selected system re-derives withheld endorsements it was not built from, and does not derive withheld rejections — a sufficiency claim, kernel- or solver-checked. **What cannot be claimed yet:** per-axiom precision and recall against human annotation (that is what the Phase 7 protocol of §19 builds), and any comparison number against another system, because no comparable benchmark grades this task (§7.4, §8.4).
+
+## 19. Phase 7 annotation protocol for the CO2 golden corpus
+
+1. **Who.** The owner plus at least one independent annotator, both working blind to the pipeline's output; outputs are compared after unblinding. The hand-worked `examples/co2-2021/golden.json` is the reference annotation.
+2. **What is annotated, per camp.** Statements with stance (endorsed / firm rejection / soft rejection); FOL formalizations; unstated candidate axioms, each with its verbatim quote; an optional value label on unstated axioms as a description only, kept out of cost(A) (§13.2 item 3).
+3. **Agreement.** Cohen's kappa on the stance of each statement and on the acceptance of each candidate axiom, reported per category (the categories are unbalanced), plus the raw agreement.
+4. **What counts as a divergence for `AUDIT.md`.** A pipeline–annotation disagreement enters the error taxonomy of brief §9 — formalization error / insufficiency / misattributed axiom / spurious minimality — with one example each. Counts are published only from runs, with reproduce commands.
+
+## 20. Session 4 conclusions: hypotheses, terminology, and what is still unverified
+
+**H1, H5, H7 and H9 in final wording** (written into `THEORY.md` §4):
+
+- **H1 (reconstruction precedent).** Reconstructing unstated premises is an established, measured task for single arguments and has been joined to a formal check; we extend the unit from one argument to a camp's whole record, and add selection by a declared cost, rejections, and cross-camp conflict sets. "Generalizes" is fair for the unit; per-argument accuracy does not carry over. *Sources:* Hitchcock (1985); Habernal et al. (2018); Quan et al. (2026); Feng & Hunter (2026); David & Hunter (2025).
+- **H5 (values as axioms — a hypothesis under test, not a premise).** Value divergence may root cross-camp disagreement. *Test:* on the CO2 corpus, report how the load-bearing axioms of each camp divide between value-labelled and factual statements (§13.2 item 3). Value labels are reviewer-attached descriptions and stay out of cost(A); which vocabulary (Schwartz's values or the moral foundations) is the owner's choice — neither was read beyond an abstract. *Sources:* Graham et al. (2009, abstract); Tetlock et al. (2000, abstract); Schwartz (1992, record only).
+- **H7 (LLMs need symbolic checks).** Proposal and decision are separated: belief bias — semantic world knowledge overriding formal logical structure — is documented for language models, and in this design entailment never reaches the model. *Source:* Biesterbos et al. (2026, abstract); the SemEval-2026 Task 11 task overview, not located, is left out.
+- **H9 (evaluation honesty).** No benchmark grades axiom-system reconstruction against a corpus (§18); we build one — the CO2 golden corpus with human annotations (§19), Wilson intervals and exact McNemar tests from the FOLIO harness, limitations published. *Sources:* Li et al. (2025); Wachsmuth et al. (2017); Han et al. (2024); the in-repo corpus.
+
+**Terminology decision, recorded as proposed** (§9): keep "axiom", qualified "stated" / "unstated"; do not use "warrant" or "implicit premise" in the interface. Subject to the owner's approval at CGR-5.
+
+**Still `[unverified]`, or read below the level the pack asked for:**
+
+- A3 and A4 full texts — SAGE, Springer and HAL refuse automated access; copies from the owner would close this.
+- Charniak & Shimony (1994) itself — not read; used only as reported by Hobbs et al. (1993).
+- The SemEval-2026 Task 11 task overview — not located.
+- The ACL, EMNLP and AAAI 2026 volumes — not read through; COMMA 2026 — not located.
+- Toulmin (1958), Walton et al. (2008), Ennis, Schwartz (1992), Festinger (1957) — records verified (`[bib]`), books not read.
+- Graham et al. (2009), Tetlock et al. (2000), Kunda (1990), Lord et al. (1979) — `[abstract]` only.
+- G2 (Han et al. 2024, FOLIO) — record verified, content not read.

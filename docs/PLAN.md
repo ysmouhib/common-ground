@@ -599,7 +599,7 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   (D2 title, D3 first author, G1 venue and corpus size; G2 confirmed: Han et al.
   2024, EMNLP 2024, 22017–22031). `THEORY.md` finished and cut to two pages with
   H1–H9; terminology recorded as proposed (axiom, stated/unstated). Remaining
-  [unverified] listed in RESEARCH.md §20. Docs-only; suites unchanged (engine
-  170 passed at 96704be; the llm-4000 run is separate, see its own log entry).
+  [unverified] listed in RESEARCH.md §20. Docs-only; engine suite re-run at
+  7a8dd93: exit 0, 170 passed; e2e unchanged since cc563a3.
   Committed as this session's commit. Escalations: none. Next: owner summary of
   THEORY.md + open decisions, then CGR-5 (owner sign-off) gates CG3-1.
