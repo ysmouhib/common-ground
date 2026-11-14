@@ -502,3 +502,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   (exit 0, 169 passed at 1252a9a). Committed as this session's commit.
   Escalations: none. Next: owner review of THEORY.md (CGR-5), which unblocks
   CG3-x / CG4 / CG5 / CG6 / CG7-3 / CG8.
+- 2026-11-14 — BACKLOG fix, approved by the owner in session (CGR-5 is still
+  unchecked, so no queue task is ungated): `bench.compare` kept the exact
+  McNemar p to 6 decimals, so `report` printed "p = 0." for the recorded runs;
+  it now keeps 4 significant figures and prints p = 1.803e-08 for
+  results/direct vs results/llm (README's p ≈ 1.8×10⁻⁸ is unchanged). 1 new
+  test; BACKLOG entry removed. Full engine suite with FOLIO_DIR+LEAN_BIN:
+  exit 0, 170 passed, 0 skipped (205 s). e2e with reviewer token + Lean: 33
+  passed, 0 failed, exit 0; the no-Lean and read-only variants not re-run (no
+  app/api change). Committed as this session's commit. Escalations: none.
+  Next: owner sessions CGR-2..CGR-5; the worker queue stays blocked until
+  CGR-5 is ticked.

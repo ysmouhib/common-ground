@@ -374,7 +374,8 @@ def compare(first_dir: Path, second_dir: Path) -> dict:
         "only_first_right": only_first,
         "only_second_right": only_second,
         "neither_right": len(shared) - len(right_first | right_second),
-        "mcnemar_exact_p": round(mcnemar_exact(only_first, only_second), 6),
+        # Four significant figures, not six decimals: a p of 2e-8 must not be reported as 0.
+        "mcnemar_exact_p": float(f"{mcnemar_exact(only_first, only_second):.4g}"),
     }
 
 

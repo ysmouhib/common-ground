@@ -170,6 +170,25 @@ def test_report_states_both_runs_and_the_paired_comparison(dataset, tmp_path, ca
     assert capsys.readouterr().out.startswith("## FOLIO validation")
 
 
+def test_a_very_small_mcnemar_p_is_reported_and_not_rounded_to_zero(tmp_path):
+    # 52 against 9 discordant examples, the split of the recorded deepseek-flash runs.
+    for name, right in (("direct", range(52)), ("llm", range(52, 61))):
+        directory = tmp_path / name
+        directory.mkdir()
+        rows = [{"index": i, "gold": "True", "verdict": "True" if i in right else "False"} for i in range(61)]
+        (directory / "runs.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        (directory / "summary.json").write_text(json.dumps({
+            "mode": name, "examples": 61, "correct": len(right), "accuracy": round(len(right) / 61, 4),
+            "accuracy_interval_95": None, "answered": 61, "accuracy_when_answered": round(len(right) / 61, 4),
+            "verdict_counts": {}}), encoding="utf-8")
+    exact = bench.mcnemar_exact(52, 9)
+    assert 0 < exact < 1e-6  # six decimals would report this as 0
+    p = bench.compare(tmp_path / "direct", tmp_path / "llm")["mcnemar_exact_p"]
+    assert p == float(f"{exact:.4g}") and p == pytest.approx(exact, rel=1e-3)
+    text = bench.report(tmp_path / "direct", tmp_path / "llm", tmp_path)
+    assert f"p = {exact:.4g}." in text and "p = 0." not in text
+
+
 def test_command_line_reports_configuration_problems(dataset, tmp_path, capsys, monkeypatch):
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     assert main(["folio", "--data", str(dataset.parents[2]), "--out", str(tmp_path / "x"), "--mode", "llm"]) == 2
