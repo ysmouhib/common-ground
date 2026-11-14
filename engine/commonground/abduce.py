@@ -373,37 +373,44 @@ def check_system(axioms: list[Formula], record: Record, timeout_ms: int = 5000,
     Statements without a reviewed FOL draft are pending, never assumed."""
     record.validate()
     axioms = list(axioms)
+    # early exit: certification needs every check to hold, so the first non-holding
+    # check decides it; selected systems are re-checked in full by report_camp
     consistent = consistency_check(axioms, timeout_ms)
+    if consistent.outcome != "holds":
+        return SystemChecks(consistent, [], [], [], [])
     sufficiency: list[Check] = []
     for st in record.statements:
         if st.stance != STANCE_ENDORSED:
             continue
         formula = st.formula()
-        if formula is None:
-            sufficiency.append(Check("sufficiency", st.fol_text or "(none)", "pending", BADGE_PENDING,
-                                     "no reviewed formalization for this statement"))
-        else:
-            sufficiency.append(entailment_check(axioms, formula, "sufficiency", timeout_ms, lean_bin))
+        c = (Check("sufficiency", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                   "no reviewed formalization for this statement") if formula is None
+             else entailment_check(axioms, formula, "sufficiency", timeout_ms, lean_bin))
+        sufficiency.append(c)
+        if c.outcome != "holds":
+            return SystemChecks(consistent, sufficiency, [], [], [])
     firm: list[Check] = []
     for st in record.statements:
         if st.stance != STANCE_FIRM:
             continue
         formula = st.formula()
-        if formula is None:
-            firm.append(Check("firm_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
-                              "no reviewed formalization for this statement"))
-        else:
-            firm.append(entailment_check(axioms, fol.Not(formula), "firm_rejection", timeout_ms, lean_bin))
+        c = (Check("firm_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                   "no reviewed formalization for this statement") if formula is None
+             else entailment_check(axioms, fol.Not(formula), "firm_rejection", timeout_ms, lean_bin))
+        firm.append(c)
+        if c.outcome != "holds":
+            return SystemChecks(consistent, sufficiency, firm, [], [])
     soft: list[Check] = []
     for st in record.statements:
         if st.stance != STANCE_SOFT:
             continue
         formula = st.formula()
-        if formula is None:
-            soft.append(Check("soft_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
-                              "no reviewed formalization for this statement"))
-        else:
-            soft.append(non_entailment_check(axioms, formula, "soft_rejection", timeout_ms))
+        c = (Check("soft_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                   "no reviewed formalization for this statement") if formula is None
+             else non_entailment_check(axioms, formula, "soft_rejection", timeout_ms))
+        soft.append(c)
+        if c.outcome != "holds":
+            return SystemChecks(consistent, sufficiency, firm, soft, [])
     # S4 is over E⁺ (THEORY.md §2): removing an axiom must break the entailment of some
     # endorsed claim or some negated firm rejection, not only an endorsed claim
     eps_targets = _targets(record)
@@ -431,7 +438,8 @@ def check_system(axioms: list[Formula], record: Record, timeout_ms: int = 5000,
                                     f"needed: without it, {witness} is not entailed"))
         else:
             minimality.append(Check("minimality", fol.to_text(a), "fails", BADGE_SOLVER,
-                                    "redundant: the other axioms still entail every endorsed claim"))
+                                    "redundant: without it, E⁺ is still entailed"))
+            return SystemChecks(consistent, sufficiency, firm, soft, minimality)
     return SystemChecks(consistent, sufficiency, firm, soft, minimality)
 
 
@@ -786,6 +794,14 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
     plausibilities = dict(plausibilities or {})
     pool_result = collect(source, record)
     stated = _targets(record)
+    # a candidate identical to a stated claim adds nothing: the stated copy has p = 1
+    stated_texts = {fol.to_text(f) for f in stated}
+    dups = [c for c in pool_result.candidates if fol.to_text(c.formula) in stated_texts]
+    if dups:
+        pool_result = Pool([c for c in pool_result.candidates if fol.to_text(c.formula) not in stated_texts],
+                           pool_result.dropped + [DroppedCandidate(fol.to_text(c.formula),
+                                                                    "duplicate of a stated claim")
+                                                   for c in dups])
     pool = stated + [c.formula for c in pool_result.candidates]
     for c in pool_result.candidates:
         plausibilities.setdefault(fol.to_text(c.formula), 0.5)  # anchored mid level when unscored

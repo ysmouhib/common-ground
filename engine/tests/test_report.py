@@ -67,6 +67,20 @@ def test_report_camp_selects_the_unstated_system_and_reports_load():
         assert forbidden not in md.lower()
 
 
+def test_report_drops_a_candidate_that_duplicates_a_stated_claim():
+    import tempfile, pathlib
+    with tempfile.TemporaryDirectory() as tmp:
+        rp = pathlib.Path(tmp) / "record.json"
+        write_record(rp, good_statements())
+        record = abduce.load_record(str(rp))
+    dup = abduce.Candidate("Human(socrates)",
+                           [("dx", "Socrates is human.", tuple(span_of("Socrates is human.")))])
+    report = abduce.report_camp(record, abduce.ScriptedSource([dup]), {}, lam=0.3)
+    assert report["pool"]["candidates"] == []
+    assert any(d["reason"] == "duplicate of a stated claim" for d in report["pool"]["dropped"])
+    assert report["abstention"] is True  # selection unchanged: the stated copy has p = 1
+
+
 def test_report_abstention_when_no_candidate_is_proposed():
     import tempfile, pathlib
     with tempfile.TemporaryDirectory() as tmp:
