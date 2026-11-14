@@ -278,18 +278,27 @@ covers it and the known limits: [`SECURITY.md`](SECURITY.md).
 
 ```
 engine/commonground/   fol.py parser · verdict.py · smt.py (Z3) · ground.py (SAT) · model.py (evaluator)
-                       lean.py (certificates) · argmap.py (conflicts) · formalize.py (model, not run) · bench.py
-engine/tests/          122 tests: properties, differential checks between engines, Lean soundness probes,
-                       the model path with scripted clients
+                       lean.py (certificates) · argmap.py (conflicts) · bench.py · folio.py (dataset)
+                       formalize.py (language model to formulas) · extract.py (statements with verbatim spans)
+                       abduce.py (axiom systems, cost, per-camp report) · load.py · crosscamp.py (common ground,
+                       fault lines)
+engine/tests/          345 tests: properties, differential checks between engines, Lean soundness probes,
+                       the model path with scripted clients, the search against brute force, the CO2 golden corpus
 engine/examples/       two debates as formulas
-results/               benchmark output and the annotation audit
-api/                   Hono + tRPC server, access control, Lean runner, AI drafts
-contracts/             Lean sources, certificate hashes, generated analysis (with api/: 43 tests)
+examples/co2-2021/     golden corpus: the Swiss CO2-law vote of 13 June 2021, statements and hand-worked target
+results/               benchmark output (FOLIO, model runs, abduction, CO2 holdout) and the annotation audit
+AUDIT.md               where the pipeline and the hand-worked CO2 target differ, and why
+docs/                  PLAN.md (state) · BACKLOG.md · design/ (abduction, cross-camp) · research/ (THEORY, RESEARCH)
+api/                   Hono + tRPC server, access control, Lean runner, AI drafts, engine bridge (camp,
+                       crosscamp, extract)
+contracts/             Lean sources, certificate hashes, generated analysis, engine report whitelists
+                       (with api/: 57 tests)
 db/                    schema, worked-example data, stored Lean outputs
 proofs/                the worked example's Lean files
-src/                   React interface
+src/                   React interface: debate, evidence, proofs, camps, axiom queue, comparison
 e2e/                   end-to-end checks against a running build
 .github/workflows/     ci.yml (tests, benchmark, container, end-to-end) · model-benchmark.yml (manual)
+                       release.yml (container image to GHCR on a version tag)
 ```
 
 ## How this was built
