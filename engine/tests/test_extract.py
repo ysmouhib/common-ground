@@ -275,3 +275,78 @@ def test_an_outage_at_any_position_leaves_exactly_the_finished_rows_then_resumes
     assert summary["documents"] == 4 and summary["failed"] == 0
     rows = (tmp_path / "runs.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(rows) == 4
+
+
+# ------------------------------------------------------------- discourse relations (CG2-4)
+
+REL = {"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "supports"}
+GOOD_REL = json.dumps({"statements": json.loads(GOOD)["statements"], "relations": [REL]})
+
+
+def test_relations_are_accepted_and_must_reference_statement_spans():
+    result = extract.extract(Scripted(GOOD_REL), "doc1", DOC)
+    assert result.attempts == 1
+    assert [(r.source, r.target, r.kind) for r in result.relations] == [(S1, S2, "supports")]
+    spans = {(s.start, s.end) for s in result.statements}
+    for r in result.relations:
+        assert r.source in spans and r.target in spans
+
+
+def test_a_reply_without_relations_is_still_valid():
+    assert extract.extract(Scripted(GOOD), "doc1", DOC).relations == []
+
+
+@pytest.mark.parametrize("bad_rel, problem", [
+    ({"from": [0, 5], "to": [S2[0], S2[1]], "kind": "supports"}, '"from" span [0, 5] is not one of the statements'),
+    ({"from": [S1[0], S1[1]], "to": [0, 5], "kind": "attacks"}, '"to" span [0, 5] is not one of the statements'),
+    ({"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "refutes"}, "kind must be one of"),
+    ({"from": [S1[0], S1[1]], "to": [S1[0], S1[1]], "kind": "supports"}, "relates a statement to itself"),
+    ({"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "supports", "extra": 1}, None),  # extra keys tolerated
+])
+def test_bad_relation_is_sent_back_with_the_reason(bad_rel, problem):
+    reply = json.dumps({"statements": json.loads(GOOD)["statements"], "relations": [bad_rel]})
+    if problem is None:  # the tolerated case succeeds on the first attempt
+        assert extract.extract(Scripted(reply), "doc1", DOC).attempts == 1
+        return
+    client = Scripted(reply, GOOD)
+    result = extract.extract(client, "doc1", DOC)
+    assert result.attempts == 2 and problem in client.calls[1][1]
+
+
+def test_duplicate_and_oversized_relation_lists_are_rejected():
+    dup = json.dumps({"statements": json.loads(GOOD)["statements"], "relations": [REL, REL]})
+    with pytest.raises(extract.ExtractionError) as caught:
+        extract.extract(Scripted(dup), "doc1", DOC, max_repairs=0)
+    assert "repeats" in caught.value.history[0]["problem"]
+    big = json.dumps({"statements": json.loads(GOOD)["statements"],
+                      "relations": [dict(REL, to=[S1[0], S1[1]] if i == 0 else [S2[0], S2[1]]) for i in range(0)]})
+    many = json.dumps({"statements": json.loads(GOOD)["statements"],
+                       "relations": [{**REL, "to": [S2[0], S2[1]], "kind": "attacks"}] * (extract.MAX_RELATIONS + 1)})
+    with pytest.raises(extract.ExtractionError) as caught2:
+        extract.extract(Scripted(many), "doc1", DOC, max_repairs=0)
+    assert "at most" in caught2.value.history[0]["problem"]
+
+
+def test_run_rows_and_summary_carry_relations(tmp_path):
+    summary = extract.run(Scripted(GOOD_REL, GOOD_REL), [("doc1", DOC), ("doc2", DOC)], tmp_path)
+    assert summary["relations"] == 2 and summary["statements"] == 4
+    rows = [json.loads(l) for l in (tmp_path / "runs.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert rows[0]["relations"] == [{"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "supports"}]
+
+
+@given(TEXTS, st.data())
+@settings(max_examples=100, deadline=None)
+def test_every_relation_endpoint_is_a_statement_span(doc, data):
+    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: p, min_size=2, max_size=5))
+    pairs = data.draw(st.lists(st.tuples(st.sampled_from(spans), st.sampled_from(spans)),
+                               max_size=4))
+    rels = [{"from": [a[0], a[1]], "to": [b[0], b[1]],
+             "kind": data.draw(st.sampled_from(["supports", "attacks"]))}
+            for a, b in pairs if a != b]
+    rels = list({(tuple(r["from"]), tuple(r["to"]), r["kind"]): r for r in rels}.values())
+    reply = _reply(doc, spans)
+    reply = json.dumps({**json.loads(reply), "relations": rels})
+    result = extract.extract(Scripted(reply), "doc", doc)
+    stmt_spans = {(s.start, s.end) for s in result.statements}
+    assert all(r.source in stmt_spans and r.target in stmt_spans for r in result.relations)
+    assert len(result.relations) == len(rels)

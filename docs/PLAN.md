@@ -121,7 +121,7 @@ number guard; the README evidence tables.
   Deps: CG2-2. Done-when: pytest exits 0; README row with reproduce command or
   "not run".
 
-- [ ] **CG2-4** — Extend extraction to emit support/attack relations between
+- [x] **CG2-4** — Extend extraction to emit support/attack relations between
   statements (the discourse-level edges of the argument graph), same verbatim-span
   discipline; schema-validated, resumable like the rest. Files:
   `engine/commonground/extract.py`, `engine/tests/test_extract.py`. Deps: CG2-3.
@@ -414,3 +414,10 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   names the exact workflow inputs for the recorded run. No engine/app changes
   this session; full suite remains exit 0, 159 passed (CG1-1 run). Committed as
   this session's commit. Escalations: none. Proposed next task: CG2-4.
+- 2026-11-13 — CG2-4: extract.py now also emits discourse relations
+  ({"from","to","kind": supports|attacks}) whose endpoints must be statement
+  spans; validated with the same repair loop; run() rows and summary carry
+  them; 10 new tests incl. a hypothesis property that every relation endpoint
+  is a statement span. Full engine suite: exit 0, 169 passed, 0 skipped
+  (210 s). Committed as this session's commit. Escalations: none. Next:
+  CG7-1.

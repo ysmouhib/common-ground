@@ -29,6 +29,8 @@ from .formalize import ChatClient, extract_json
 MAX_DOCUMENT_CHARS = 20_000
 MAX_STATEMENTS = 40
 MAX_STATEMENT_CHARS = 500
+MAX_RELATIONS = 80
+RELATION_KINDS = ("supports", "attacks")
 
 SYSTEM_EXTRACT = f"""You extract the statements a text asserts.
 You receive a JSON object with "document_id" and "text".
@@ -38,7 +40,12 @@ Reply with one JSON object and nothing else:
 Each "text" must be copied exactly from "text", and "span" must be its [start, end) character
 offsets in "text", so that text[start:end] equals the quote. Offsets count characters, not bytes.
 Include only complete, self-contained statements the text asserts; skip greetings, questions
-and meta commentary. Give at most {MAX_STATEMENTS} statements."""
+and meta commentary. Give at most {MAX_STATEMENTS} statements.
+Also list the relations the text asserts between those statements, if any:
+  "relations": [{{"from": [start, end], "to": [start, end], "kind": "supports"}}, ...]
+"from" and "to" are the spans of two statements above; "kind" is "supports" when the source
+statement is given as a reason for the target, "attacks" when it is given as a challenge to it.
+Give at most {MAX_RELATIONS} relations."""
 
 
 @dataclass
@@ -49,9 +56,18 @@ class Statement:
 
 
 @dataclass
+class Relation:
+    """A discourse-level edge: the statement at ``source`` supports or attacks the one at ``target``."""
+    source: tuple[int, int]
+    target: tuple[int, int]
+    kind: str
+
+
+@dataclass
 class Extraction:
     document: str
     statements: list[Statement]
+    relations: list[Relation]
     attempts: int
     usage: list[dict] = field(default_factory=list)
 
@@ -69,7 +85,7 @@ def _check_document(text: str) -> None:
         raise ValueError(f"the document must be non-empty text of at most {MAX_DOCUMENT_CHARS} characters")
 
 
-def _validate(reply: str, text: str) -> list[Statement]:
+def _validate(reply: str, text: str) -> tuple[list[Statement], list[Relation]]:
     data = extract_json(reply)
     entries = data.get("statements")
     if not isinstance(entries, list):
@@ -99,7 +115,34 @@ def _validate(reply: str, text: str) -> list[Statement]:
             raise ValueError(f"statement {position} quote does not match the source: "
                              f"text[{start}:{end}] is {text[start:end]!r}")
         statements.append(Statement(quote, start, end))
-    return statements
+    spans = {(st.start, st.end) for st in statements}
+    entries_rel = data.get("relations", [])
+    if not isinstance(entries_rel, list):
+        raise ValueError('"relations" must be a list')
+    if len(entries_rel) > MAX_RELATIONS:
+        raise ValueError(f"at most {MAX_RELATIONS} relations per document, got {len(entries_rel)}")
+    relations: list[Relation] = []
+    seen_rel: set[tuple[tuple[int, int], tuple[int, int], str]] = set()
+    for position, rel in enumerate(entries_rel, start=1):
+        if not isinstance(rel, dict):
+            raise ValueError(f"relation {position} must be an object with \"from\", \"to\" and \"kind\"")
+        source, target, kind = rel.get("from"), rel.get("to"), rel.get("kind")
+        for name, span in (("from", source), ("to", target)):
+            if (not isinstance(span, list) or len(span) != 2
+                    or not all(isinstance(i, int) and not isinstance(i, bool) for i in span)):
+                raise ValueError(f'relation {position} needs "{name}": [start, end] as two integers')
+            if (span[0], span[1]) not in spans:
+                raise ValueError(f'relation {position} "{name}" span {span} is not one of the statements')
+        if kind not in RELATION_KINDS:
+            raise ValueError(f'relation {position} kind must be one of {RELATION_KINDS}')
+        if (source[0], source[1]) == (target[0], target[1]):
+            raise ValueError(f"relation {position} relates a statement to itself")
+        key = ((source[0], source[1]), (target[0], target[1]), kind)
+        if key in seen_rel:
+            raise ValueError(f"relation {position} repeats {key}")
+        seen_rel.add(key)
+        relations.append(Relation((source[0], source[1]), (target[0], target[1]), kind))
+    return statements, relations
 
 
 def extract(client: ChatClient, document_id: str, text: str, max_repairs: int = 2) -> Extraction:
@@ -111,8 +154,8 @@ def extract(client: ChatClient, document_id: str, text: str, max_repairs: int = 
         reply, used = client.complete(SYSTEM_EXTRACT, user)
         usage.append(used)
         try:
-            statements = _validate(reply, text)
-            return Extraction(document_id, statements, attempt, usage)
+            statements, relations = _validate(reply, text)
+            return Extraction(document_id, statements, relations, attempt, usage)
         except (ValueError, json.JSONDecodeError) as exc:
             history.append({"attempt": attempt, "reply": reply[:2000], "problem": str(exc)})
             user = (f"{request}\n\nYour previous reply was rejected: {exc}\n"
@@ -172,6 +215,8 @@ def run(client: ChatClient, documents: list[tuple[str, str]], out_dir: Path) -> 
             else:
                 row = {"document": document_id,
                        "statements": [{"text": s.text, "span": [s.start, s.end]} for s in result.statements],
+                       "relations": [{"from": list(r.source), "to": list(r.target), "kind": r.kind}
+                                     for r in result.relations],
                        "attempts": result.attempts, "usage": result.usage,
                        "seconds": round(time.time() - started, 2)}
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -187,6 +232,7 @@ def run(client: ChatClient, documents: list[tuple[str, str]], out_dir: Path) -> 
                     tokens[key] += used[key]
     summary = {**config, "documents": len(rows),
                "statements": sum(len(r.get("statements", [])) for r in rows),
+               "relations": sum(len(r.get("relations", [])) for r in rows),
                "failed": sum(1 for r in rows if "error" in r),
                "tokens": dict(tokens), "environment": environment(None)}
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
