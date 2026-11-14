@@ -52,7 +52,7 @@ kernel-checked, solver-checked, or shown as pending — never silently picked.
 | Check whether a conclusion follows from premises | `python -m commonground check --premise "∀x (Human(x) → Mortal(x))" --premise "Human(socrates)" --conclusion "Mortal(socrates)" --lean` | a verdict backed by a Lean-kernel proof, or a solver refutation with an explicit countermodel (on FOLIO: 128/128 kernel-certified, 0/278 false accepted) |
 | See where a debate stands | `python -m commonground analyze examples/plastic_bags.json` | compatible / minimal conflicts / smallest concessions; `examples/remote_work.json` shows 2 conflicts and 8 ways out |
 | Turn texts into statements | `python -m commonground extract doc.txt --base-url … --model … --out out` | statements with verbatim quotes and spans, plus support/attack relations |
-| Reconstruct what one camp's claims rest on | `python -m commonground camp record.json --candidates cand.json --lam 0.3 --lean --out out` | `out/report.md`: the selected axioms are **verified sufficient** — e.g. "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)" — with load ranking and negative controls |
+| Reconstruct what one camp's claims rest on | `python -m commonground camp record.json --candidates cand.json --lam 0.3 --lean --out out` | `out/report.md`: the selected axioms are **verified sufficient** — e.g. "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)" — with load ranking, negative controls, and — when `--plausibilities` gives ranges — a plausibility-sensitivity section |
 | Compare two camps | `python -m commonground co2 --out co2-out` (bundled CO2 vote), or `crosscamp A.json B.json --candidates a.json b.json --out out` | `crosscamp.md`: provable common ground (two tiers) and the exact fault lines; on the CO2 example the camps are consistent and diverge at the root (top-ranked axiom pair, rank 8) |
 
 The web UI for pasting your own debate is Phase 6 of [`docs/PLAN.md`](docs/PLAN.md)
@@ -68,6 +68,8 @@ and is not built yet; the CLI above works today.
 | Lean accepted **0 of 278** false statements offered to it (the opposite of each verdict, both directions for the open ones) | `summary.json` → `lean` | same |
 | Every "does not follow either way" verdict (75) comes with two finite models, re-checked by an evaluator that imports no solver | `engine/commonground/model.py`, `per_example.csv` | same |
 | A second, independent engine (grounding to SAT) agrees on **201 of 201** examples where it is definite | `summary.json` → `second_engine` | same |
+| On a 25-example FOLIO slice, the example's own premises contain a **certified sufficient subset for its conclusion on 9 of 25** (36.0 %, 95 % Wilson 20.3–55.5 %); the recovered subsets average 3.44 premises against 5.6 given | `results/abduction-25/summary.json` (solver-only run, so every row is SOLVER-CHECKED) | `FOLIO_DIR=… python -m commonground --timeout-ms 3000 folio --mode abduction --limit 25 --out results/abduction-25` |
+| On the bundled CO2 vote, each reviewed statement is re-derived from the rest when withheld in turn on **2 of 7** "yes" and **2 of 6** "no" statements (28.6 %, Wilson 8.2–64.1 %; 33.3 %, Wilson 9.7–70.0 %) | `results/co2-holdout/summary.json` | `cd engine && python -m pytest tests/test_golden.py -k holdout` |
 | The path a language model's reply takes (JSON, validation, solver) adds no error of its own: fed the dataset's formulas, it returns the reference verdict on all 203 examples whose formulas parse, and no answer on the malformed one | `engine/tests/test_bench.py` | `FOLIO_DIR=… python -m pytest tests/test_bench.py` |
 | In 10 of the 204 examples the dataset has a different number of sentences and formulas, so "one formula per sentence" cannot be met on them | [`AUDIT.md`](results/folio-validation/AUDIT.md) | same as the first row |
 | In the worked debate the two positions are compatible, and each proof's premise list is exactly the one minimal set that entails its conclusion | `contracts/analysis.generated.ts`, `contracts/analysis.test.ts` | `npm test` |
@@ -141,6 +143,10 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
 
   The run is resumable and writes `runs.jsonl`, `config.json` (model and settings) and
   `summary.json` to the output directory; a provider outage stops it, never scores it.
+* **The abduction benchmark is a 25-example slice, and the recorded run used no Lean** (every row SOLVER-CHECKED). The full 204-example run was not run this session, and no live model proposed the candidate pool — that mode needs an endpoint and `LLM_API_KEY`. Recorded in `results/abduction-25/`.
+
+* **The CO2 holdout covers a tiny corpus and skips the selection search.** With 7 and 6 withheld statements the two Wilson intervals (8.2–64.1 % and 9.7–70.0 %) overlap almost completely, so the camps' proportions are not distinguishable; and per AUDIT-4 the 16-item "yes"-pool search does not finish under the check cap, so the holdout rebuilds with the golden candidate extraction (CG7-2) instead — `results/co2-holdout/summary.json` says so in its note. It measures coverage of the reconstruction on one small corpus, not a property of either camp.
+
 * **Faithfulness is not certified by anything here.** A formula can be provably
   entailed and still not say what the sentence meant.
 * **The container image has been built only by CI**, not on a developer machine.

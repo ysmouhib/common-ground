@@ -1,0 +1,7 @@
+{
+  "mode": "abduction",
+  "lam": 0.3,
+  "max_checks": 4000,
+  "timeout_ms": 3000,
+  "lean": false
+}

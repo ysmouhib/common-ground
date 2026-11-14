@@ -1,0 +1,36 @@
+{
+  "mode": "abduction",
+  "lam": 0.3,
+  "max_checks": 4000,
+  "timeout_ms": 3000,
+  "lean": false,
+  "dataset": {
+    "name": "FOLIO validation",
+    "examples": 25,
+    "revision": "5d7bb84c7edab3fb358e057d2807f19cf5cf5e2d",
+    "licence": "CC BY-SA 4.0"
+  },
+  "examples": 25,
+  "parsed": 25,
+  "pool_too_large": 0,
+  "search_incomplete": 0,
+  "definite": 25,
+  "recovered": 9,
+  "recovery_rate": 0.36,
+  "recovery_interval_95": [
+    0.2025,
+    0.5548
+  ],
+  "min_recovered_size_mean": 3.444,
+  "reference_premises_mean": 5.6,
+  "badges": {
+    "SOLVER-CHECKED (not kernel-certified)": 25
+  },
+  "environment": {
+    "python": "3.12.10",
+    "z3": "5.4.1",
+    "pysat": "1.9.dev22",
+    "lean": null,
+    "engine_sha256": "55f87c836e8ea397f84d50c2e94785fe3433a727e231597b0e0b054f6f254632"
+  }
+}
