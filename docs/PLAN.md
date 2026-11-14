@@ -155,12 +155,12 @@ number guard; the README evidence tables.
   (branch-and-bound), cross-checked against brute force in tests, mirroring how
   `argmap.py` is tested. Files: `engine/commonground/abduce.py`,
   `engine/tests/test_abduce.py`. Deps: CG3-3. Done-when: pytest exits 0.
-- [ ] **CG3-6** — Symbolic baseline control (owner decision 2026-11-13): A = E(C)
+- [x] **CG3-6** — Symbolic baseline control (owner decision 2026-11-13): A = E(C)
   and its minimal sufficient subset via `argmap` run through the same certified
   checks as LLM-proposed systems, so tests can show whether the LLM layer adds
   anything beyond symbolic minimization. Files: `engine/tests/test_abduce.py`,
   `engine/commonground/abduce.py`. Deps: CG3-5. Done-when: pytest exits 0.
-- [ ] **CG3-5** — Negative controls: for a certified axiom set, Lean must
+- [x] **CG3-5** — Negative controls: for a certified axiom set, Lean must
   reject the negations; adversarial self-checks (a claim not entailed, a
   smuggled contradiction, a redundant axiom, a violated rejection). Files:
   `engine/tests/test_abduce.py`, `engine/commonground/abduce.py`. Deps: CG3-4.
@@ -646,3 +646,12 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   systems). 7 new tests; full suite exit 0, 210 passed (280 s, FOLIO_DIR+LEAN_BIN).
   e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none.
   Next: CG3-5.
+- 2026-11-14 — CG3-5 + CG3-6 done (one commit, one code append): negative_controls() runs
+  the adversarial battery (non-entailed claim answered fails-with-model, smuggled
+  contradiction caught by consistency, redundant axiom caught by S4, violated soft
+  rejection caught, and with Lean the kernel must reject the negations of the sufficiency
+  claims; unrun controls report null, never failed); baseline_system() runs A = E(C) and a
+  greedy minimal sufficient subset of E⁺ through the same certified checks (CG3-6, owner
+  decision 2026-11-13). 5 new tests (battery pass/fail, Lean negation rejection, baseline).
+  Full suite exit 0, 215 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3.
+  Committed as this session's commit. Escalations: none. Next: CG4-1 (load) + CG4-2 (report).

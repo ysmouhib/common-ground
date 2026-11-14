@@ -356,3 +356,44 @@ def test_pool_cap_is_enforced():
     pool = [fol.parse(f"P{i}(a)") for i in range(abduce.MAX_POOL + 1)]
     with pytest.raises(TooMany):
         abduce.select(pool, big_record(), {}, 0.3)
+
+
+# --- CG3-5 / CG3-6: negative controls and the symbolic baseline ------------
+
+
+def test_negative_controls_battery_passes_on_a_certified_system():
+    axioms = [fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)]
+    report = abduce.negative_controls(axioms, check_record())
+    assert report["all_passed"], report["controls"]
+    assert report["controls"]["lean_negations_rejected"] is None  # no Lean in this run
+
+
+@needs_lean
+def test_negative_controls_lean_rejects_the_negations():
+    axioms = [fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)]
+    report = abduce.negative_controls(axioms, check_record(), lean_bin=LEAN)
+    assert report["controls"]["lean_negations_rejected"] is True
+    assert report["all_passed"]
+
+
+def test_negative_controls_detect_a_broken_system():
+    # a system that does not entail an endorsed claim: control 1 must NOT pass
+    report = abduce.negative_controls([fol.parse(AXIOM_SOC)], check_record())
+    assert not report["all_passed"]
+
+
+def test_baseline_system_runs_stated_and_minimal_stated_through_the_checks():
+    base = abduce.baseline_system(big_record())
+    assert base["stated"].certified
+    assert base["minimal_stated"].certified
+    assert base["minimal_formulas"] == base["stated_formulas"]  # nothing redundant here
+
+
+def test_baseline_minimal_subset_drops_a_redundant_stated_claim():
+    r = check_record()
+    r.statements.append(abduce.RecordStatement(
+        "e2", abduce.STANCE_ENDORSED, "Mortal(socrates)", "d1", DOC[S1[0]:S2[1]], (S1[0], S2[1])))
+    base = abduce.baseline_system(r)
+    # e2 duplicates e1's formula and the firm negation is entailed by e1: the minimal subset is smaller
+    assert len(base["minimal_formulas"]) < len(base["stated_formulas"])
+    assert base["minimal_stated"].certified

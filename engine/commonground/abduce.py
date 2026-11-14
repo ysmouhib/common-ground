@@ -659,3 +659,71 @@ def margin_at(certified: list[list[str]], pool: list[Formula], plausibilities: d
     if len(costs) < 2:
         return None
     return costs[1] - costs[0]
+
+
+# ---------------------------------------------------------------------------
+# Negative controls and the symbolic baseline (CG3-5, CG3-6; design §10, §12).
+# CG3-5: before a system is reported certified, the engine tries to break it —
+# a claim it does not entail, a smuggled contradiction, a redundant axiom, a
+# violated rejection — and with Lean, the kernel must reject the negations of
+# the sufficiency claims. CG3-6: the stated system A = E(C) and a minimal
+# sufficient subset of it run through the same certified checks, so tests can
+# show whether unstated candidates add anything beyond symbolic minimization.
+
+
+def negative_controls(axioms: list[Formula], record: Record, lean_bin: str | None = None,
+                      timeout_ms: int = 5000) -> dict:
+    """The adversarial battery on a candidate system (design §10). Returns per-item
+    pass/fail; all_passed is True only when every control behaves as it should."""
+    axioms = list(axioms)
+    endorsed = [st.formula() for st in record.statements
+                if st.stance == STANCE_ENDORSED and st.formula() is not None]
+    soft = [st.formula() for st in record.statements
+            if st.stance == STANCE_SOFT and st.formula() is not None]
+    controls: dict[str, bool] = {}
+    # 1. a claim the system does not entail is answered "fails" with a model, never "holds"
+    if soft:
+        c = entailment_check(axioms, soft[0], "sufficiency", timeout_ms)
+        controls["non_entailed_claim_not_reported"] = c.outcome == "fails" and c.model_false is not None
+    # 2. a smuggled contradiction is caught by the consistency check
+    controls["contradiction_caught"] = consistency_check(
+        axioms + [fol.parse("P(zzz)"), fol.parse("¬P(zzz)")], timeout_ms).outcome == "fails"
+    # 3. a redundant axiom is caught by S4
+    taut = fol.parse("∀x (Mortal(x) → Mortal(x))")
+    checks = check_system(axioms + [taut], record, timeout_ms)
+    controls["redundant_axiom_caught"] = any(c.outcome == "fails" for c in checks.minimality)
+    # 4. a violated soft rejection is caught
+    if soft:
+        viol = check_system(axioms + [soft[0]], record, timeout_ms)  # A ∪ {r} entails r: rejection violated
+        controls["violated_rejection_caught"] = any(c.outcome == "fails" for c in viol.soft_rejections)
+    # 5. with Lean, the kernel must reject the negations of the sufficiency claims
+    controls["lean_negations_rejected"] = None
+    if lean_bin is not None and endorsed:
+        certs = _lean.certify([(axioms, fol.Not(e)) for e in endorsed], lean_bin)
+        controls["lean_negations_rejected"] = all(not c.accepted for c in certs)
+    # a control that was not run (None, e.g. no Lean) is reported as null, not as failed
+    return {"controls": controls, "all_passed": all(v for v in controls.values() if v is not None)}
+
+
+def baseline_system(record: Record, timeout_ms: int = 5000, lean_bin: str | None = None) -> dict:
+    """The symbolic baseline (CG3-6): A = E(C) — the stated claims themselves — and a
+    minimal sufficient subset of them, both run through the same certified checks."""
+    record.validate()
+    stated = [st.formula() for st in record.statements
+              if st.stance == STANCE_ENDORSED and st.formula() is not None]
+    stated += [fol.Not(st.formula()) for st in record.statements
+               if st.stance == STANCE_FIRM and st.formula() is not None]
+    stated_checks = check_system(stated, record, timeout_ms, lean_bin)
+    # a minimal sufficient subset of E⁺: greedily drop any axiom whose removal keeps
+    # every endorsed claim entailed (solver checks; ties are not enumerated here)
+    minimal = list(stated)
+    for a in list(stated):
+        rest = [x for x in minimal if fol.to_text(x) != fol.to_text(a)]
+        if all(_solver_entailment(rest, e, timeout_ms).label in ("True", "Inconsistent")
+               for e in [st.formula() for st in record.statements
+                         if st.stance == STANCE_ENDORSED and st.formula() is not None]):
+            minimal = rest
+    minimal_checks = check_system(minimal, record, timeout_ms, lean_bin)
+    return {"stated": stated_checks, "minimal_stated": minimal_checks,
+            "stated_formulas": [fol.to_text(f) for f in stated],
+            "minimal_formulas": [fol.to_text(f) for f in minimal]}
