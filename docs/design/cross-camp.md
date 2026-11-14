@@ -74,9 +74,11 @@ Theorem 1).
   MUS as the minimal set whose consequence breaks; Reiter 1987 reads MUSes as
   diagnoses; Liffiton & Sakallah 2008 (definitions + hitting-set duality, checked in
   `test_argmap.py`) and Liffiton et al. 2016 (MARCO, implemented in `argmap.py`) do the
-  enumeration. Each MUS is certified by a solver refutation (badge SOLVER-CHECKED,
-  sound inside the Bernays–Schönfinkel class, `ground.py`; outside it: no verdict,
-  entry stays PENDING, never published).
+  enumeration. Each MUS is certified by a solver refutation (badge SOLVER-CHECKED; sound in any
+  fragment — Z3 runs on an uninterpreted sort with a plain solver, `smt.py`, so its "unsat"
+  is a sound refutation; `ground.py`'s Bernays–Schönfinkel boundary is where the grounding
+  engine decides, i.e. a boundary of termination, not of soundness — outside the class the
+  check's `detail` says the refutation rests on Z3 alone. Owner decision 2026-11-14, PLAN.md).
 - **Capping.** `limit`/`TooMany` as in `argmap.py`. MARCO outputs MUSes steadily, so a
   capped run reports a certified *partial* MUS list, labelled partial. Never derive
   MUSes from a partial MCS collection — that is the CAMUS phase-1 caveat (RESEARCH.md

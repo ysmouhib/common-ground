@@ -81,14 +81,18 @@ Every verdict follows THEORY.md's verdict table:
 | A ⊨ φ | `lean.certify` (kernel proof) preferred; `verdict.decide`/`smt.check` refutation as fallback | SUFFICIENT (kernel-checked) or SOLVER-CHECKED (not kernel-certified) |
 | A ⊭ r | `verdict.decide` with `model_false` structure, re-evaluated by the solver-free checker in `model.py` | SOLVER-CHECKED |
 | A consistent | explicit finite model | SOLVER-CHECKED |
-| timeout / outside BS class | — | pending, shown as pending; never "false" |
+| timeout | — | pending, shown as pending; never "false" |
 
 No text from a visitor or a model reaches Lean: `lean.certify` takes parsed `Formula`s,
 generates the source from the syntax tree, and `lean.assert_generated` refuses anything
 outside the generated vocabulary (existing `lean.py` machinery; the app never sends visitor
-text to Lean either). Soundness note: a solver refutation is sound for ⊨ inside the
-Bernays–Schönfinkel class (`ground.py`'s boundary, documented there); outside it the check
-returns "no verdict" (THEORY.md limit 6).
+text to Lean either). Soundness note: a solver refutation is sound for ⊨ in any fragment here — Z3 runs on an
+uninterpreted sort with a plain solver (`smt.py`), so its "unsat" is a sound refutation
+regardless of class. The Bernays–Schönfinkel boundary in `ground.py` is where grounding (the
+second engine) *decides* — a boundary of termination, not of soundness. Outside the class the
+check still reads SOLVER-CHECKED and its `detail` says the refutation rests on Z3 alone
+(THEORY.md limit 6: outside the class, "no verdict" remains possible in general) — owner
+decision 2026-11-14, recorded in PLAN.md.
 
 **Checks on a candidate system A** (all certified): consistency; sufficiency A ⊨ φ for every
 φ ∈ E⁺; firm rejections A ⊨ ¬r; soft rejections A ⊭ r (each separately, amendment A6 —
