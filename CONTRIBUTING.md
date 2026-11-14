@@ -11,6 +11,8 @@ and no published number may be unreproducible.
 - Node.js (LTS) for the app: `npm ci`.
 - Optional but used by CI: Lean 4.35.0 (`LEAN_BIN`), a FOLIO clone
   (`FOLIO_DIR`), MySQL 8.0 (`DATABASE_URL`) and a Playwright browser for e2e.
+  Use MySQL 8.0, not MariaDB: `npx drizzle-kit push` fails against MariaDB 11.8
+  with a parse error on `serial AUTO_INCREMENT NOT NULL`.
 
 ## Test commands
 

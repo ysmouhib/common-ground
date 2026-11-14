@@ -524,3 +524,9 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   `C:\...`. Engine and e2e not re-run (no engine, api or build change since
   cc563a3: 170 passed; e2e 33 passed with Lean). Committed as this session's
   commit. Escalations: none. Next: unchanged — owner sessions CGR-2..CGR-5.
+- 2026-11-14 — BACKLOG item (owner: "do as you suggested"): the MariaDB note
+  moved to where a contributor reads it — `CONTRIBUTING.md` now says to use
+  MySQL 8.0, not MariaDB (`drizzle-kit push` fails on MariaDB 11.8); BACKLOG
+  entry removed. Docs-only; suites unchanged (engine 170 passed at cc563a3;
+  `npm test` 39 passed, 4 skipped at 18df5dc). Committed as this session's
+  commit. Escalations: none. Next: the `max_tokens` BACKLOG item.
