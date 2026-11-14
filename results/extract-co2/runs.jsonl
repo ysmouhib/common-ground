@@ -1,0 +1,2 @@
+{"document": "../results/extract-co2/yes.txt", "error": "NoExtraction", "attempts": 3, "seconds": 24.58}
+{"document": "../results/extract-co2/no.txt", "error": "NoExtraction", "attempts": 3, "seconds": 24.06}

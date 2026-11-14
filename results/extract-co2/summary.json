@@ -1,0 +1,22 @@
+{
+  "mode": "extract",
+  "client": {
+    "model": "deepseek-flash",
+    "host": "api.deepseek.com",
+    "json_mode": true,
+    "temperature": 0.0,
+    "max_tokens": 2000
+  },
+  "documents": 2,
+  "statements": 0,
+  "relations": 0,
+  "failed": 2,
+  "tokens": {},
+  "environment": {
+    "python": "3.12.10",
+    "z3": "5.4.1",
+    "pysat": "1.9.dev22",
+    "lean": null,
+    "engine_sha256": "44c6516ba627b89b937b655d6864886c84f64624889a971b566724d3651e4bce"
+  }
+}

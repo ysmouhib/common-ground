@@ -1,7 +1,8 @@
 """Language model as statement extractor: documents in, verbatim statements with spans out.
 
-Status: implemented and tested against scripted clients and a local HTTP stub. It has NOT
-been run against a live model in this repository; no result in the README comes from this file.
+Status: implemented and tested against scripted clients and a local HTTP stub, and run
+against one live model (deepseek-flash, 2026-11-14): 2 of 2 short CO2 documents at an
+8000-token reply limit, 0 of 2 at 2000 or 4000; see `results/extract-co2*/` and the README.
 
 Design rules (the same as ``formalize.py``):
 

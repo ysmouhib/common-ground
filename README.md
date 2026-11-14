@@ -135,14 +135,27 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   The same three commands run from the repository's Actions tab: workflow
   `model-benchmark`, "Run workflow". It needs a repository secret `LLM_API_KEY`
   and uploads every reply and verdict.
-* **The statement extractor (`engine/commonground/extract.py`) has never called a live
-  model either.** It is tested with scripted clients and a local HTTP stub, including a
-  full CLI run against the stub. Every statement it returns is validated to be a verbatim
-  span of the source text. To run it against a real endpoint:
+* **The statement extractor (`engine/commonground/extract.py`) has been run against one
+  live model** — deepseek-flash, temperature 0, 14 November 2026, on the two CO2 camps'
+  statements (587 and 542 characters, `results/extract-co2/yes.txt` and `no.txt`),
+  recorded in `results/extract-co2/`, `results/extract-co2-4000/` and
+  `results/extract-co2-8000/`. At the default 2000-token reply limit and at 4000, both
+  documents failed (NoExtraction after 3 attempts each) — diagnosed as the model spending
+  the whole reply limit on reasoning tokens before writing any JSON. At an 8000-token
+  limit: 2 of 2 documents, 13 statements and 6 relations, every span verbatim, and all 13
+  golden statements of `examples/co2-2021/statements.json` returned exactly; the model
+  spent 4.1k–8.0k completion tokens per attempt, almost all of it reasoning. Not run
+  (kept outside the repository): three longer documents (3,100, 3,072 and 16,020
+  characters) gave 0 of 3 at 2000 and at 4000, and the two ~3,000-character ones 0 of 2
+  even at 16000. So on this model it works on short documents only with a reply limit of
+  8000, and on no document of 3,000 characters or more at any limit tried. It is also
+  tested with scripted clients and a local HTTP stub, including a full CLI run against
+  the stub. Every statement it returns is validated to be a verbatim span of the source
+  text. To run it against a real endpoint:
 
   ```bash
   export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions
-  python -m commonground extract file1.txt file2.txt --base-url https://… --model … --out results/extract
+  python -m commonground extract file1.txt file2.txt --base-url https://… --model … --max-tokens 8000 --out results/extract
   ```
 
   The run is resumable and writes `runs.jsonl`, `config.json` (model and settings) and
