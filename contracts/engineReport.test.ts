@@ -15,9 +15,20 @@ function rawReport(): Record<string, unknown> {
   return {
     camp: "yes",
     lam: 0.3,
-    source: "scripted",
+    source: { model: "scripted-chat", temperature: 0.0, prompt_sha256: "abc123" },
     statements: [{ id: "yes-1", stance: "endorsed", fol: "P", document: "d1", span: [0, 1] }],
-    pool: { candidates: [], dropped: [] },
+    pool: {
+      candidates: [
+        {
+          fol: "∀x (P(x) → Q(x))",
+          quotes: [["d1", "P(socrates)", [0, 11]]],
+          plausibility: 0.7,
+          plausibility_source: "given",
+        },
+      ],
+      dropped: [{ fol: "P", reason: "duplicate of a stated claim" }],
+    },
+    plausibility: { default: 0.5, defaulted: ["∀x (P(x) → Q(x))"], ignored_for_stated: {} },
     search_complete: false,
     hull_complete: false,
     existence: { status: "pending", reason: "unformalized", detail: "1 statement(s) unformalized", unformalized: ["yes-2"] },
@@ -71,13 +82,30 @@ describe("the camp report contract", () => {
     expect(report.systems[0].checks.certified).toBe(true);
     expect(report.systems[0].checks.sufficiency[0].outcome).toBe("holds");
     expect(report.systems[0].checks.soft_rejections[0].outcome).toBe("fails");
+    // the axiom queue input: proposed axioms with evidence quotes, plausibility and provenance
+    expect(report.source).toMatchObject({ model: "scripted-chat", prompt_sha256: "abc123" });
+    expect(report.pool.candidates[0].quotes).toEqual([["d1", "P(socrates)", [0, 11]]]);
+    expect(report.pool.candidates[0].plausibility).toBe(0.7);
+    expect(report.pool.dropped[0].reason).toBe("duplicate of a stated claim");
+    expect(report.plausibility.default).toBe(0.5);
   });
 
   it("strips every key it does not name, abstention included", () => {
     const report = parseCampReport(rawReport());
     expect("abstention" in report).toBe(false);
     expect(Object.keys(report).sort()).toEqual(
-      ["camp", "existence", "hull_complete", "lam", "search_complete", "selection", "systems"].sort(),
+      [
+        "camp",
+        "existence",
+        "hull_complete",
+        "lam",
+        "plausibility",
+        "pool",
+        "search_complete",
+        "selection",
+        "source",
+        "systems",
+      ].sort(),
     );
   });
 

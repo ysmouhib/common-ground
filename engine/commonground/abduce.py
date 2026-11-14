@@ -239,7 +239,9 @@ class ChatSource:
 
     def describe(self) -> dict:
         describe = getattr(self.client, "describe", None)
-        return describe() if callable(describe) else {"model": type(self.client).__name__}
+        base = describe() if callable(describe) else {"model": type(self.client).__name__}
+        # provenance for the review queue: which model and settings proposed, and which prompt version
+        return {**base, "prompt_sha256": _hashlib.sha256(PROMPT.encode("utf-8")).hexdigest()}
 
     def propose(self, record: Record) -> list[Candidate]:
         statements = "\n".join(

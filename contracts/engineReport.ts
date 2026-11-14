@@ -53,9 +53,33 @@ const selectionSchema = z.looseObject({
   exhausted: z.boolean(),
 });
 
+// Provenance of the proposed axioms: which model and settings proposed them, and
+// which prompt version (prompt_sha256) — RESEARCH.md §15.3. Loose, because the
+// engine may add settings; the key never appears here.
+const sourceSchema = z.looseObject({ model: z.string() });
+
+// One proposed unstated axiom with its evidence quotes (verbatim spans) and the
+// plausibility estimate the report charged it ("default" = the anchored mid level).
+const candidateSchema = z.looseObject({
+  fol: z.string(),
+  quotes: z.array(z.tuple([z.string(), z.string(), z.tuple([z.number(), z.number()])])),
+  plausibility: z.number(),
+  plausibility_source: z.enum(["default", "given"]),
+});
+
 export const campReportSchema = z.object({
   camp: z.string(),
   lam: z.number(),
+  source: sourceSchema,
+  pool: z.object({
+    candidates: z.array(candidateSchema),
+    dropped: z.array(z.looseObject({ fol: z.string(), reason: z.string() })),
+  }),
+  plausibility: z.looseObject({
+    default: z.number(),
+    defaulted: z.array(z.string()),
+    ignored_for_stated: z.record(z.string(), z.number()),
+  }),
   search_complete: z.boolean(),
   hull_complete: z.boolean(),
   existence: existenceSchema,

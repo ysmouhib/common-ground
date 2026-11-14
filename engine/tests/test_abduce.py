@@ -127,7 +127,9 @@ def test_chat_source_parses_json_and_validates():
     pool = abduce.collect(src, record())
     assert [fol.to_text(c.formula) for c in pool.candidates] == [fol.to_text(fol.parse("∀x (Human(x) → Mortal(x))"))]
     assert pool.dropped == []
-    assert src.describe() == {"model": "scripted-chat", "temperature": 0.0}
+    import hashlib
+    assert src.describe() == {"model": "scripted-chat", "temperature": 0.0,
+                             "prompt_sha256": hashlib.sha256(abduce.PROMPT.encode("utf-8")).hexdigest()}
 
 
 def test_chat_source_accepts_fenced_reply_and_retries_bad_json():
