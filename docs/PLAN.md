@@ -277,10 +277,12 @@ number guard; the README evidence tables.
   validated; green or "not run" locally.
 - [x] **CG9-10** — `SECURITY.md` refresh + `examples/` index. Files:
   `SECURITY.md`, `examples/README.md`. Done-when: committed.
-- [ ] **CG9-11** — Final acceptance: a person outside the project clones on a
+- [x] **CG9-11** — Final acceptance: a person outside the project clones on a
   clean machine and completes an analysis in under 10 minutes following only
   the README. Files: `docs/PLAN.md` (record). Deps: all above. Done-when:
-  outcome recorded.
+  outcome recorded. Outcome: NOT RUN on the build machine (no clean machine
+  available); the engine-only quickstart path was verified live instead (see
+  session log). Owner runs it on a clean machine before pushing v2.0.0.
 
 ## Phase R detail carried from the previous sessions (for the owner's research tool)
 
@@ -490,3 +492,13 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   remote_work.json, exit 0). Docs-only; suite unchanged (exit 0, 169 passed at
   1252a9a). Committed as this session's commit. Escalations: none. Next: CG9-11
   (clean-clone acceptance — expected "not run" on this machine).
+- 2026-11-13 — CG9-11: clean-clone <10 min acceptance NOT RUN here (no clean
+  machine on the build box); recorded as such in the checkbox and in the
+  README quickstart note. What was verified live on this machine instead:
+  engine-only quickstart (`pip install -r engine/requirements.txt`, `cd engine`,
+  `python -m commonground analyze examples/plastic_bags.json`, exit 0) and both
+  bundled examples headless. Owner action before pushing v2.0.0: run the
+  clean-clone acceptance and push the tag (CG9-6). Docs-only; suite unchanged
+  (exit 0, 169 passed at 1252a9a). Committed as this session's commit.
+  Escalations: none. Next: owner review of THEORY.md (CGR-5), which unblocks
+  CG3-x / CG4 / CG5 / CG6 / CG7-3 / CG8.
