@@ -1,0 +1,117 @@
+{
+  "mode": "co2-leave-one-out-holdout",
+  "protocol": "RESEARCH.md §14.2",
+  "note": "Per camp, each reviewed statement is withheld in turn; the system is rebuilt from the remaining stated claims plus the candidates whose evidence is not solely the withheld statement; 'derived' is a certified entailment check (badge carried). Search-based selection is not run here (AUDIT-4: the 16-item pool search does not finish under the cap); this holdout uses the golden candidate extraction (CG7-2).",
+  "camps": {
+    "yes": {
+      "camp": "yes",
+      "withheld": 7,
+      "derived": 2,
+      "proportion": 0.2857,
+      "interval_95": [
+        0.08221892324928332,
+        0.6410655504689458
+      ],
+      "rows": [
+        {
+          "withheld": "yes-1",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 9
+        },
+        {
+          "withheld": "yes-2",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 7
+        },
+        {
+          "withheld": "yes-3",
+          "derived": true,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 10
+        },
+        {
+          "withheld": "yes-4",
+          "derived": true,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 10
+        },
+        {
+          "withheld": "yes-5",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 9
+        },
+        {
+          "withheld": "yes-6",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 9
+        },
+        {
+          "withheld": "yes-7",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 9
+        }
+      ]
+    },
+    "no": {
+      "camp": "no",
+      "withheld": 6,
+      "derived": 2,
+      "proportion": 0.3333,
+      "interval_95": [
+        0.09677141021353453,
+        0.7000066870052566
+      ],
+      "rows": [
+        {
+          "withheld": "no-1",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 5
+        },
+        {
+          "withheld": "no-2",
+          "derived": true,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 6
+        },
+        {
+          "withheld": "no-3",
+          "derived": true,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 6
+        },
+        {
+          "withheld": "no-4",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 5
+        },
+        {
+          "withheld": "no-5",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 5
+        },
+        {
+          "withheld": "no-6",
+          "derived": false,
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "candidates_available": 5
+        }
+      ]
+    }
+  },
+  "environment": {
+    "python": "3.12.10",
+    "z3": "5.4.1",
+    "pysat": "1.9.dev22",
+    "lean": null,
+    "engine_sha256": "55f87c836e8ea397f84d50c2e94785fe3433a727e231597b0e0b054f6f254632"
+  },
+  "run_at": "2026-11-14"
+}

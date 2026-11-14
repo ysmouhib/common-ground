@@ -146,3 +146,53 @@ def test_cli_co2_runs_the_bundled_example_headless(tmp_path):
     assert result["search_incomplete"] == ["yes", "no"]
     cross_md = (out / "crosscamp.md").read_text(encoding="utf-8")
     assert cross_md.startswith("# Cross-camp") and "Search incomplete for `yes`, `no`" in cross_md
+
+
+# --- CG8-2: CO2 leave-one-out holdout (RESEARCH.md §14.2) ---
+
+
+def holdout(camp, timeout_ms: int = 3000):
+    """Withhold each reviewed statement of the camp, rebuild from the rest — the remaining
+    stated claims plus only the candidates whose evidence is not solely the withheld
+    statement — and check whether the rebuilt system derives the withheld statement.
+    Every derivation is a certified entailment check carrying its badge; a non-derivation
+    is a definite non-entailment with its finite model."""
+    record, cands, _, _, _ = build_camp(camp)
+    rows = []
+    for w in record.statements:
+        kept = [st for st in record.statements if st.id != w.id]
+        rec2 = abduce.Record(record.camp, record.documents, kept)
+        avail = [fol.parse(c["fol"]) for c, _ in cands
+                 if any(ev != w.id for ev in c["evidence"])]
+        stated_rest = [st.formula() for st in kept if st.stance == "endorsed" and st.formula()]
+        chk = abduce.entailment_check(avail + stated_rest, w.formula(), kind="holdout",
+                                     timeout_ms=timeout_ms)
+        rows.append({"withheld": w.id, "derived": chk.outcome == "holds", "badge": chk.badge,
+                     "candidates_available": len(avail)})
+    return rows
+
+
+def holdout_summary(camp, rows):
+    from commonground import bench
+    n = len(rows)
+    k = sum(1 for r in rows if r["derived"])
+    return {"camp": camp, "withheld": n, "derived": k,
+            "proportion": round(k / n, 4) if n else None,
+            "interval_95": list(bench.wilson_interval(k, n)) if n else None,
+            "rows": rows}
+
+
+def test_holdout_yes_camp():
+    summary = holdout_summary("yes", holdout("yes"))
+    assert summary["withheld"] == 7
+    assert summary["derived"] == 2                      # recorded 2026-11-14
+    assert summary["proportion"] == round(2 / 7, 4)
+    assert summary["interval_95"] and 0.08 < summary["interval_95"][0] < 0.65
+    assert all(r["badge"] for r in summary["rows"])     # every row certified, none pending
+
+
+def test_holdout_no_camp():
+    summary = holdout_summary("no", holdout("no"))
+    assert summary["withheld"] == 6
+    assert summary["derived"] == 2                      # recorded 2026-11-14
+    assert all(r["badge"] for r in summary["rows"])
