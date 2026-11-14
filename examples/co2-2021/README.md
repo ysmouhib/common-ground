@@ -13,9 +13,12 @@ verbatim German text and their booklet page. Sources with URLs are in
 `statements.json → vote.sources`. The French booklet (`brochure-fr.pdf`) covers
 the same camps for the bilingual annotation (Phase 7, CG7-2).
 
-`golden.json` (added by CG7-2) will hold the hand-worked target output: FOL
-formalizations of the statements, candidate axioms per camp, and the expected
-load ranking, which the pipeline must then reproduce (CG7-3).
+`golden.json` (CG7-2) holds the hand-worked target output: FOL formalizations of
+the 13 statements, candidate axioms per camp with plausibility priors and
+statement-level evidence, and the expected load ranking. Machine-checked at
+writing: every formula parses in the strict grammar, and each camp's axiom set
+is consistent and entails all of that camp's statements. The pipeline must
+reproduce this (CG7-3); every divergence goes to `AUDIT.md`.
 
 This is seed data under `examples/` per the build brief §6: the pipeline runs on
 it headless, and Phase 8's holdout test withholds statements of a camp and

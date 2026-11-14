@@ -1,0 +1,241 @@
+{
+  "note": "Hand-worked golden target (CG7-2, 2026-11-13). FOL formalizations are editorial, like the plastic-bag debate's method note: they say what the statements mean in the strict grammar, not what the camps 'really believe'. The pipeline (CG7-3) must reproduce this; divergences go to AUDIT.md.",
+  "camps": {
+    "yes": {
+      "statements": [
+        {
+          "id": "yes-1",
+          "fol": "StronglyAffected(switzerland, climate)"
+        },
+        {
+          "id": "yes-2",
+          "fol": "(GlacierMelting ∨ LandslideDamage) → HighCosts(pop, econ)"
+        },
+        {
+          "id": "yes-3",
+          "fol": "NotAnOption(doingNothing)"
+        },
+        {
+          "id": "yes-4",
+          "fol": "Responsible(switzerland, climate)"
+        },
+        {
+          "id": "yes-5",
+          "fol": "SupportsGreenInvestment(law) ∧ CreatesFutureJobs(law)"
+        },
+        {
+          "id": "yes-6",
+          "fol": "Fair(law) ∧ Social(law)"
+        },
+        {
+          "id": "yes-7",
+          "fol": "ReducesDependency(law, foreignOil) ∧ InvestsLocally(law)"
+        }
+      ],
+      "candidate_axioms": [
+        {
+          "id": "YA1",
+          "fol": "StronglyAffected(switzerland, climate)",
+          "plausibility": 0.85,
+          "evidence": [
+            "yes-1"
+          ],
+          "note": "fact: vulnerability"
+        },
+        {
+          "id": "YA2a",
+          "fol": "GlacierMelting ↔ ClimateDamageEvent(glacierMelting)",
+          "plausibility": 0.7,
+          "evidence": [
+            "yes-2"
+          ],
+          "note": "bridge"
+        },
+        {
+          "id": "YA2b",
+          "fol": "LandslideDamage ↔ ClimateDamageEvent(landslideDamage)",
+          "plausibility": 0.7,
+          "evidence": [
+            "yes-2"
+          ],
+          "note": "bridge"
+        },
+        {
+          "id": "YA2c",
+          "fol": "∀e (ClimateDamageEvent(e) → HighCosts(pop, econ))",
+          "plausibility": 0.8,
+          "evidence": [
+            "yes-2"
+          ],
+          "note": "climate damage causes high costs"
+        },
+        {
+          "id": "YA3",
+          "fol": "∀x (StronglyAffected(x, climate) → Responsible(x, climate))",
+          "plausibility": 0.9,
+          "evidence": [
+            "yes-1",
+            "yes-4"
+          ],
+          "note": "vulnerability grounds responsibility"
+        },
+        {
+          "id": "YA4",
+          "fol": "∀x (Responsible(x, climate) → NotAnOption(doingNothing))",
+          "plausibility": 0.85,
+          "evidence": [
+            "yes-3",
+            "yes-4"
+          ],
+          "note": "responsibility rules out inaction"
+        },
+        {
+          "id": "YAF",
+          "fol": "GreenInvestmentLaw(law)",
+          "plausibility": 0.8,
+          "evidence": [
+            "yes-5",
+            "yes-6",
+            "yes-7"
+          ],
+          "note": "classification fact about the law"
+        },
+        {
+          "id": "YA5",
+          "fol": "∀l (GreenInvestmentLaw(l) → (SupportsGreenInvestment(l) ∧ CreatesFutureJobs(l)))",
+          "plausibility": 0.75,
+          "evidence": [
+            "yes-5"
+          ],
+          "note": "green investment creates jobs"
+        },
+        {
+          "id": "YA6",
+          "fol": "∀l (GreenInvestmentLaw(l) → (Fair(l) ∧ Social(l)))",
+          "plausibility": 0.7,
+          "evidence": [
+            "yes-6"
+          ],
+          "note": "the law is fair and social by design"
+        },
+        {
+          "id": "YA7",
+          "fol": "∀l (GreenInvestmentLaw(l) → (ReducesDependency(l, foreignOil) ∧ InvestsLocally(l)))",
+          "plausibility": 0.75,
+          "evidence": [
+            "yes-7"
+          ],
+          "note": "less foreign oil, more local investment"
+        }
+      ],
+      "expected_load_ranking": [
+        "YA3",
+        "YA1",
+        "YAF",
+        "YA2c",
+        "YA4",
+        "YA5",
+        "YA6",
+        "YA7",
+        "YA2a",
+        "YA2b"
+      ],
+      "expected_load_note": "YA3 and YA1 drive yes-1/yes-4/yes-3 (the responsibility chain); YAF drives yes-5/6/7; YA2c drives yes-2. Bridges YA2a/b are low-load."
+    },
+    "no": {
+      "statements": [
+        {
+          "id": "no-1",
+          "fol": "PriceRise(petrol) ∧ PriceRise(diesel)"
+        },
+        {
+          "id": "no-2",
+          "fol": "CostsRise(averageFamily, high)"
+        },
+        {
+          "id": "no-3",
+          "fol": "NoEffectOnClimate(law)"
+        },
+        {
+          "id": "no-4",
+          "fol": "TinyShareOfEmissions(switzerland)"
+        },
+        {
+          "id": "no-5",
+          "fol": "MainlyHitsLowIncome(law) ∧ Unjust(law)"
+        },
+        {
+          "id": "no-6",
+          "fol": "Radical(law) ∧ OnlyBansAndRules(law)"
+        }
+      ],
+      "candidate_axioms": [
+        {
+          "id": "NA1",
+          "fol": "CO2Law(law) ∧ AppliesTo(law, switzerland)",
+          "plausibility": 0.95,
+          "evidence": [
+            "no-1"
+          ],
+          "note": "classification fact"
+        },
+        {
+          "id": "NA2",
+          "fol": "∀l (CO2Law(l) → (PriceRise(petrol) ∧ PriceRise(diesel) ∧ CostsRise(averageFamily, high)))",
+          "plausibility": 0.8,
+          "evidence": [
+            "no-1",
+            "no-2"
+          ],
+          "note": "the law's cost effects"
+        },
+        {
+          "id": "NA3",
+          "fol": "TinyShareOfEmissions(switzerland)",
+          "plausibility": 0.9,
+          "evidence": [
+            "no-4"
+          ],
+          "note": "fact: 0.1% share"
+        },
+        {
+          "id": "NA4",
+          "fol": "∀l ∀c (CO2Law(l) ∧ AppliesTo(l, c) ∧ TinyShareOfEmissions(c) → NoEffectOnClimate(l))",
+          "plausibility": 0.85,
+          "evidence": [
+            "no-3",
+            "no-4"
+          ],
+          "note": "efficacy: a 0.1% emitter cannot change the climate"
+        },
+        {
+          "id": "NA5",
+          "fol": "∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l)))",
+          "plausibility": 0.75,
+          "evidence": [
+            "no-5"
+          ],
+          "note": "distributional fairness"
+        },
+        {
+          "id": "NA6",
+          "fol": "∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l)))",
+          "plausibility": 0.7,
+          "evidence": [
+            "no-6"
+          ],
+          "note": "character of the law"
+        }
+      ],
+      "expected_load_ranking": [
+        "NA4",
+        "NA2",
+        "NA1",
+        "NA3",
+        "NA5",
+        "NA6"
+      ],
+      "expected_load_note": "NA4 (efficacy) is the load-bearing root for no-3 given NA1/NA3; NA2 carries no-1/no-2; NA5/NA6 are thinner."
+    }
+  }
+}

@@ -216,7 +216,7 @@ number guard; the README evidence tables.
   `examples/co2-2021/statements.json`. Deps: campaign materials from
   swissvotes.ch (owner supplies if web access is unavailable). Done-when:
   committed; pytest exits 0.
-- [ ] **CG7-2** — Hand-worked golden reconstruction: formalizations, candidate
+- [x] **CG7-2** — Hand-worked golden reconstruction: formalizations, candidate
   axioms, expected load ranking. Files: `examples/co2-2021/golden.json`,
   `examples/co2-2021/README.md`. Deps: CG7-1. Done-when: committed and
   reviewable.
@@ -427,3 +427,10 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   pages, fetched live and text-extracted with pdftotext) + README.md.
   Engine untouched; suite remains exit 0, 169 passed (CG2-4 run). Committed as
   this session's commit. Escalations: none. Next: CG7-2.
+- 2026-11-13 — CG7-2: golden.json hand-worked and machine-checked: 13 FOL
+  formalizations + per-camp candidate axioms (plausibility, evidence, notes)
+  + expected load ranking. Verified with the real engine: all formulas parse
+  in the strict grammar; each camp's axiom set is consistent (solver probe)
+  and entails every statement of that camp (decide == True for all 13).
+  Engine untouched; suite remains exit 0, 169 passed (CG2-4 run). Committed as
+  this session's commit. Escalations: none. Next: CG9-1.
