@@ -2,6 +2,7 @@
 name = "commonground-engine"
 version = "0.2.0"
 description = "First-order verdicts with checked evidence, Lean certificates and conflict analysis for arguments"
+readme = "README.md"
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
