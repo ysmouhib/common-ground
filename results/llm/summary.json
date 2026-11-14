@@ -1,0 +1,60 @@
+{
+  "mode": "llm",
+  "client": {
+    "model": "deepseek-flash",
+    "host": "api.deepseek.com",
+    "json_mode": true,
+    "temperature": 0.0,
+    "max_tokens": 2000
+  },
+  "dataset": {
+    "name": "FOLIO validation",
+    "examples": 204,
+    "revision": "5d7bb84c7edab3fb358e057d2807f19cf5cf5e2d",
+    "licence": "CC BY-SA 4.0"
+  },
+  "examples": 204,
+  "correct": 119,
+  "accuracy": 0.5833,
+  "accuracy_interval_95": [
+    0.5148,
+    0.6488
+  ],
+  "answered": 146,
+  "accuracy_when_answered": 0.8151,
+  "accuracy_when_answered_interval_95": [
+    0.7443,
+    0.8697
+  ],
+  "verdict_counts": {
+    "NoFormalization": 58,
+    "Uncertain": 72,
+    "True": 40,
+    "False": 34
+  },
+  "confusion_gold_then_verdict": {
+    "False -> False": 33,
+    "False -> NoFormalization": 15,
+    "False -> True": 3,
+    "False -> Uncertain": 12,
+    "True -> False": 1,
+    "True -> NoFormalization": 25,
+    "True -> True": 36,
+    "True -> Uncertain": 10,
+    "Uncertain -> NoFormalization": 18,
+    "Uncertain -> True": 1,
+    "Uncertain -> Uncertain": 50
+  },
+  "tokens": {
+    "prompt_tokens": 82904,
+    "completion_tokens": 270198,
+    "total_tokens": 353102
+  },
+  "environment": {
+    "python": "3.12.10",
+    "z3": "5.4.1",
+    "pysat": "1.9.dev22",
+    "lean": null,
+    "engine_sha256": "48f7c99017f1f9c5014a5bf0145e57062bf6454a7f4e6af68235ce981fbf3d11"
+  }
+}

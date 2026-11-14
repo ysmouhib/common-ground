@@ -43,14 +43,16 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   dataset's formulas. It measures the logic back end and audits the annotations;
   it is a ceiling for any formalizer scored against those labels, not a result
   about formalization.
-* **The language-model formalizer (`engine/commonground/formalize.py`) has never
-  called a live model.** It is tested with scripted clients, a local HTTP stub and
-  a replay of the dataset's own formulas. The rows it would fill are empty:
+* **The language-model formalizer (`engine/commonground/formalize.py`) has been run
+  against one live model only** — deepseek-flash, temperature 0, 13 November 2026
+  (runs recorded in `results/direct/` and `results/llm/`, every reply kept). It is
+  also tested with scripted clients, a local HTTP stub and a replay of the
+  dataset's own formulas. No other model, provider or setting has been benchmarked:
 
   | Mode | Accuracy on FOLIO validation | Accuracy when it answers |
   |---|---|---|
-  | model answers directly | not run | not run |
-  | model formalizes, solver decides | not run | not run |
+  | model answers directly | 162 of 204 (79.4 %, 95 % Wilson interval 73.3–84.4 %) | 162 of 194 (83.5 %, 77.6–88.1 %) |
+  | model formalizes, solver decides | 119 of 204 (58.3 %, 51.5–64.9 %) | 119 of 146 (81.5 %, 74.4–87.0 %) |
 
   ```bash
   export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions
@@ -63,7 +65,10 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   test on the examples where exactly one of the two runs is right. With 204
   examples an interval reaches 3 to 7 points to each side, so a small difference
   between two runs is not evidence of anything, and the report shows that in
-  numbers. A run is resumable, names its
+  numbers. In the recorded deepseek-flash runs the two modes disagreed on 61 of
+  204 examples (52 right only when answering directly, 9 only when formalizing;
+  exact McNemar p ≈ 1.8×10⁻⁸): the direct mode is ahead on this dataset, mostly because
+  58 of the 204 examples produced no parseable formalization. A run is resumable, names its
   model and settings in `config.json`, and stops instead of scoring a provider
   outage as wrong answers. Providers differ: add `--no-json-mode` or
   `--no-temperature` for one that rejects `response_format=json_object` or any

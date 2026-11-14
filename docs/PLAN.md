@@ -83,7 +83,7 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
 
 ### Phase 1 — The formalizer goes live
 
-- [ ] **CG1-1** — Run `folio --mode direct` and `--mode llm` against the
+- [x] **CG1-1** — Run `folio --mode direct` and `--mode llm` against the
   configured endpoint; publish both README rows with 95% Wilson intervals and
   the exact McNemar test via `python -m commonground report`.
   Files: `README.md`, `results/direct/`, `results/llm/`. Deps: LLM endpoint
@@ -352,3 +352,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   Full engine suite: exit 0, 159 passed, 0 skipped (215 s). Committed as this
   session's commit. Escalations: none. Proposed next task: CG1-1 (blocked on an LLM
   endpoint from the owner) — next runnable without one: CG7-1.
+- 2026-11-13 — CG1-1: FOLIO benchmark run live against DeepSeek (deepseek-flash,
+  temperature 0, json_mode, via api.deepseek.com; key supplied by the owner in
+  chat, kept in env only — verified absent from every committed file).
+  results/direct: 162/204 (79.41 %, Wilson 73.34–84.39), when answered 162/194
+  (83.51 %, 77.64–88.07), 149140 tokens. results/llm: 119/204 (58.33 %,
+  51.48–64.88), when answered 119/146 (81.51 %, 74.43–86.97), 58
+  NoFormalization, 353102 tokens. report: both right 110, only direct 52, only
+  llm 9, neither 33, exact McNemar p = 1.8e-08 (prints as 0 after round(…,6) —
+  BACKLOG). README rows filled from these runs; full engine suite exit 0,
+  159 passed, 0 skipped. Committed as this session's commit. Escalations:
+  none. Proposed next task: CG1-2.
