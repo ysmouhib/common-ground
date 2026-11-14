@@ -54,6 +54,66 @@ def test_bracketing_ambiguity_ignores_pure_regrouping():
     assert not bench.bracketing_ambiguous("(A ∧ B) ∨ C")
 
 
+# --- CG8-1: hide-premise abduction benchmark (bench.abduction) ---
+
+
+def dataset(tmp_path, rows):
+    """A minimal fake FOLIO clone: <root>/data/v0.0/folio-validation.jsonl."""
+    data = tmp_path / "data" / "v0.0"
+    data.mkdir(parents=True)
+    path = data / "folio-validation.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+    return tmp_path
+
+
+def folio_row(premises_fol, conclusion_fol, label="True"):
+    return {"premises": ["-"] * len(premises_fol), "premises-FOL": premises_fol,
+            "conclusion": "-", "conclusion-FOL": conclusion_fol, "label": label}
+
+
+def test_abduction_recovers_a_sufficient_premise_subset(tmp_path):
+    root = dataset(tmp_path, [folio_row(["P(a)", "P(a) → Q(a)"], "Q(a)")])
+    summary = bench.abduction(root / "data" / "v0.0" / "folio-validation.jsonl",
+                              tmp_path / "out", timeout_ms=3000)
+    assert summary["parsed"] == 1 and summary["recovered"] == 1
+    assert summary["recovery_rate"] == 1.0 and summary["recovery_interval_95"]
+    assert summary["search_incomplete"] == 0 and summary["pool_too_large"] == 0
+    row = json.loads((tmp_path / "out" / "runs.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert row["recovered"] is True and row["min_recovered_size"] == 2
+    assert row["reference_premises"] == 2 and row["search_complete"] is True
+    assert row["badge"]  # every published verdict carries one
+
+
+def test_abduction_marks_a_definite_negative_when_premises_do_not_entail(tmp_path):
+    root = dataset(tmp_path, [folio_row(["P(a)"], "Q(a)", label="False")])
+    summary = bench.abduction(root / "data" / "v0.0" / "folio-validation.jsonl",
+                              tmp_path / "out", timeout_ms=3000)
+    assert summary["recovered"] == 0 and summary["definite"] == 1
+    assert summary["recovery_rate"] == 0.0
+
+
+def test_abduction_parse_error_and_pool_cap_are_counted_not_crashed(tmp_path):
+    rows = [folio_row(["P(a"], "Q(a)"),  # malformed
+            folio_row([f"P(c{i})" for i in range(17)], "Q(c0)")]  # pool 18 > MAX_POOL
+    root = dataset(tmp_path, rows)
+    summary = bench.abduction(root / "data" / "v0.0" / "folio-validation.jsonl",
+                              tmp_path / "out", timeout_ms=3000)
+    assert summary["parsed"] == 1 and summary["pool_too_large"] == 1
+    assert summary["definite"] == 0 and summary["recovery_rate"] is None
+
+
+def test_abduction_cli_mode_end_to_end(tmp_path):
+    from commonground.__main__ import main
+    root = dataset(tmp_path, [folio_row(["P(a)", "P(a) → Q(a)"], "Q(a)")])
+    out = tmp_path / "cli-out"
+    code = main(["--timeout-ms", "3000", "folio", "--mode", "abduction", "--data", str(root),
+                 "--out", str(out)])
+    assert code == 0
+    summary = json.loads((out / "summary.json").read_text(encoding="utf-8"))
+    assert summary["mode"] == "abduction" and summary["recovered"] == 1
+    assert (out / "runs.jsonl").exists() and (out / "config.json").exists()
+
+
 RESULTS = Path(__file__).resolve().parents[2] / "results" / "folio-validation" / "summary.json"
 DATA = os.environ.get("FOLIO_DIR")
 

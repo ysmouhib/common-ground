@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import folio, lean
-from .fol import And, BINARY, Formula, Not, Or, ParseError, QUANT, parse
+from .fol import And, BINARY, Formula, Not, Or, ParseError, QUANT, parse, to_text
 from .ground import epr_bound
 from .verdict import decide
 
@@ -194,6 +194,105 @@ def reference(data_file: Path, out_dir: Path, lean_bin: str | None, timeout_ms: 
             writer.writerow([r["index"], r["gold"], r["verdict"], r["verdict"] == r["gold"], r["verdict_flat_right"],
                              r.get("grounding", ""), r.get("decidable_class", ""), r.get("lean", ""), sizes,
                              r.get("note", "")])
+    return summary
+
+
+def abduction(data_file: Path, out_dir: Path, limit: int | None = None, timeout_ms: int = 5000,
+              lean_bin: str | None = None, lam: float = 0.3, max_checks: int = 4000) -> dict:
+    """Hide-premise abduction benchmark on FOLIO validation (CG8-1).
+
+    Per example the conclusion is the camp's only endorsed claim and the pool is the
+    example's own premises, offered as unscored candidates (p = 0.5 default). Recovery
+    is graded cost-independently: a certified axiom system made only of premises exists
+    (read from the certified enumeration; ``search_complete`` is required for a definite
+    negative). The benchmark grades sufficiency recovery, never truth. An LLM-proposed-
+    candidate run needs a live endpoint and is recorded as "not run" without one.
+    """
+    from . import abduce
+    from .argmap import TooMany
+    examples = folio.load(data_file)[:limit]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    config = {"mode": "abduction", "lam": lam, "max_checks": max_checks,
+              "timeout_ms": timeout_ms, "lean": bool(lean_bin)}
+    config_file = out_dir / "config.json"
+    if config_file.exists():
+        previous = json.loads(config_file.read_text(encoding="utf-8"))
+        if previous != config:
+            raise ConfigurationMismatch(
+                f"{out_dir} holds a run made with {previous}; use an empty directory for {config}")
+    else:
+        config_file.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+    rows: list[dict] = []
+    with (out_dir / "runs.jsonl").open("a", encoding="utf-8") as fh:
+        for ex in examples:
+            row: dict = {"index": ex.index, "gold": ex.label}
+            started = time.time()
+            try:
+                parsed = folio.parse_example(ex)
+            except (ParseError, folio.SignatureError) as exc:
+                row.update(parsed=False, error=str(exc))
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                rows.append(row)
+                continue
+            row["parsed"] = True
+            texts = list(ex.premises_text) + [ex.conclusion_text]
+            doc = "\n".join(texts)
+            spans, off = [], 0
+            for t in texts:
+                spans.append((off, off + len(t)))
+                off += len(t) + 1
+            record_ = abduce.Record(
+                f"ex-{ex.index}", [abduce.Document("doc", doc)],
+                [abduce.RecordStatement("conclusion", "endorsed", to_text(parsed.conclusion),
+                                        "doc", ex.conclusion_text, spans[-1])])
+            candidates = [abduce.Candidate(to_text(p), [("doc", ex.premises_text[i], spans[i])])
+                          for i, p in enumerate(parsed.premises)]
+            try:
+                report = abduce.report_camp(record_, abduce.ScriptedSource(candidates), {}, lam=lam,
+                                            timeout_ms=timeout_ms, lean_bin=lean_bin,
+                                            max_checks=max_checks)
+            except TooMany as exc:
+                row.update(pool_too_large=True, error=str(exc), seconds=round(time.time() - started, 2))
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+                rows.append(row)
+                continue
+            premise_texts = {to_text(p) for p in parsed.premises}
+            recovered_sets = [s_ for s_ in report["selection"]["all_certified"]
+                              if set(s_) <= premise_texts]
+            row["search_complete"] = report["search_complete"]
+            row["existence"] = report["existence"]["status"]
+            row["recovered"] = bool(recovered_sets) if report["search_complete"] else None
+            row["min_recovered_size"] = min((len(s_) for s_ in recovered_sets), default=None)
+            row["reference_premises"] = len(parsed.premises)
+            row["badge"] = report["systems"][0]["badge"] if report["systems"] else None
+            row["seconds"] = round(time.time() - started, 2)
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            rows.append(row)
+
+    parsed_rows = [r for r in rows if r.get("parsed")]
+    definite = [r for r in parsed_rows if r.get("recovered") is not None]
+    recovered = [r for r in definite if r["recovered"]]
+    sizes = [r["min_recovered_size"] for r in recovered]
+    refs = [r["reference_premises"] for r in parsed_rows if "reference_premises" in r]
+    summary = {
+        **config,
+        "dataset": {"name": "FOLIO validation", "examples": len(rows),
+                    "revision": folio.revision(data_file.parents[2]), "licence": "CC BY-SA 4.0"},
+        "examples": len(rows),
+        "parsed": len(parsed_rows),
+        "pool_too_large": sum(1 for r in rows if r.get("pool_too_large")),
+        "search_incomplete": sum(1 for r in parsed_rows if not r.get("search_complete", True)),
+        "definite": len(definite),
+        "recovered": len(recovered),
+        "recovery_rate": round(len(recovered) / len(definite), 4) if definite else None,
+        "recovery_interval_95": _interval(len(recovered), len(definite)),
+        "min_recovered_size_mean": round(sum(sizes) / len(sizes), 3) if sizes else None,
+        "reference_premises_mean": round(sum(refs) / len(refs), 3) if refs else None,
+        "badges": dict(Counter(r["badge"] for r in parsed_rows if r.get("badge"))),
+        "environment": environment(lean_bin),
+    }
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
 
 

@@ -107,6 +107,18 @@ def _folio(args) -> int:
             print(f"no Lean {lean.TOOLCHAIN} found (set LEAN_BIN)", file=sys.stderr)
             return 2
         summary = bench.reference(folio.fetch(Path(args.data)), out_dir, lean_bin, args.timeout_ms)
+    elif args.mode == "abduction":
+        lean_bin = lean.find_lean() if args.lean else None
+        if args.lean and lean_bin is None:
+            print(f"no Lean {lean.TOOLCHAIN} found (set LEAN_BIN)", file=sys.stderr)
+            return 2
+        data_file = folio.fetch(Path(args.data))
+        try:
+            summary = bench.abduction(data_file, out_dir, args.limit, args.timeout_ms, lean_bin,
+                                      args.lam, args.max_checks)
+        except bench.ConfigurationMismatch as exc:
+            print(exc, file=sys.stderr)
+            return 2
     else:
         from .formalize import OpenAICompatible, ProviderError
         key = os.environ.get(args.api_key_env, "")
@@ -445,12 +457,15 @@ def main(argv: list[str] | None = None) -> int:
     fol = commands.add_parser("folio", help="run the FOLIO benchmark")
     fol.add_argument("--data", default="data/FOLIO", help="where the dataset repository is (cloned if absent)")
     fol.add_argument("--out", required=True)
-    fol.add_argument("--mode", choices=("reference", "llm", "direct"), default="reference")
+    fol.add_argument("--mode", choices=("reference", "llm", "direct", "abduction"), default="reference")
+    fol.add_argument("--lam", type=float, default=0.3, help="abduction mode: cost weight of one axiom (default 0.3)")
+    fol.add_argument("--max-checks", type=int, default=4000,
+                     help="abduction mode: cap on certification checks per example (default 4000)")
     fol.add_argument("--lean", action="store_true", help="reference mode: certify verdicts with Lean")
     fol.add_argument("--base-url")
     fol.add_argument("--model")
     fol.add_argument("--api-key-env", default="LLM_API_KEY", help="name of the variable holding the key")
-    fol.add_argument("--limit", type=int, help="model modes: only the first N examples")
+    fol.add_argument("--limit", type=int, help="model and abduction modes: only the first N examples")
     fol.add_argument("--no-json-mode", action="store_true",
                      help="do not send response_format=json_object (for providers that reject it)")
     fol.add_argument("--temperature", type=float, default=0.0, help="model modes: sampling temperature (default 0)")
