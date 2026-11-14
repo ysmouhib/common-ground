@@ -87,7 +87,7 @@ number guard; the README evidence tables.
   draft H6, H8; coverage measure; load vs. centrality; plausibility elicitation
   protocol. Files: `docs/research/RESEARCH.md`, `docs/research/THEORY.md`.
   Deps: CGR-2. Done-when: owner records the session.
-- [ ] **CGR-4** — Session 4, evaluation (owner): A6, D2, D3, G3; RQ6; Phase 7
+- [x] **CGR-4** — Session 4, evaluation (done 2026-11-14, assigned by the owner; see the session log): A6, D2, D3, G3; RQ6; Phase 7
   annotation protocol; finish `THEORY.md` within two pages; list every
   remaining `[unverified]`. Deps: CGR-3. Done-when: owner records the session.
 - [ ] **CGR-5** — Owner review of the finished `THEORY.md`. Gates CG3-1.
@@ -576,3 +576,30 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   unchanged (engine 170 passed at 96704be). Committed as this session's commit.
   Escalations: none. Next: the FOLIO 4000-token run (publish next to the
   2000-token run), then CGR-4.
+- 2026-11-14 — FOLIO formalizing run at 4000 tokens finished and published:
+  the run left by the previous session completed on its own (204 rows);
+  `results/llm-4000/` holds config.json, runs.jsonl, summary.json. Numbers from
+  summary.json and `report` only: 145 of 204 (71.1 %, Wilson 64.5-76.9), 189
+  answered (76.7 %), 15 NoFormalization (was 58 at 2000). Paired comparison
+  llm-2000 vs llm-4000 on the same 204 examples: 115 both right, 4 only at 2000,
+  30 only at 4000, 55 neither; exact McNemar p = 6.2e-06. README gained the third
+  table row and the paired comparison; the direct run was recorded at 2000 and
+  not re-run; workflow input max_tokens=4000 reproduces the new row (workflow
+  default left at 2000 — owner decision pending). BACKLOG entry removed.
+  results/llm (2000) kept untouched per the owner's failed-experiments decision.
+  Engine suite re-run: exit 0, 170 passed (~200 s, FOLIO_DIR+LEAN_BIN set). e2e
+  unchanged since cc563a3 (33 passed; nothing in app/api/build changed — this
+  commit touches results/, README, BACKLOG, PLAN only). Committed as this
+  session's commit. Escalations: none. Next: CGR-4.
+- 2026-11-14 — CGR-4 (Phase R session 4) finished: `docs/research/RESEARCH.md`
+  §17–§20 — RQ6 answered (comparable systems grade components against gold
+  annotations; our holdout grades the system, with Wilson intervals, coverage κ/δ,
+  the hull with λ-intervals, the plausibility range); the Phase 7 annotation
+  protocol for the CO2 corpus written (§19); four more pack errors corrected
+  (D2 title, D3 first author, G1 venue and corpus size; G2 confirmed: Han et al.
+  2024, EMNLP 2024, 22017–22031). `THEORY.md` finished and cut to two pages with
+  H1–H9; terminology recorded as proposed (axiom, stated/unstated). Remaining
+  [unverified] listed in RESEARCH.md §20. Docs-only; suites unchanged (engine
+  170 passed at 96704be; the llm-4000 run is separate, see its own log entry).
+  Committed as this session's commit. Escalations: none. Next: owner summary of
+  THEORY.md + open decisions, then CGR-5 (owner sign-off) gates CG3-1.
