@@ -145,7 +145,7 @@ number guard; the README evidence tables.
   `abduce.py` (scripted clients for tests). Files:
   `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-1.
   Done-when: pytest exits 0.
-- [ ] **CG3-3 [PLAN: Lean integration edge cases]** — Sufficiency / consistency
+- [x] **CG3-3 [PLAN: Lean integration edge cases]** — Sufficiency / consistency
   / negation checking via the existing solvers (`smt.py`, `ground.py`,
   `model.py`) plus Lean certificates for sufficiency proofs. Files:
   `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-2.
@@ -624,3 +624,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   test_abduce.py (validation, spans, determinism, fenced JSON, repair loop). Full engine
   suite: exit 0, 192 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3 (no app/api
   change). Committed as this session's commit. Escalations: none. Next: CG3-3.
+- 2026-11-14 — CG3-3 done: the certified layer in `abduce.py` — Check/SystemChecks,
+  entailment_check (Lean kernel certificate preferred, badge SUFFICIENT (kernel-checked);
+  solver refutation fallback, badge SOLVER-CHECKED; non-entailment answered with an explicit
+  finite model; Undecided -> PENDING, never false), non_entailment_check for soft rejections,
+  consistency_check with finite model, check_system (consistency + sufficiency + firm
+  rejections A⊨¬r + soft A⊭r + minimality S4 by certified removal), certify_sufficiency
+  (parsed formulas only; lean.assert_generated guards the source). 11 new tests incl. kernel
+  accept/reject with LEAN_BIN and a forced-Undecided pending case; one real bug fixed
+  (redundant axiom was marked pending instead of fails). Full suite: exit 0, 203 passed.
+  e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none.
+  Next: CG3-4.

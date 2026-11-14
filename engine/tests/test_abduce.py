@@ -149,3 +149,110 @@ def test_chat_source_drops_a_candidate_with_a_bad_span():
     ]})
     pool = abduce.collect(abduce.ChatSource(Scripted(reply)), record())
     assert pool.candidates == [] and "does not match" in pool.dropped[0].reason
+
+
+# --- CG3-3: the certified layer -------------------------------------------
+
+from commonground import lean
+from commonground.fol import Not
+
+LEAN = lean.find_lean()
+needs_lean = pytest.mark.skipif(LEAN is None, reason="no Lean 4.35.0 (set LEAN_BIN)")
+
+AXIOM_ALL = "∀x (Human(x) → Mortal(x))"
+AXIOM_SOC = "Human(socrates)"
+
+
+def check_record(**overrides):
+    r = abduce.Record(
+        camp="campA",
+        documents=[abduce.Document("d1", DOC)],
+        statements=[
+            abduce.RecordStatement("e1", abduce.STANCE_ENDORSED, "Mortal(socrates)", "d1", DOC[S1[0]:S2[1]], (S1[0], S2[1])),
+            abduce.RecordStatement("r1", abduce.STANCE_FIRM, "¬Mortal(socrates)", "d1", DOC[S1[0]:S2[1]], (S1[0], S2[1])),
+            abduce.RecordStatement("s1", abduce.STANCE_SOFT, "Flies(socrates)", "d1", DOC[S1[0]:S1[1]], S1),
+        ],
+    )
+    for key, value in overrides.items():
+        setattr(r, key, value)
+    return r
+
+
+def test_entailment_check_holds_by_solver_refutation():
+    c = abduce.entailment_check([fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)], fol.parse("Mortal(socrates)"))
+    assert c.outcome == "holds" and c.badge == abduce.BADGE_SOLVER
+
+
+def test_entailment_check_fails_with_an_explicit_model():
+    c = abduce.entailment_check([fol.parse(AXIOM_SOC)], fol.parse("Mortal(socrates)"))
+    assert c.outcome == "fails" and c.badge == abduce.BADGE_SOLVER
+    assert c.model_false is not None  # finite model where Mortal(socrates) is false
+
+
+def test_non_entailment_check_holds_with_model_and_fails_when_entailed():
+    ok = abduce.non_entailment_check([fol.parse(AXIOM_SOC)], fol.parse("Flies(socrates)"))
+    assert ok.outcome == "holds" and ok.model_false is not None
+    bad = abduce.non_entailment_check([fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)], fol.parse("Mortal(socrates)"))
+    assert bad.outcome == "fails"
+
+
+def test_consistency_check_holds_and_fails():
+    ok = abduce.consistency_check([fol.parse(AXIOM_SOC)])
+    assert ok.outcome == "holds"
+    bad = abduce.consistency_check([fol.parse("P(a)"), fol.parse("¬P(a)")])
+    assert bad.outcome == "fails"
+
+
+def test_undecided_is_pending_never_false(monkeypatch):
+    forced = abduce._verdict.Verdict("Undecided", True, notes=["forced"])
+    monkeypatch.setattr(abduce._verdict, "decide", lambda *a, **k: forced)
+    c = abduce.entailment_check([fol.parse(AXIOM_SOC)], fol.parse("Mortal(socrates)"))
+    assert c.outcome == "pending" and c.badge == abduce.BADGE_PENDING
+
+
+def test_check_system_certifies_a_minimal_sufficient_system():
+    checks = abduce.check_system([fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)], check_record())
+    assert checks.certified
+    assert checks.consistent.outcome == "holds"
+    assert all(c.outcome == "holds" for c in checks.sufficiency)
+    assert all(c.outcome == "holds" for c in checks.firm_rejections)   # A ⊨ ¬¬Mortal(socrates)
+    assert all(c.outcome == "holds" for c in checks.soft_rejections)   # A ⊭ Flies(socrates), with model
+    assert all(c.outcome == "holds" for c in checks.minimality)         # both axioms needed
+
+
+def test_check_system_catches_a_redundant_axiom():
+    axioms = [fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC), fol.parse("∀x (Mortal(x) → Mortal(x))")]
+    checks = abduce.check_system(axioms, check_record())
+    assert not checks.certified
+    redundant = [c for c in checks.minimality if c.outcome == "fails"]
+    assert len(redundant) == 1 and "redundant" in redundant[0].detail
+
+
+def test_check_system_catches_a_missing_entailment():
+    checks = abduce.check_system([fol.parse(AXIOM_SOC)], check_record())
+    assert not checks.certified
+    assert any(c.outcome == "fails" for c in checks.sufficiency)
+
+
+def test_check_system_marks_unformalized_statements_pending():
+    r = check_record()
+    r.statements[0].fol_text = None
+    checks = abduce.check_system([fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)], r)
+    assert not checks.certified
+    assert checks.sufficiency[0].outcome == "pending"
+
+
+@needs_lean
+def test_entailment_check_is_kernel_checked_when_lean_accepts():
+    c = abduce.entailment_check([fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)], fol.parse("Mortal(socrates)"),
+                                lean_bin=LEAN)
+    assert c.outcome == "holds" and c.badge == abduce.BADGE_KERNEL and "kernel" in c.detail
+
+
+@needs_lean
+def test_certify_sufficiency_accepts_a_theorem_and_rejects_a_non_theorem():
+    axioms = [fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)]
+    good = abduce.certify_sufficiency(axioms, [fol.parse("Mortal(socrates)")], LEAN)
+    assert good[0].accepted
+    bad = abduce.certify_sufficiency(axioms, [fol.parse("Flies(socrates)")], LEAN)
+    assert not bad[0].accepted

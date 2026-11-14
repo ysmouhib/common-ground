@@ -258,3 +258,184 @@ class ChatSource:
                 quotes.append((q.get("document"), q.get("text"), span))
             candidates.append(Candidate(entry.get("fol"), quotes))
         return candidates
+
+
+# ---------------------------------------------------------------------------
+# The certified layer (CG3-3, docs/design/abduction.md §6). Nothing here trusts a
+# model: entailment and non-entailment come from the solvers (sound inside the
+# Bernays-Schönfinkel class, the boundary ground.py documents) and can be
+# kernel-checked by Lean. "pending" is a first-class outcome, never "false".
+
+from . import lean as _lean
+from . import verdict as _verdict
+
+BADGE_KERNEL = "SUFFICIENT (kernel-checked)"
+BADGE_SOLVER = "SOLVER-CHECKED (not kernel-certified)"
+BADGE_PENDING = "PENDING"
+
+
+@dataclass
+class Check:
+    """One certified check. outcome is "holds" / "fails" / "pending"; the badge says how it was established."""
+
+    kind: str            # "consistency" | "sufficiency" | "firm_rejection" | "soft_rejection" | "minimality"
+    claim: str           # FOL text of what was checked
+    outcome: str
+    badge: str
+    detail: str = ""
+    model_false: object | None = None   # explicit finite model witnessing a non-entailment
+
+    def to_json(self) -> dict:
+        return {"kind": self.kind, "claim": self.claim, "outcome": self.outcome, "badge": self.badge,
+                "detail": self.detail,
+                "model_where_claim_fails": self.model_false.to_json() if self.model_false is not None else None}
+
+
+def _solver_entailment(premises: list[Formula], conclusion: Formula, timeout_ms: int) -> _verdict.Verdict:
+    return _verdict.decide(list(premises), conclusion, timeout_ms)
+
+
+def entailment_check(premises: list[Formula], conclusion: Formula, kind: str = "sufficiency",
+                     timeout_ms: int = 5000, lean_bin: str | None = None) -> Check:
+    """Is premises ⊨ conclusion? Kernel-checked when Lean accepts the generated proof,
+    else solver-checked by refutation; a non-entailment is answered "fails" with an
+    explicit finite model; no verdict leaves the check pending."""
+    claim = fol.to_text(conclusion)
+    if lean_bin is not None:
+        cert = _lean.certify([(list(premises), conclusion)], lean_bin)[0]
+        if cert.accepted:
+            return Check(kind, claim, "holds", BADGE_KERNEL,
+                         f"Lean {_lean.TOOLCHAIN} kernel accepted the proof; axioms: {cert.axioms}")
+        # a rejected proof is not a refutation: fall through to the solver
+    v = _solver_entailment(premises, conclusion, timeout_ms)
+    if v.label in ("True", "Inconsistent"):
+        detail = "solver refutation" + (" (premises inconsistent: vacuous; see the consistency check)"
+                                         if v.label == "Inconsistent" else "")
+        return Check(kind, claim, "holds", BADGE_SOLVER, detail)
+    if v.label in ("False", "Uncertain"):
+        return Check(kind, claim, "fails", BADGE_SOLVER, f"non-entailment, verdict {v.label}", v.model_false)
+    return Check(kind, claim, "pending", BADGE_PENDING, f"no verdict: {v.label}; {v.notes}")
+
+
+def non_entailment_check(premises: list[Formula], conclusion: Formula, kind: str = "soft_rejection",
+                         timeout_ms: int = 5000) -> Check:
+    """Is premises ⊭ conclusion? Holds with an explicit finite model where the conclusion
+    fails, re-evaluated without a solver by verdict.py; fails when the conclusion is entailed."""
+    claim = fol.to_text(conclusion)
+    v = _solver_entailment(premises, conclusion, timeout_ms)
+    if v.label in ("False", "Uncertain"):
+        return Check(kind, claim, "holds", BADGE_SOLVER, f"non-entailment, verdict {v.label}", v.model_false)
+    if v.label in ("True", "Inconsistent"):
+        return Check(kind, claim, "fails", BADGE_SOLVER, f"the conclusion IS entailed (verdict {v.label})")
+    return Check(kind, claim, "pending", BADGE_PENDING, f"no verdict: {v.label}; {v.notes}")
+
+
+def consistency_check(premises: list[Formula], timeout_ms: int = 5000) -> Check:
+    """Does the system have a model? The witness is an explicit finite structure."""
+    answer = _verdict.satisfiable(list(premises), timeout_ms)
+    if answer.status == "sat":
+        size = answer.structure.size if answer.structure else None
+        return Check("consistency", "(all axioms)", "holds", BADGE_SOLVER,
+                     f"explicit finite model of size {size}" if size else "model")
+    if answer.status == "unsat":
+        return Check("consistency", "(all axioms)", "fails", BADGE_SOLVER, "solver refutation: no model")
+    return Check("consistency", "(all axioms)", "pending", BADGE_PENDING, f"no verdict: {answer.note}")
+
+
+@dataclass
+class SystemChecks:
+    """Every check on one candidate axiom system A against one camp's record (THEORY.md §2; design §6)."""
+
+    consistent: Check
+    sufficiency: list[Check]        # one per endorsed statement
+    firm_rejections: list[Check]    # one per firm rejection: A ⊨ ¬r
+    soft_rejections: list[Check]    # one per soft rejection: A ⊭ r
+    minimality: list[Check]         # one per axiom: A without it no longer suffices (S4)
+
+    @property
+    def certified(self) -> bool:
+        """A system is reported only when every check holds; any pending blocks certification."""
+        checks = [self.consistent, *self.sufficiency, *self.firm_rejections, *self.soft_rejections, *self.minimality]
+        return all(c.outcome == "holds" for c in checks)
+
+    def to_json(self) -> dict:
+        return {"consistent": self.consistent.to_json(),
+                "sufficiency": [c.to_json() for c in self.sufficiency],
+                "firm_rejections": [c.to_json() for c in self.firm_rejections],
+                "soft_rejections": [c.to_json() for c in self.soft_rejections],
+                "minimality": [c.to_json() for c in self.minimality],
+                "certified": self.certified}
+
+
+def check_system(axioms: list[Formula], record: Record, timeout_ms: int = 5000,
+                 lean_bin: str | None = None) -> SystemChecks:
+    """Run every certified check of docs/design/abduction.md §6 on A against the record.
+    Statements without a reviewed FOL draft are pending, never assumed."""
+    record.validate()
+    axioms = list(axioms)
+    consistent = consistency_check(axioms, timeout_ms)
+    sufficiency: list[Check] = []
+    for st in record.statements:
+        if st.stance != STANCE_ENDORSED:
+            continue
+        formula = st.formula()
+        if formula is None:
+            sufficiency.append(Check("sufficiency", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                                     "no reviewed formalization for this statement"))
+        else:
+            sufficiency.append(entailment_check(axioms, formula, "sufficiency", timeout_ms, lean_bin))
+    firm: list[Check] = []
+    for st in record.statements:
+        if st.stance != STANCE_FIRM:
+            continue
+        formula = st.formula()
+        if formula is None:
+            firm.append(Check("firm_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                              "no reviewed formalization for this statement"))
+        else:
+            firm.append(entailment_check(axioms, fol.Not(formula), "firm_rejection", timeout_ms, lean_bin))
+    soft: list[Check] = []
+    for st in record.statements:
+        if st.stance != STANCE_SOFT:
+            continue
+        formula = st.formula()
+        if formula is None:
+            soft.append(Check("soft_rejection", st.fol_text or "(none)", "pending", BADGE_PENDING,
+                              "no reviewed formalization for this statement"))
+        else:
+            soft.append(non_entailment_check(axioms, formula, "soft_rejection", timeout_ms))
+    endorsed = [st.formula() for st in record.statements
+                if st.stance == STANCE_ENDORSED and st.formula() is not None]
+    minimality: list[Check] = []
+    for a in axioms:
+        rest = [x for x in axioms if fol.to_text(x) != fol.to_text(a)]
+        needed = False
+        undecided = False
+        witness = ""
+        for e in endorsed:
+            v = _solver_entailment(rest, e, timeout_ms)
+            if v.label in ("False", "Uncertain"):
+                needed = True
+                witness = fol.to_text(e)
+                break
+            if v.label == "Undecided":
+                undecided = True
+                witness = fol.to_text(e) + " (undecided)"
+                break
+        if undecided:
+            minimality.append(Check("minimality", fol.to_text(a), "pending", BADGE_PENDING,
+                                    f"removal check undecided for {witness}"))
+        elif needed:
+            minimality.append(Check("minimality", fol.to_text(a), "holds", BADGE_SOLVER,
+                                    f"needed: without it, {witness} is not entailed"))
+        else:
+            minimality.append(Check("minimality", fol.to_text(a), "fails", BADGE_SOLVER,
+                                    "redundant: the other axioms still entail every endorsed claim"))
+    return SystemChecks(consistent, sufficiency, firm, soft, minimality)
+
+
+def certify_sufficiency(axioms: list[Formula], claims: list[Formula], lean_bin: str) -> list:
+    """Kernel certificates for the sufficiency proofs of a selected system (design §6).
+    Takes parsed formulas only; the generated Lean source is checked by lean.assert_generated,
+    so no visitor or model text ever reaches Lean."""
+    return _lean.certify([(list(axioms), c) for c in claims], lean_bin)
