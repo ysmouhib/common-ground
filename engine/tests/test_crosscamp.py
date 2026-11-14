@@ -1,8 +1,10 @@
 import json
+import pathlib
 
 import pytest
 
-from commonground import abduce, crosscamp, fol, lean
+from commonground import abduce, argmap, crosscamp, fol, lean
+from commonground.__main__ import main
 
 LEAN = lean.find_lean()
 needs_lean = pytest.mark.skipif(LEAN is None, reason="no Lean 4.35.0 (set LEAN_BIN)")
@@ -132,3 +134,102 @@ def test_common_ground_can_be_kernel_checked():
     cg = crosscamp.common_ground(camps_shared_q(), lean_bin=LEAN)
     badges = {c["badge"] for e in cg["stated"]["agreed"] for c in e["checks"]}
     assert abduce.BADGE_KERNEL in badges
+
+
+# --- CG5-3: fault lines (reduced disagreement) + CLI ---
+
+
+def camps_conflict():
+    a = make_camp("A", "da", "A says: P(a) holds.", [("e1", "endorsed", "P(a)", "P(a) holds.")])
+    b = make_camp("B", "db", "B says: not P(a).", [("e1", "rejected_firm", "P(a)", "not P(a).")])
+    return [a, b]
+
+
+def test_stated_fault_line_on_firm_rejection_conflict():
+    fl = crosscamp.fault_lines(camps_conflict())
+    assert fl["stated"]["consistent"]["outcome"] == "fails"
+    mus = fl["stated"]["mus"]
+    assert len(mus) == 1 and set(mus[0]) == {"P(a)", "¬P(a)"}
+    # MCSes are the complements of the maximal consistent subsets: give up one side
+    assert any(set(m) == {"¬P(a)"} for m in fl["stated"]["mcs"])
+    assert any(set(m) == {"P(a)"} for m in fl["stated"]["mcs"])
+    pair = fl["per_system_pair"][0]
+    assert pair["consistent"] is False
+    assert any(set(m) == {"P(a)", "¬P(a)"} for m in pair["mus"])
+    assert pair["root_divergence"] == []
+
+
+def camps_disjoint():
+    a = make_camp("A", "da", "A says: P(a) holds.", [("e1", "endorsed", "P(a)", "P(a) holds.")])
+    b = make_camp("B", "db", "B says: R(a) holds.", [("e1", "endorsed", "R(a)", "R(a) holds.")])
+    return [a, b]
+
+
+def test_root_divergence_when_the_union_is_consistent():
+    camps = camps_disjoint()
+    cg = crosscamp.common_ground(camps)
+    assert cg["stated"]["agreed"] == []          # neither camp entails the other's claim
+    fl = crosscamp.fault_lines(camps)
+    assert fl["stated"]["consistent"]["outcome"] == "holds"
+    assert fl["stated"]["mus"] == []
+    pair = fl["per_system_pair"][0]
+    assert pair["consistent"] is True
+    assert pair["mus"] == []
+    roots = pair["root_divergence"]
+    assert len(roots) == 1
+    r = roots[0]
+    assert {r["a1"], r["a2"]} == {"P(a)", "R(a)"}
+    assert r["rank"] == 2                          # load 1 in each camp
+    assert all(c["outcome"] == "holds" and c["model_where_claim_fails"] for c in r["checks"])
+
+
+def test_analyze_combines_and_renders_json_and_markdown():
+    report = crosscamp.analyze(camps_shared_q())
+    assert set(report) == {"camps", "common_ground", "fault_lines"}
+    json.dumps(report)
+    md = crosscamp.render_markdown(report)
+    assert "Common ground among stated claims" in md
+    assert "`Q(a)`" in md
+    assert "Fault lines" in md
+
+
+def test_combination_cap_raises_too_many(monkeypatch):
+    monkeypatch.setattr(crosscamp, "MAX_COMBINATIONS", 0)
+    with pytest.raises(argmap.TooMany):
+        crosscamp.common_ground(camps_shared_q())
+
+
+def write_record_file(path, camp, doc_id, text, statements):
+    def span_of(sub):
+        i = text.index(sub)
+        return [i, i + len(sub)]
+    record = {"camp": camp, "documents": [{"id": doc_id, "text": text}],
+              "statements": [{"id": sid, "stance": stance, "fol": f, "document": doc_id,
+                              "quote": q, "span": span_of(q)}
+                             for sid, stance, f, q in statements]}
+    path.write_text(json.dumps(record), encoding="utf-8")
+
+
+def test_cli_crosscamp_end_to_end(tmp_path):
+    ra = tmp_path / "a.json"
+    rb = tmp_path / "b.json"
+    ca = tmp_path / "ca.json"
+    cb = tmp_path / "cb.json"
+    write_record_file(ra, "A", "da", TEXT_A,
+                      [("e1", "endorsed", "P(a)", "P(a) holds."),
+                       ("e2", "endorsed", "Q(a)", "Q(a) holds too.")])
+    write_record_file(rb, "B", "db", TEXT_B,
+                      [("e1", "endorsed", "Q(a)", "Q(a) holds."),
+                       ("e2", "endorsed", "R(a)", "R(a) holds.")])
+    ca.write_text(json.dumps({"candidates": []}), encoding="utf-8")
+    cb.write_text(json.dumps({"candidates": []}), encoding="utf-8")
+    out = tmp_path / "out"
+    code = main(["crosscamp", str(ra), str(rb), "--candidates", str(ca), str(cb),
+                 "--out", str(out)])
+    assert code == 0
+    result = json.loads((out / "crosscamp.json").read_text(encoding="utf-8"))
+    assert result["camps"] == ["A", "B"]
+    assert [e["statement"] for e in result["common_ground"]["stated"]["agreed"]] == ["Q(a)"]
+    assert (out / "A" / "report.json").exists() and (out / "B" / "report.md").exists()
+    assert "crosscamp.md" in [p.name for p in out.iterdir()]
+    assert pathlib.Path(out / "crosscamp.md").read_text(encoding="utf-8").startswith("# Cross-camp")

@@ -168,6 +168,58 @@ def _camp(args) -> int:
     return 0
 
 
+def _crosscamp(args) -> int:
+    from . import abduce, crosscamp
+    from .argmap import TooMany
+    if len(args.records) < 2:
+        print("crosscamp needs at least two camp records", file=sys.stderr)
+        return 2
+    if len(args.candidates) != len(args.records):
+        print("--candidates once per record, in the same order", file=sys.stderr)
+        return 2
+    try:
+        plausibilities = (json.loads(Path(args.plausibilities).read_text(encoding="utf-8"))
+                         if args.plausibilities else {})
+        camps = []
+        for rec_path, cand_path in zip(args.records, args.candidates):
+            record = abduce.load_record(rec_path)
+            raw = json.loads(Path(cand_path).read_text(encoding="utf-8"))
+            candidates = [abduce.Candidate(c["fol"],
+                                           [(q["document"], q["text"], (q["span"][0], q["span"][1]))
+                                            for q in c.get("quotes", [])])
+                          for c in raw["candidates"]]
+            camps.append((record, candidates))
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"cannot read the inputs: {exc}", file=sys.stderr)
+        return 2
+    lean_bin = lean.find_lean() if args.lean else None
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    camp_objs = []
+    try:
+        for record, candidates in camps:
+            report = abduce.report_camp(record, abduce.ScriptedSource(candidates), plausibilities,
+                                        args.lam, args.timeout_ms, lean_bin)
+            camp_dir = out / record.camp
+            camp_dir.mkdir(parents=True, exist_ok=True)
+            (camp_dir / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False),
+                                                  encoding="utf-8")
+            (camp_dir / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+            camp_objs.append(crosscamp.Camp(record, report))
+        result = crosscamp.analyze(camp_objs, args.timeout_ms, lean_bin)
+    except TooMany as exc:
+        print(f"input too large for the documented scope: {exc}; per-camp reports were written",
+              file=sys.stderr)
+        return 2
+    (out / "crosscamp.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+    (out / "crosscamp.md").write_text(crosscamp.render_markdown(result), encoding="utf-8")
+    n_mus = sum(len(p.get("mus") or []) for p in result["fault_lines"]["per_system_pair"])
+    print(json.dumps({"out": str(out), "camps": result["camps"],
+                      "stated_agreed": len(result["common_ground"]["stated"]["agreed"]),
+                      "fault_lines_found": n_mus}, ensure_ascii=False))
+    return 0
+
+
 def _extract(args) -> int:
     from . import extract as extract_mod
     from .formalize import OpenAICompatible, ProviderError
@@ -240,6 +292,18 @@ def main(argv: list[str] | None = None) -> int:
     camp.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     camp.add_argument("--out", required=True, help="output directory: report.json and report.md")
     camp.set_defaults(run=_camp)
+
+    xc = commands.add_parser("crosscamp", help="cross-camp report: common ground + fault lines for 2+ camps")
+    xc.add_argument("records", nargs="+", help="camp record JSONs (two or more)")
+    xc.add_argument("--candidates", nargs="+", required=True,
+                    help="one scripted-candidates JSON per record, in the same order")
+    xc.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate")
+    xc.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
+    xc.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
+    xc.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")
+    xc.add_argument("--out", required=True,
+                    help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
+    xc.set_defaults(run=_crosscamp)
 
     ex = commands.add_parser("extract", help="extract the statements of text files, with verbatim spans")
     ex.add_argument("files", nargs="+", help="text files; each file is one document, id = the path as given")
