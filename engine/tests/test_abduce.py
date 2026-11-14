@@ -442,6 +442,34 @@ def test_minimality_without_verdict_blocks_certification(monkeypatch):
     assert not checks.certified
 
 
+def test_undecided_subsets_are_counted_and_make_the_search_incomplete(monkeypatch):
+    # a subset whose certification came back pending used to be treated like a failed one:
+    # the search then ended "complete" although a cheaper subset was never decided
+    pool = [P(AXIOM_ALL), P(AXIOM_SOC)]
+    rec = check_record()
+    real_check_system = abduce.check_system
+
+    def check_system(axioms, record, timeout_ms=5000, lean_bin=None):
+        sc = real_check_system(axioms, record, timeout_ms, lean_bin)
+        if sorted(fol.to_text(a) for a in axioms) == [AXIOM_SOC]:
+            # the solver gave no verdict on this subset: pending, never "false"
+            pending = abduce.Check("sufficiency", "Mortal(socrates)", "pending",
+                                   abduce.BADGE_PENDING, "forced: no verdict")
+            return abduce.SystemChecks(sc.consistent, [pending], [], [], [])
+        return sc
+
+    monkeypatch.setattr(abduce, "check_system", check_system)
+    for search in (abduce.select, abduce.select_bruteforce):
+        sel = search(pool, rec, {}, 0.3)
+        assert not sel.exhausted and sel.undecided == 1
+        assert sel.systems  # {∀x (Human(x) → Mortal(x)), Human(socrates)} is still certified
+    src = abduce.ScriptedSource([candidate(AXIOM_ALL, [GOOD_QUOTE]), candidate(AXIOM_SOC, [GOOD_QUOTE])])
+    report = abduce.report_camp(rec, src, {}, lam=0.3)
+    assert report["selection"]["undecided"] == 1
+    assert report["search_complete"] is False and report["abstention"] is None
+    assert "SEARCH INCOMPLETE" in abduce.render_markdown(report)
+
+
 def test_checks_carry_their_evidence():
     ok = abduce.consistency_check([P(AXIOM_SOC)])
     assert ok.model is not None and ok.to_json()["model"]["size"] >= 1

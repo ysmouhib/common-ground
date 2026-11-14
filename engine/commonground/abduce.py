@@ -415,6 +415,13 @@ class SystemChecks:
         checks = [self.consistent, *self.sufficiency, *self.firm_rejections, *self.soft_rejections, *self.minimality]
         return all(c.outcome == "holds" for c in checks)
 
+    @property
+    def undecided(self) -> bool:
+        """Some check came back pending: no verdict was reached, so the system is neither
+        certified nor refuted."""
+        checks = [self.consistent, *self.sufficiency, *self.firm_rejections, *self.soft_rejections, *self.minimality]
+        return any(c.outcome == "pending" for c in checks)
+
     def to_json(self) -> dict:
         return {"consistent": self.consistent.to_json(),
                 "sufficiency": [c.to_json() for c in self.sufficiency],
@@ -622,10 +629,13 @@ class Selection:
     checks: int                    # how many subsets were certification-checked
     exhausted: bool                # True when the check budget ran out before the search finished:
                                    # the systems are then certified but not shown to be cost-minimal
+    undecided: int                 # subsets whose certification came back pending (no verdict):
+                                   # the search then cannot claim cost-minimality either
 
     def to_json(self) -> dict:
         return {"lam": self.lam, "best_cost": self.best_cost, "systems": self.systems,
-                "all_certified": self.all_certified, "checks": self.checks, "exhausted": self.exhausted}
+                "all_certified": self.all_certified, "checks": self.checks, "exhausted": self.exhausted,
+                "undecided": self.undecided}
 
 
 def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
@@ -639,6 +649,7 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
     all_certified: list[list[str]] = []
     checks = 0
     exhausted = False
+    undecided = 0
     order = sorted(range(len(pool)), key=lambda i: fol.to_text(pool[i]))
 
     seen: set[tuple[int, ...]] = set()
@@ -646,7 +657,7 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
     def visit(chosen: list[int], prune: bool) -> None:
         # the empty system is visited too: it is the axiom system of a record whose
         # claims are all valid (THEORY.md §2, condition 4)
-        nonlocal best, systems, all_certified, checks, exhausted
+        nonlocal best, systems, all_certified, checks, exhausted, undecided
         key = tuple(sorted(chosen))
         if key in seen:  # the A₀ seed is also reached by the search itself
             return
@@ -659,7 +670,10 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
             exhausted = True
             return
         checks += 1
-        if not check_system(axioms, record, timeout_ms).certified:
+        sc = check_system(axioms, record, timeout_ms)
+        if not sc.certified:
+            if sc.undecided:
+                undecided += 1  # no verdict on this subset: the search is incomplete
             return
         texts = sorted(fol.to_text(a) for a in axioms)
         all_certified.append(texts)
@@ -697,7 +711,7 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
             if exhausted:  # set by visit only when a subset still needed a check
                 break
     assert best is not None or not all_certified
-    return Selection(lam, best if best is not None else float("inf"), systems, all_certified, checks, exhausted)
+    return Selection(lam, best if best is not None else float("inf"), systems, all_certified, checks, exhausted, undecided)
 
 
 def select_bruteforce(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
@@ -1095,7 +1109,9 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
     else:
         sel = select(pool, record, plausibilities, lam, timeout_ms, max_checks)
         search = "branch-and-bound"
-    search_complete = not sel.exhausted
+    # complete means every subset got a verdict: a budget stop (exhausted) or a single
+    # undecided subset both leave "cost-minimal" unproven
+    search_complete = not sel.exhausted and sel.undecided == 0
     # plausibility sensitivity (CG8-4, design abduction.md §2): recompute the selection at the
     # minimum and the maximum of every sampled range — never a single silent pick
     sensitivity = None
@@ -1107,13 +1123,16 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
             return select(pool, record, point, lam, timeout_ms, max_checks)
         sel_lo = _search_at({t: lo for t, (lo, hi) in ranges.items()})
         sel_hi = _search_at({t: hi for t, (lo, hi) in ranges.items()})
-        complete = not (sel_lo.exhausted or sel_hi.exhausted)
+        complete = (not (sel_lo.exhausted or sel_hi.exhausted)
+                    and sel_lo.undecided == 0 and sel_hi.undecided == 0)
         main_sets = sorted(map(sorted, sel.systems))
         stable = (complete and sorted(map(sorted, sel_lo.systems)) == main_sets
                   == sorted(map(sorted, sel_hi.systems)))
         sensitivity = {"ranges": {t: [lo, hi] for t, (lo, hi) in nontrivial.items()},
-                       "at_min": {"systems": sel_lo.systems, "search_complete": not sel_lo.exhausted},
-                       "at_max": {"systems": sel_hi.systems, "search_complete": not sel_hi.exhausted},
+                       "at_min": {"systems": sel_lo.systems,
+                                  "search_complete": not sel_lo.exhausted and sel_lo.undecided == 0},
+                       "at_max": {"systems": sel_hi.systems,
+                                  "search_complete": not sel_hi.exhausted and sel_hi.undecided == 0},
                        "stable": stable if complete else None}
     by_text = {fol.to_text(f): f for f in pool}
     hull = hull_intervals(sel.all_certified, pool, plausibilities)
@@ -1160,7 +1179,7 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
         "margin_to_runner_up": margin_at(sel.all_certified, pool, plausibilities, lam),
         "systems": systems,
         "existence": ({"status": "certified"} if sel.all_certified
-                      else _existence(record, sel.exhausted, timeout_ms)),
+                      else _existence(record, sel.exhausted or sel.undecided > 0, timeout_ms)),
         "baseline": {"stated_certified": base["stated"].certified,
                      "minimal_stated_certified": base["minimal_stated"].certified,
                      "stated_formulas": base["stated_formulas"],
@@ -1204,16 +1223,21 @@ def render_markdown(report: dict) -> str:
         lines += ["", "## Warnings (how a formula is read)", ""]
         lines += [f"- {w}" for w in report["warnings"]]
     sel = report["selection"]
-    complete = report.get("search_complete", not sel.get("exhausted", False))
+    complete = report.get("search_complete", not sel.get("exhausted", False) and not sel.get("undecided", 0))
     hull_complete = report.get("hull_complete", complete)
     if complete:
         lines += ["", "## Selected systems (cost-minimal, ties reported)", ""]
     else:
+        reasons = []
+        if sel.get("exhausted"):
+            reasons.append(f"the budget of {sel['checks']} certification checks ran out")
+        if sel.get("undecided"):
+            reasons.append(f"{sel['undecided']} subset(s) got no verdict (PENDING)")
         lines += ["", "## Cheapest certified systems found — SEARCH INCOMPLETE", "",
-                  f"The search stopped at its budget of {sel['checks']} certification checks. Each system "
+                  f"The search did not finish: {'; '.join(reasons)}. Each system "
                   "below is certified, but it is **not shown to be cost-minimal**: a cheaper system may "
-                  "exist among the subsets that were not checked. Selection, abstention, hull and margin "
-                  "are PENDING until the search finishes (raise `--max-checks`).", ""]
+                  "exist among the subsets that were not decided. Selection, abstention, hull and margin "
+                  "are PENDING until the search finishes (raise `--max-checks` / `--timeout-ms`).", ""]
     if not sel["systems"]:
         existence = report.get("existence") or {"status": "pending", "detail": "no system was certified"}
         if existence["status"] == "none":
