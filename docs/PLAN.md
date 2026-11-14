@@ -272,7 +272,7 @@ number guard; the README evidence tables.
 - [x] **CG9-8** — Engine packaging for PyPI; name decision recorded here.
   Files: `engine/pyproject.toml`, `docs/PLAN.md`. Done-when: build works or
   "not run" recorded.
-- [ ] **CG9-9** — CI publishes the container to GHCR. Files:
+- [x] **CG9-9** — CI publishes the container to GHCR. Files:
   `.github/workflows/ci.yml` (or a new release workflow). Done-when: workflow
   validated; green or "not run" locally.
 - [ ] **CG9-10** — `SECURITY.md` refresh + `examples/` index. Files:
@@ -470,3 +470,12 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   name). Publishing to PyPI: NOT done — release action for the owner.
   Suite unchanged (exit 0, 169 passed). Committed as this session's commit.
   Escalations: none. Next: CG9-9.
+- 2026-11-13 — CG9-9: .github/workflows/release.yml added: on version tags
+  (v*) it logs into GHCR with GITHUB_TOKEN (packages: write) and builds+pushes
+  the Dockerfile image as ghcr.io/<owner>/common-ground:<version> + latest.
+  YAML validated; every action pinned to a commit SHA verified against the
+  GitHub API (checkout v4.4.0, login-action v3.5.0, metadata-action v5.8.0,
+  build-push-action v6.12.0), same pinning style as ci.yml. The actual publish
+  is NOT run (needs the v2.0.0 tag pushed by the owner and repo Packages
+  permission). Docs-only; suite unchanged (exit 0, 169 passed). Committed as
+  this session's commit. Escalations: none. Next: CG9-10.
