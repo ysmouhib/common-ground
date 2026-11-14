@@ -22,7 +22,7 @@ It has two parts:
 
 ## Quickstart
 
-Engine only — verdicts and debate analysis, no server, no database:
+Engine only — verdicts and debate analysis, no server, no database. From PyPI, no clone needed: `pip install commonground-engine`, then `python -m commonground ...` from any directory. From a clone:
 
 ```bash
 git clone https://github.com/ysmouhib/common-ground.git && cd common-ground
