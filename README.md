@@ -1,6 +1,9 @@
 # Common Ground
 
 [![ci](https://github.com/ysmouhib/common-ground/actions/workflows/ci.yml/badge.svg)](https://github.com/ysmouhib/common-ground/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![python](https://img.shields.io/badge/python-%3E%3D3.10-blue.svg)](engine/pyproject.toml)
+[![node](https://img.shields.io/badge/node-22-green.svg)](.github/workflows/ci.yml)
 
 Does a conclusion follow from the premises someone gave for it? And when two
 positions disagree, where exactly, and what could both still hold?
@@ -16,6 +19,28 @@ It has two parts:
 * `engine/`: a Python logic engine (parser, two solvers, Lean certificates,
   conflict analysis, a benchmark);
 * a web app that walks through one sourced policy debate using the engine's output.
+
+## Quickstart
+
+Engine only — verdicts and debate analysis, no server, no database:
+
+```bash
+git clone https://github.com/ysmouhib/common-ground.git && cd common-ground
+pip install -r engine/requirements.txt
+cd engine
+python -m commonground analyze examples/plastic_bags.json
+python -m commonground check --premise "∀x (Human(x) → Mortal(x))" --premise "Human(socrates)"     --conclusion "Mortal(socrates)" --lean    # the Lean step needs LEAN_BIN set
+```
+
+Web app: `npm ci`, copy `.env.example` to `.env` and set `DATABASE_URL` (MySQL)
+and `REVIEWER_TOKEN`, `npx drizzle-kit push --force`, `npm run dev`.
+
+A live language-model run needs an endpoint you configure — the exact commands
+are under "What has not been shown" below. The paste-your-own-debate flow is
+being built in Phase 6 of [`docs/PLAN.md`](docs/PLAN.md); the engine CLI above
+works today. On a clean machine the engine-only path reaches a first analysis
+in a few minutes; the 10-minute acceptance test for the full release is
+CG9-11 in the plan (not run here).
 
 ## What has been shown, and by what
 

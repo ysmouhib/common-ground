@@ -265,7 +265,7 @@ number guard; the README evidence tables.
 - [x] **CG9-6** — `CHANGELOG.md` (Keep a Changelog) and tag `v2.0.0`. Files:
   `CHANGELOG.md`. Done-when: committed; tag created (push only with owner
   approval).
-- [ ] **CG9-7** — README release pass: badges (CI, MIT, Python/Node versions),
+- [x] **CG9-7** — README release pass: badges (CI, MIT, Python/Node versions),
   quickstart, demo media, links to `THEORY.md` / `RESEARCH.md`. Files:
   `README.md`. Deps: CG9-1..CG9-6. Done-when: quickstart verified on a clean
   clone or "not run" recorded; every badge and claim true.
@@ -456,3 +456,9 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   not pushed (push needs owner approval and CG9-11 acceptance is not met yet).
   Docs-only; suite unchanged (exit 0, 169 passed). Committed as this session's
   commit. Escalations: none. Next: CG9-7.
+- 2026-11-13 — CG9-7: README release pass: badges (CI, MIT, python >=3.10,
+  node 22) and a Quickstart section (engine-only path verified live just now:
+  `python -m commonground analyze examples/plastic_bags.json` runs; web-app
+  path documented). The <10 min clean-clone acceptance (CG9-11) is NOT run —
+  stated as such in the README. Docs-only; suite unchanged (exit 0, 169
+  passed). Committed as this session's commit. Escalations: none. Next: CG9-8.
