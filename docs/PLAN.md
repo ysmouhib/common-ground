@@ -604,3 +604,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   Committed as this session's commit. Escalations: none. Next: owner summary of
   THEORY.md + open decisions, then CGR-5 (owner sign-off) gates CG3-1.
 - 2026-11-14 — CGR-5: the owner reviewed `docs/research/THEORY.md` and closed the review, no changes requested; approval recorded here per the done-when. The terminology decision (axiom, stated/unstated) and amendments A1–A7 stand as drafted. THEORY.md's draft note updated to "reviewed and approved". Phase 3 is unblocked: next CG3-1 (design doc `docs/design/abduction.md`, owner approves before code). Docs-only; engine suite unchanged (exit 0, 170 passed at 7a8dd93); e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG3-1.
+- 2026-11-14 — CG3-1 (design doc produced, awaiting owner approval before code):
+  `docs/design/abduction.md` written — argument-graph architecture per the owner's
+  2026-11-13 decision (discourse + entailment + MUS edges locate candidates via load,
+  graph position, MUS membership; the graph is a check, never a cost term),
+  LLM-independent CandidateSource interface, plausibility protocol (RESEARCH.md §15.3),
+  certified-layer verdict mapping to verdict/lean (kernel vs SOLVER-CHECKED vs pending),
+  branch-and-bound search over certified subsets with hull + λ-intervals + runner-up
+  margin, brute-force cross-checks, negative controls, coverage κ/δ and abstention with
+  the stated system A₀. Cites THEORY.md (CGR-5 approved). Docs-only; engine suite
+  unchanged (exit 0, 170 passed at 7a8dd93). Committed as this session's commit.
+  Escalations: none. Next: owner approves the design, then CG3-2 (`abduce.py`).
