@@ -3,9 +3,9 @@
 > **Draft, 14 November 2026. Phase R, sessions 1 to 4 of 4.** This file cites nothing
 > unverified. The definitions amend brief §4 in seven places ([`RESEARCH.md`](RESEARCH.md)
 > §5); on 13 November 2026 the owner said to proceed on them, so they are adopted for
-> drafting and remain subject to review. The terminology decision of `RESEARCH.md` §9 is
-> recorded below as *proposed*. Not reviewed by the owner: CGR-5 is the owner's sign-off
-> and gates all Phase 3 code.
+> drafting and were approved with this review. The terminology decision of
+> `RESEARCH.md` §9 is recorded below. **Reviewed and approved by the owner on
+> 14 November 2026: review closed, no changes requested (CGR-5, `docs/PLAN.md`).**
 
 ## 1. The claim
 

@@ -18,7 +18,7 @@ command cannot run in the current environment, record "not run" and the reason
 |---|---|
 | 0 Baseline | **Recorded locally, all suites.** Engine: **122 passed, 0 skipped**, exit 0 with `FOLIO_DIR` + `LEAN_BIN` set (117 passed / 5 skipped without them). App: `npm run check`, `npm run lint` exit 0; `npm test` 39 passed, **4 failed** — Windows-only shebang-spawn failures in `api/proofVerifier.test.ts` (pass on Linux CI; `docs/BACKLOG.md`). e2e: **33 + 33 (with Lean) + 8 (read-only) passed**, exit 0. README numbers reproduced exactly: FOLIO 195/204, disagreements [5,27,29,47,87,112,114,138,139], Lean 128/128 certified and 0/278 false accepted, second engine 201/201, 75 uncertain, 10/204 unequal counts. |
 | R Scientific grounding | Session 1 of 4 done (details below). Sessions 2–4 and the `THEORY.md` review are **owner tasks**: research is off-limits to the worker (AGENTS.md, Evidence discipline). |
-| 1 to 9 | Not started. No abduction code before the owner has reviewed `THEORY.md` (brief §8; gate CGR-5). |
+| 1 to 9 | Unblocked: the owner closed the review of `THEORY.md` on 2026-11-14 (CGR-5, no changes requested). Next: CG3-1 design doc. |
 
 Git: `main` is at `7b8736d` ("prepare the architecture for v2"); the handoff from
 the previous agent was already committed, the tree was clean at session start.
@@ -90,8 +90,8 @@ number guard; the README evidence tables.
 - [x] **CGR-4** — Session 4, evaluation (done 2026-11-14, assigned by the owner; see the session log): A6, D2, D3, G3; RQ6; Phase 7
   annotation protocol; finish `THEORY.md` within two pages; list every
   remaining `[unverified]`. Deps: CGR-3. Done-when: owner records the session.
-- [ ] **CGR-5** — Owner review of the finished `THEORY.md`. Gates CG3-1.
-  Deps: CGR-4. Done-when: owner approval recorded here.
+- [x] **CGR-5** — Owner review of the finished `THEORY.md`. Gates CG3-1.
+  Deps: CGR-4. Done-when: owner approval recorded here. **Approved: the owner closed the review on 2026-11-14, no changes requested** (session log below).
 
 ### Phase 1 — The formalizer goes live
 
@@ -128,7 +128,7 @@ number guard; the README evidence tables.
   `engine/commonground/extract.py`, `engine/tests/test_extract.py`. Deps: CG2-3.
   Done-when: pytest exits 0. (Owner-approved architecture input, 2026-11-13.)
 
-### Phase 3 — The abduction engine (blocked on CGR-5; [PLAN] on the design)
+### Phase 3 — The abduction engine (CGR-5 approved 2026-11-14; [PLAN] on the design)
 
 - [ ] **CG3-1 [PLAN]** — Design doc first. Must incorporate the owner-approved
   architecture (2026-11-13): a logic-backed argument graph (statements plus
@@ -139,7 +139,7 @@ number guard; the README evidence tables.
   pending. Candidate generation, sufficiency /
   consistency / negation checking, cost function, cost-minimal search,
   certificates, negative controls; soundness and termination notes; cites
-  `THEORY.md`. Files: `docs/design/abduction.md`. Deps: CGR-5.
+  `THEORY.md`. Files: `docs/design/abduction.md`. Deps: CGR-5 (approved).
   Done-when: step-by-step plan produced in-session; owner approves before code.
 - [ ] **CG3-2** — LLM-independent candidate-generation interface in
   `abduce.py` (scripted clients for tests). Files:
@@ -182,7 +182,7 @@ number guard; the README evidence tables.
 - [ ] **CG5-1 [PLAN]** — Design doc: common ground (claims entailed by both
   camps' systems) and reduced disagreement as MUS/MCS over the union of the
   camps' axiom systems (sources pack C1–C3); fault-line output format. Files:
-  `docs/design/cross-camp.md`. Deps: CG4-2, CGR-5. Done-when: owner-approved
+  `docs/design/cross-camp.md`. Deps: CG4-2, CGR-5 (approved). Done-when: owner-approved
   plan before code.
 - [ ] **CG5-2** — Common-ground computation with solver checks. Files:
   `engine/commonground/crosscamp.py`, `engine/tests/test_crosscamp.py`.
@@ -603,3 +603,4 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   7a8dd93: exit 0, 170 passed; e2e unchanged since cc563a3.
   Committed as this session's commit. Escalations: none. Next: owner summary of
   THEORY.md + open decisions, then CGR-5 (owner sign-off) gates CG3-1.
+- 2026-11-14 — CGR-5: the owner reviewed `docs/research/THEORY.md` and closed the review, no changes requested; approval recorded here per the done-when. The terminology decision (axiom, stated/unstated) and amendments A1–A7 stand as drafted. THEORY.md's draft note updated to "reviewed and approved". Phase 3 is unblocked: next CG3-1 (design doc `docs/design/abduction.md`, owner approves before code). Docs-only; engine suite unchanged (exit 0, 170 passed at 7a8dd93); e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG3-1.
