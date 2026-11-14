@@ -193,21 +193,36 @@ number guard; the README evidence tables.
 
 ### Phase 6 — Web app
 
-- [ ] **CG6-1** — API routers (tRPC) for extract / abduce / cross-camp with
-  the existing access control: public reads, reviewer token for mutations,
-  schema validation, timeouts, provider outage never scored as a wrong answer.
-  Files: one `api/` router file, one contracts test. Deps: CG3-5, CG5-3.
-  Done-when: `npm test` and e2e pass.
+- [ ] **CG6-1a** — Engine bridge + first v2 router (tRPC): `api/engineRunner.ts`
+  spawns `python -m commonground camp|crosscamp` in a temp dir and parses
+  report.json (mirrors proofVerifier spawning Lean; timeout; outage never scored
+  as wrong). Plus the `camp` report router, its registration in `api/router.ts`,
+  one contracts test. The API must surface `search_complete`, `existence`,
+  per-system `badge`/`certified` and per-check outcomes — never `abstention` or a
+  headline badge alone (soundness review 2026-11-14). Files: `api/engineRunner.ts`,
+  one new `api/` router file, `api/router.ts`, one contracts test.
+  Deps: CG5-3, 7b60efd. Done-when: `npm test` passes; e2e still 33+33+8 green
+  (no existing route changed).
+- [ ] **CG6-1b** — `crosscamp` and `extract` routers on the same bridge, with the
+  existing access control: public reads, reviewer token for mutations, schema
+  validation, timeouts, provider outage never scored as a wrong answer.
+  Deps: CG6-1a. Done-when: `npm test` and e2e pass.
 - [ ] **CG6-2** — Statement and camp input UI (paste texts, assign camps).
-  Files: two `src/` files. Deps: CG6-1. Done-when: `npm test` and e2e pass.
+  Unformalized statements are shown as pending, never dropped. Router changes
+  belong to CG6-1a/1b. Files: two `src/` files. Deps: CG6-1b.
+  Done-when: `npm test` and e2e pass.
 - [ ] **CG6-3** — Axiom review queue UI (proposed axioms with evidence quotes,
-  approve/reject; no LLM output reaches Lean without human approval). Files:
-  two `src/` files. Deps: CG6-2. Done-when: `npm test` and e2e pass.
-- [ ] **CG6-4** — Camp comparison view: provable common ground and exact fault
-  lines. Files: two `src/` files. Deps: CG6-3. Done-when: `npm test` and e2e
-  pass.
-- [ ] **CG6-5** — Extend the e2e suite (currently 33 + 8 checks) for the new
-  flow; update README check counts. Files: `e2e/run.mjs`, `README.md`.
+  approve/reject; no LLM output reaches Lean without human approval). Axiom cards
+  show the plausibility estimate with its provenance (model, settings, prompt
+  hash), never the word "probability" (RESEARCH.md §15.3). Files: two `src/`
+  files. Deps: CG6-2. Done-when: `npm test` and e2e pass.
+- [ ] **CG6-4** — Camp comparison view: renders both tiers and the fault-line
+  section from `crosscamp.json`, including `search_incomplete` warnings and
+  pending root-divergence pairs; pairwise display for >2 camps (joint MUS is an
+  owner-open question, cross-camp.md §9). Files: two `src/` files. Deps: CG6-3.
+  Done-when: `npm test` and e2e pass.
+- [ ] **CG6-5** — Extend the e2e suite (currently 33 + 33 with Lean + 8 read-only
+  checks) for the new flow; update README check counts. Files: `e2e/run.mjs`, `README.md`.
   Deps: CG6-4. Done-when: e2e passes; README updated.
 
 ### Phase 7 — Golden dataset (Swiss CO2-law votation, 13 June 2021, vote 644)
@@ -231,24 +246,31 @@ number guard; the README evidence tables.
 
 ### Phase 8 — Evaluation
 
-- [ ] **CG8-1** — Abduction benchmark on FOLIO: hide premises, check whether
-  the system recovers *sufficient* premises; reuse the Wilson-interval /
-  McNemar harness. Files: `engine/commonground/folio.py`,
-  `engine/tests/test_folio.py`. Deps: CG3-5. Done-when: pytest exits 0;
-  numbers recorded or "not run".
-- [ ] **CG8-2** — CO2 holdout test: remove published statements of a camp,
-  extract axioms from the rest, check the extracted system still derives the
-  withheld statements. Files: `engine/tests/test_golden.py`, `results/`.
-  Deps: CG7-3. Done-when: pytest exits 0; README row added.
-- [ ] **CG8-4** — Sensitivity reporting (owner decision 2026-11-13): the selected
-  axiom system varies with the subjective choices (λ, plausibility prior), so
-  report λ-intervals / the hull of selected systems and plausibility intervals or
-  multi-sample agreement, never a single silent pick. Files: `README.md`,
-  `engine/commonground/abduce.py`. Deps: CG8-3. Done-when: README shows the
-  sensitivity tables; pytest exits 0.
+- [ ] **CG8-1** — Abduction benchmark on FOLIO (`folio --mode abduction`): per
+  example the conclusion is the only endorsed claim and the pool is the example's
+  own premises; grade *recovery* — a certified sufficient subset of the premises
+  exists (cost-independent, read from `all_certified`; `search_complete` required
+  for a definite negative), with a Wilson interval, plus selected-subset size vs
+  the reference premise count. Live-model candidate proposal: numbers recorded or
+  "not run" (needs the owner's endpoint). Files: `engine/commonground/bench.py`,
+  `engine/commonground/__main__.py`, `engine/tests/test_folio.py`. Deps: CG3-5,
+  CG7-3. Done-when: pytest exits 0; numbers recorded or "not run".
+- [ ] **CG8-2** — CO2 holdout test: withhold published statements of a camp,
+  rebuild the system from the rest, assert each withheld statement is still
+  entailed with its badge; report `search_complete`. Files:
+  `engine/tests/test_golden.py`, `results/`. Deps: CG7-3. Done-when: pytest
+  exits 0; numbers recorded (README row lands in CG8-3).
+- [ ] **CG8-4** — Sensitivity reporting (owner decision 2026-11-13): the hull and
+  λ-intervals are already computed (CG3-4; `hull_complete` flag from 7b60efd).
+  Remaining: plausibility ranges — recompute the selection at the min and max of
+  each estimate's range (design abduction.md §2; RESEARCH.md §15.3 k samples), in
+  `abduce.py` + tests; never a single silent pick. Files:
+  `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG8-1,
+  CG8-2. Done-when: pytest exits 0; ranges reported.
 - [ ] **CG8-3** — Publish all evaluation numbers README-style with reproduce
   commands; update "What has not been shown". Files: `README.md`. Deps:
-  CG8-1, CG8-2. Done-when: README updated; CI number guard green.
+  CG8-1, CG8-2, CG8-4. Done-when: README updated; pytest exits 0; CI number guard
+  green on next push or "not run" locally.
 
 ### Phase 9 — Release readiness
 
@@ -300,12 +322,18 @@ log in its §K), `docs/research/RESEARCH.md` (RQ1, RQ3 drafted; amendments A1–
 to brief §4 proposed, adopted for drafting, subject to owner review),
 `docs/research/THEORY.md` (draft: definitions, F1–F5, H2–H4).
 
-Decisions waiting for the owner: (1) location of RESEARCH.md/THEORY.md (both
-under `docs/research/` for now; moving is one `git mv` each); (2) amendments
-A1–A7 to brief §4 — A1 minimality = no sufficient proper subset, A3 size
-counted on a normal form, A4 floor/logarithmic charge on plausibility, A5
-report the hull and λ-intervals; (3) Phase 0 — whether to run and record the
-baseline before Phase R continues (partly answered by CG0-1's recorded run).
+Decisions waiting for the owner (updated 2026-11-14 after the soundness review):
+(1) Bernays–Schönfinkel boundary — gate solver-only refutations outside the class
+to PENDING, or amend the two design sentences and keep the label (BACKLOG);
+(2) the gameable size normal form (THEORY.md §6, BACKLOG); (3) cross-camp.md §9
+open questions (>2 camps pairwise vs joint MUS; common ground over statements vs
+pool; interpolation); (4) THEORY.md §6 presentation questions (joint soft
+rejections, shared background theory, load as tie-breaker, κ presentation);
+(5) value vocabulary for the H5 value/factual split (from the CGR-5 review);
+(6) direct mode at 4000 tokens and `model-benchmark.yml` max_tokens default
+(still 2000); (7) `extract --max-tokens` default (still 2000; live extract never
+run); (8) release actions: push approval, tag v2.0.0 push (GHCR), clean-clone
+acceptance CG9-11, PyPI publish.
 
 Pack entries that looked wrong at a glance (not checked; do not copy as
 corrections): B3 second author's initial; B4 volume/year mismatch; F2 journal
@@ -668,3 +696,4 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
 - 2026-11-14 — CG7-4 done: new `co2` subcommand in `__main__.py` runs the bundled CO2 golden corpus headless (builds records from statements.json + golden.json with located spans, per-camp report_camp + crosscamp.analyze, writes <camp>/report.{json,md} + crosscamp.{json,md}); `--max-checks` threads a cap through select/select_bruteforce/report_camp; the search is now seeded with the stated system A₀ (F1) so the cap still yields a certified selection (bnb and brute force deduplicate the seed; cross-check test green). Runs recorded live: `python -m commonground analyze examples/plastic_bags.json` exit 0; `python -m commonground co2 --max-checks 150 --timeout-ms 3000 --out co2-cli-out` exit 0 → `{"camps": ["yes", "no"], "stated_agreed": 0, "fault_lines_found": 0}`; both camps report the certified stated system (abstention at λ=0.3, AUDIT-3). README gained the v2 example commands; 1 new CLI test in test_golden.py. Full suite exit 0, 241 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG6-1 (web app API) or CG8-1 (FOLIO abduction benchmark).
 - 2026-11-14 — README gained a "What you can do with it today" table (capability → command → concrete output) right before the evidence section, so a newcomer sees the five working flows (check / analyze / extract / camp / co2+crosscamp) in simple terms; notes that the paste-your-own-debate UI is Phase 6 and not built yet. Docs-only; engine suite unchanged (exit 0, 241 passed at c855fb4); e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG6-1 or CG8-1 (owner's choice).
 - 2026-11-14 — Soundness review of the v2 certification layer, then fixes (owner in session: "find a solution and correct/improve everything that is either important to improve or easy"). The review was read-only; every finding was reproduced with a run. Five high-severity holes: (1) a search stopped by `max_checks` was published as cost-minimal, with "abstention" and a hull on [0, ∞] — the bundled `co2 --max-checks 150` run did this for both camps; (2) "no system was certified" (pending check, cap, unformalized statement) was published as "no axiom system exists … cannot all hold together"; (3) a camp with inconsistent stated claims gave vacuous tier-1 common ground, kernel-badged under `--lean`; (4) unformalized statements were dropped from the stated tier, which then read "jointly consistent: no stated conflict"; (5) the system headline read "SUFFICIENT (kernel-checked)" when a single entailment was. All five fixed in `abduce.py`, `crosscamp.py`, `load.py`, `__main__.py`, each with a regression test: `search_complete` / `hull_complete` / `abstention: null` and "SEARCH INCOMPLETE" in report.md, `search_incomplete` in crosscamp; `existence` (certified | none + reason | pending + reason); per-camp consistency gate and a stated tier of reviewed statements only; consistency and fault lines pending while statements are unformalized; `system_badge` (kernel only when every entailment is, "NOT CERTIFIED" otherwise). Also fixed: λ > 0 and plausibility in [0, 1] enforced (with a plausibility above 1 accepted, branch-and-bound returned a non-optimal system); plausibility keys matched in any spelling; a stated claim is never charged an estimate (AUDIT-5: the CO2 stated systems cost 3.0 / 2.7, were 3.15 / 2.8); the 0.5 default is reported; the hull lists only systems some λ > 0 selects (an inverted interval was reported, also on the CO2 `no` camp); the empty system is considered; duplicate formulas count once; ¬(A ⊕ B) and ¬(A ↔ B) are normalized; load reports undecided removals as `pending`; root-divergence pairs without verdict are listed as pending; checks export their evidence (finite model; Lean source + SHA-256); negative controls call the check they name, require a certified system, add a fresh-symbol claim and, with Lean, a theorem accepted in the same run; record/candidate JSON validated with a reason (CLI exit 2, no traceback); a camp name cannot leave `--out`, duplicate camp names refused; `--lean` without Lean is an error; `camp`/`crosscamp` gained `--max-checks`; the candidate prompt shows the real grammar; a name no quantifier binds is listed as a warning; a solver refutation outside the Bernays–Schönfinkel class says so in its detail. Recorded run: CO2 camp `no` searched exhaustively (2,048 checks, complete): abstention at λ=0.3 established, stated system cost-minimal for λ ≤ 0.4 (AUDIT-3); camp `yes` not established. Left for the owner (BACKLOG): the Bernays–Schönfinkel boundary (the designs say "no verdict" outside the class; the engine accepts a Z3 refutation there and now labels it — gate, or amend the designs), the gameable size normal form, `lean.py`'s error regex on Windows paths, a complete hull beyond 12 pool items. v1 modules, `docs/research/` and `docs/design/` untouched. 94 new test cases. Full engine suite with FOLIO_DIR+LEAN_BIN: exit 0, 335 passed (was 241; 520 s). e2e not re-run (no app/api/build change since cc563a3). README (CO2 paragraph), AUDIT.md, CHANGELOG.md, BACKLOG.md updated. Committed as this session's commit. Escalations: none while fixing; one owner decision recorded (the boundary). Next: CG6-1 — the API must read `search_complete`, `existence`, `badge` and the per-check outcomes, never `abstention` or a headline alone — or CG8-1.
+- 2026-11-14 — PLAN.md review after the soundness review (7b60efd), docs-only commit: CG6-1 split into CG6-1a (engine bridge api/engineRunner.ts + camp router + registration + contracts; must surface search_complete/existence/badge/certified/per-check outcomes, never abstention or a headline alone) and CG6-1b (crosscamp + extract routers); CG6-2..6-4 wording aligned with the new report fields (pending display, plausibility provenance, search_incomplete, pairwise >2 camps); CG6-5 count corrected to 33+33+8; CG8-1 reworded (recovery = certified sufficient subset of the premises, Wilson interval, sizes; files bench.py/__main__.py/test_folio.py); CG8-2 wording; CG8-4 moved after CG8-1/CG8-2 with deps fixed and scoped to the missing plausibility-range recomputation; CG8-3 last, CI guard 'or not run locally'; stale 'Decisions waiting' paragraph replaced by the current eight owner decisions. Engine suite unchanged (exit 0, 335 passed at 7b60efd, recorded; not re-run for this docs commit). e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG8-1 implementation.
