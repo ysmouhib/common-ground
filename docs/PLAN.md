@@ -36,6 +36,17 @@ elan: `LEAN_BIN=/c/Users/youne/.elan/toolchains/leanprover--lean4---v4.35.0/bin/
 Playwright chromium installed (`npx playwright install chromium`). FOLIO clone at the CI-pinned revision in `~/datasets/FOLIO` (`FOLIO_DIR=/c/Users/youne/datasets/FOLIO`). No docker.
 Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci-only-root-password@127.0.0.1:3306/common_ground REVIEWER_TOKEN=<24+ chars> node dist/boot.js`.
 
+## v1 strengths kept as-is (owner decision, 2026-11-13)
+
+v2 builds on these; do not rewrite or replace them: `fol.py` strict grammar;
+`verdict.py` two engines + explicit models; `ground.py` with its documented
+Bernays–Schönfinkel boundary; `lean.py` kernel certificates; `model.py`
+solver-free re-checking; `argmap.py` MARCO-based conflict/concession/
+justification analysis (this is the logic-backed argument graph of v1);
+the web app's access control (reviewer token, dispute suspension, CSP, rate
+limits, lockout, no model text to Lean); the e2e suite (33 + 8 checks); the CI
+number guard; the README evidence tables.
+
 ## Task queue
 
 ### Phase 0 — Baseline
@@ -110,9 +121,21 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
   Deps: CG2-2. Done-when: pytest exits 0; README row with reproduce command or
   "not run".
 
+- [ ] **CG2-4** — Extend extraction to emit support/attack relations between
+  statements (the discourse-level edges of the argument graph), same verbatim-span
+  discipline; schema-validated, resumable like the rest. Files:
+  `engine/commonground/extract.py`, `engine/tests/test_extract.py`. Deps: CG2-3.
+  Done-when: pytest exits 0. (Owner-approved architecture input, 2026-11-13.)
+
 ### Phase 3 — The abduction engine (blocked on CGR-5; [PLAN] on the design)
 
-- [ ] **CG3-1 [PLAN]** — Design doc first: candidate generation, sufficiency /
+- [ ] **CG3-1 [PLAN]** — Design doc first. Must incorporate the owner-approved
+  architecture (2026-11-13): a logic-backed argument graph (statements plus
+  support/attack edges from CG2-4, entailment edges from `argmap.py`) locates
+  candidate foundations via three signals — load/`justifications`, graph position
+  (uncontested, attack sources), MUS membership — and Lean certifies the selected
+  deductive steps (kernel) while the solver certifies the rest, pending shown as
+  pending. Candidate generation, sufficiency /
   consistency / negation checking, cost function, cost-minimal search,
   certificates, negative controls; soundness and termination notes; cites
   `THEORY.md`. Files: `docs/design/abduction.md`. Deps: CGR-5.
@@ -131,6 +154,11 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
   (branch-and-bound), cross-checked against brute force in tests, mirroring how
   `argmap.py` is tested. Files: `engine/commonground/abduce.py`,
   `engine/tests/test_abduce.py`. Deps: CG3-3. Done-when: pytest exits 0.
+- [ ] **CG3-6** — Symbolic baseline control (owner decision 2026-11-13): A = E(C)
+  and its minimal sufficient subset via `argmap` run through the same certified
+  checks as LLM-proposed systems, so tests can show whether the LLM layer adds
+  anything beyond symbolic minimization. Files: `engine/tests/test_abduce.py`,
+  `engine/commonground/abduce.py`. Deps: CG3-5. Done-when: pytest exits 0.
 - [ ] **CG3-5** — Negative controls: for a certified axiom set, Lean must
   reject the negations; adversarial self-checks (a claim not entailed, a
   smuggled contradiction, a redundant axiom, a violated rejection). Files:
@@ -211,6 +239,12 @@ Start a server with: `NODE_ENV=production PORT=3000 DATABASE_URL=mysql://root:ci
   extract axioms from the rest, check the extracted system still derives the
   withheld statements. Files: `engine/tests/test_golden.py`, `results/`.
   Deps: CG7-3. Done-when: pytest exits 0; README row added.
+- [ ] **CG8-4** — Sensitivity reporting (owner decision 2026-11-13): the selected
+  axiom system varies with the subjective choices (λ, plausibility prior), so
+  report λ-intervals / the hull of selected systems and plausibility intervals or
+  multi-sample agreement, never a single silent pick. Files: `README.md`,
+  `engine/commonground/abduce.py`. Deps: CG8-3. Done-when: README shows the
+  sensitivity tables; pytest exits 0.
 - [ ] **CG8-3** — Publish all evaluation numbers README-style with reproduce
   commands; update "What has not been shown". Files: `README.md`. Deps:
   CG8-1, CG8-2. Done-when: README updated; CI number guard green.
@@ -363,3 +397,9 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   BACKLOG). README rows filled from these runs; full engine suite exit 0,
   159 passed, 0 skipped. Committed as this session's commit. Escalations:
   none. Proposed next task: CG1-2.
+- 2026-11-13 — queue updated per owner: v1 strengths frozen as-is (see "v1
+  strengths kept as-is"); added CG2-4 (support/attack edges), CG3-6 (symbolic
+  baseline control), CG8-4 (λ/plausibility sensitivity reporting); CG3-1 [PLAN]
+  design doc must incorporate the logic-backed argument graph architecture with
+  tiered Lean/solver certification. Committed as this session's commit.
+  Escalations: none. Proposed next task: CG1-2.
