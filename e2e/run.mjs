@@ -196,6 +196,13 @@ async function readAccess() {
   });
 }
 
+// A minimal valid camp record for the engine-bridge checks (CG6-5).
+const e2eRecord = (camp) => ({
+  camp,
+  documents: [{ id: "d1", text: "P holds." }],
+  statements: [{ id: "s1", stance: "endorsed", fol: "P", document: "d1", quote: "P holds.", span: [0, 8] }],
+});
+
 async function accessControl() {
   console.log("\nEverything that costs or changes something needs the reviewer token");
   const mutations = [
@@ -203,6 +210,9 @@ async function accessControl() {
     ["proof.verify", { proofId: "proof-advocate" }],
     ["proof.verifyAll", undefined],
     ["ai.critiqueFormalization", { statementId: PREMISE }],
+    ["camp.run", { record: e2eRecord("e2e"), candidates: { candidates: [] } }],
+    ["crosscamp.run", { records: [e2eRecord("e2e-a"), e2eRecord("e2e-b")], candidates: [{ candidates: [] }, { candidates: [] }] }],
+    ["extract.run", { documents: [{ id: "d.txt", text: "P holds." }], baseUrl: "https://127.0.0.1:9/v1", model: "e2e" }],
   ];
   for (const [procedure, input] of mutations) {
     await check(`${procedure} is refused without a token`, async () => {
@@ -316,6 +326,72 @@ async function leanRuns() {
   });
 }
 
+async function engineBridge() {
+  console.log("\nEngine bridge (camp / crosscamp / extract)");
+  await check("camp.run answers a report or an honest no_verdict, never a verdict-shaped failure", async () => {
+    const res = await call("camp.run", {
+      mutation: true,
+      token: TOKEN,
+      input: { record: e2eRecord("e2e"), candidates: { candidates: [] }, maxChecks: 50, timeoutMs: 2000, lean: false },
+    });
+    assert.equal(res.status, 200, res.message);
+    assert.ok(["report", "no_verdict"].includes(res.data.kind), res.data.kind);
+    if (res.data.kind === "report") {
+      assert.equal(typeof res.data.report.search_complete, "boolean");
+      assert.ok(["certified", "none", "pending"].includes(res.data.report.existence.status));
+      assert.ok(Array.isArray(res.data.report.systems));
+      assert.ok(!JSON.stringify(res.data).includes("abstention"), "an abstention reached the API");
+    } else {
+      assert.equal(typeof res.data.reason, "string");
+      assert.ok(res.data.reason.length > 0);
+    }
+  });
+  await check("camp.run rejects an invalid camp name before spawning anything", async () => {
+    const res = await call("camp.run", {
+      mutation: true,
+      token: TOKEN,
+      input: { record: e2eRecord("../evil"), candidates: { candidates: [] } },
+    });
+    assert.equal(res.status, 400);
+    assert.equal(res.code, "BAD_REQUEST");
+  });
+  await check("crosscamp.run answers a report or an honest no_verdict for two camps", async () => {
+    const res = await call("crosscamp.run", {
+      mutation: true,
+      token: TOKEN,
+      input: {
+        records: [e2eRecord("e2e-a"), e2eRecord("e2e-b")],
+        candidates: [{ candidates: [] }, { candidates: [] }],
+        maxChecks: 50,
+        timeoutMs: 2000,
+        lean: false,
+      },
+    });
+    assert.equal(res.status, 200, res.message);
+    assert.ok(["report", "no_verdict"].includes(res.data.kind), res.data.kind);
+    if (res.data.kind === "report") {
+      assert.equal(res.data.report.camps.length, 2);
+      assert.ok(Array.isArray(res.data.report.search_incomplete));
+      assert.ok(!JSON.stringify(res.data).includes("abstention"), "an abstention reached the API");
+    }
+  });
+  await check("extract.run against a dead provider answers no_verdict, never a scored wrong answer", async () => {
+    const res = await call("extract.run", {
+      mutation: true,
+      token: TOKEN,
+      input: {
+        documents: [{ id: "d.txt", text: "P holds." }],
+        baseUrl: "https://127.0.0.1:9/v1",
+        model: "e2e",
+        maxTokens: 500,
+      },
+    });
+    assert.equal(res.status, 200, res.message);
+    assert.equal(res.data.kind, "no_verdict");
+    assert.equal(typeof res.data.reason, "string");
+  });
+}
+
 async function limits() {
   console.log("\nAbuse limits");
   await check("a batch of more than 10 calls is refused", async () => {
@@ -422,6 +498,9 @@ async function readOnlyDeployment() {
     ["proof.verify", { proofId: "proof-advocate" }],
     ["proof.verifyAll", undefined],
     ["ai.critiqueFormalization", { statementId: PREMISE }],
+    ["camp.run", { record: e2eRecord("e2e"), candidates: { candidates: [] } }],
+    ["crosscamp.run", { records: [e2eRecord("e2e-a"), e2eRecord("e2e-b")], candidates: [{ candidates: [] }, { candidates: [] }] }],
+    ["extract.run", { documents: [{ id: "d.txt", text: "P holds." }], baseUrl: "https://127.0.0.1:9/v1", model: "e2e" }],
   ];
   for (const [procedure, input] of mutations) {
     await check(`${procedure} is refused whatever token is sent`, async () => {
@@ -548,11 +627,24 @@ async function browserChecks() {
       assert.equal(await page.evaluate(() => sessionStorage.getItem("common-ground.reviewer-token")), null);
     });
     await check("every view opens without an error", async () => {
-      for (const name of ["Proof lab", "Evidence", "Method", "Debate"]) {
+      for (const name of ["Proof lab", "Evidence", "Method", "Debate", "Camps", "Axiom queue", "Compare"]) {
         await page.getByRole("navigation", { name: "Workspace views" }).getByRole("button", { name }).click();
         await page.locator("main").waitFor();
         assert.ok((await page.locator("main").innerText()).length > 200, `${name} view is empty`);
       }
+      assert.deepEqual(problems, []);
+    });
+    await check("the Camps view drafts a camp, a text and a statement shown as pending, never dropped", async () => {
+      await page.getByRole("navigation", { name: "Workspace views" }).getByRole("button", { name: "Camps" }).click();
+      await page.getByRole("heading", { name: "Camps and their statements" }).waitFor();
+      await page.getByRole("button", { name: "Add a camp" }).click();
+      assert.equal(await page.getByLabel("Camp name").count(), 2, "the second camp was not added");
+      await page.getByRole("button", { name: "Add a text (document)" }).first().click();
+      await page.getByLabel(/^Text of document /).fill("P holds.");
+      await page.getByRole("button", { name: "Add statement" }).first().click();
+      await page.getByLabel(/^Quote \(verbatim/).first().fill("P holds.");
+      await page.getByText("PENDING — no reviewed formalization").waitFor();
+      await page.getByText(/1 pending formalization/).waitFor();
       assert.deepEqual(problems, []);
     });
     await context.close();
@@ -592,6 +684,7 @@ if (READ_ONLY) {
   await accessControl();
   await reviewFlow();
   await leanRuns();
+  await engineBridge();
   if (WITH_BROWSER) await browserChecks();
   else skip("browser checks", "E2E_BROWSER=0", { allowedInCi: true });
   await limits(); // near the end: it deliberately trips the limits

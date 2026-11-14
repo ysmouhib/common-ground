@@ -27,7 +27,7 @@ npm test && npm run check && npm run lint
 # end to end: build, start a server with a database and a reviewer token, then
 npm run build
 NODE_ENV=production DATABASE_URL=mysql://… REVIEWER_TOKEN=… node dist/boot.js &
-npm run e2e            # 33 checks; E2E_READ_ONLY=1 against a tokenless server: 8 more
+npm run e2e            # 41 checks; E2E_READ_ONLY=1 against a tokenless server: 11 more
 ```
 
 CI (`.github/workflows/ci.yml`) runs all of this on every pull request and

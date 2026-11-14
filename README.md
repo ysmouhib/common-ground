@@ -73,7 +73,7 @@ still Phase 6 of [`docs/PLAN.md`](docs/PLAN.md). The CLI above works today.
 | The path a language model's reply takes (JSON, validation, solver) adds no error of its own: fed the dataset's formulas, it returns the reference verdict on all 203 examples whose formulas parse, and no answer on the malformed one | `engine/tests/test_bench.py` | `FOLIO_DIR=… python -m pytest tests/test_bench.py` |
 | In 10 of the 204 examples the dataset has a different number of sentences and formulas, so "one formula per sentence" cannot be met on them | [`AUDIT.md`](results/folio-validation/AUDIT.md) | same as the first row |
 | In the worked debate the two positions are compatible, and each proof's premise list is exactly the one minimal set that entails its conclusion | `contracts/analysis.generated.ts`, `contracts/analysis.test.ts` | `npm test` |
-| The web app does what this page says for a visitor and for a reviewer: 33 checks over real HTTP, MySQL, Lean and a browser, and 8 more on a deployment with no reviewer token | `e2e/run.mjs` | `npm run e2e` (below) |
+| The web app does what this page says for a visitor and for a reviewer: 41 checks over real HTTP, MySQL, Lean and a browser (engine bridge included), and 11 more on a deployment with no reviewer token | `e2e/run.mjs` | `npm run e2e` (below) |
 
 The CI workflow (`.github/workflows/ci.yml`) re-runs all of it on every pull
 request and on every push to `main`: the test suites, the benchmark (it fails if
