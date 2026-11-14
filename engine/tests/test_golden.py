@@ -113,3 +113,20 @@ def test_crosscamp_on_the_golden_camps():
     ranks = [r["rank"] for r in pair["root_divergence"]]
     assert ranks == sorted(ranks, reverse=True)
     assert max(ranks) == 8
+
+
+def test_cli_co2_runs_the_bundled_example_headless(tmp_path):
+    from commonground.__main__ import main
+    out = tmp_path / "co2out"
+    # small check cap keeps the test fast; the seed (stated system A₀, F1) is checked first,
+    # so a certified selection exists regardless (AUDIT-4 records the full-search timing)
+    code = main(["co2", "--dir", str(EX), "--max-checks", "150", "--timeout-ms", "3000",
+                 "--out", str(out)])
+    assert code == 0
+    result = json.loads((out / "crosscamp.json").read_text(encoding="utf-8"))
+    assert result["camps"] == ["yes", "no"]
+    for camp in ("yes", "no"):
+        report = json.loads((out / camp / "report.json").read_text(encoding="utf-8"))
+        assert report["systems"] and all(s["certified"] for s in report["systems"])
+        assert (out / camp / "report.md").exists()
+    assert (out / "crosscamp.md").read_text(encoding="utf-8").startswith("# Cross-camp")

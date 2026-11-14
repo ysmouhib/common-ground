@@ -547,7 +547,7 @@ class Selection:
 
 
 def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
-               timeout_ms: int, bnb: bool) -> Selection:
+               timeout_ms: int, bnb: bool, max_checks: int = MAX_CHECKS) -> Selection:
     if len(pool) > MAX_POOL:
         raise TooMany(f"pool of {len(pool)} exceeds the cap of {MAX_POOL}")
     best: float | None = None
@@ -557,15 +557,21 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
     exhausted = False
     order = sorted(range(len(pool)), key=lambda i: fol.to_text(pool[i]))
 
+    seen: set[tuple[int, ...]] = set()
+
     def visit(chosen: list[int], prune: bool) -> None:
         nonlocal best, systems, all_certified, checks, exhausted
         if not chosen:
             return
+        key = tuple(sorted(chosen))
+        if key in seen:  # the A₀ seed is also reached by the search itself
+            return
+        seen.add(key)
         axioms = [pool[i] for i in chosen]
         c = cost(axioms, plausibilities, lam)
         if prune and best is not None and c > best + _EPS:
             return  # pruning: adding axioms only raises the cost (charges are positive)
-        if checks >= MAX_CHECKS:
+        if checks >= max_checks:
             exhausted = True
             return
         checks += 1
@@ -578,6 +584,14 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
             systems = [texts]
         elif abs(c - best) <= _EPS:
             systems.append(texts)
+
+    # seed the search with the stated system A₀: when an axiom system exists, a minimal
+    # sufficient subset of E⁺ is one (F1), so this seeds best and activates cost pruning
+    # from the start; if it is not certified, the search proceeds as before
+    targets_texts = {fol.to_text(f) for f in _targets(record)}
+    seed = [i for i in range(len(pool)) if fol.to_text(pool[i]) in targets_texts]
+    if seed:
+        visit(seed, prune=False)
 
     if bnb:
         def dfs(pos: int, chosen: list[int]) -> None:
@@ -596,7 +610,7 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
     else:
         for mask in range(1, 1 << len(order)):
             visit([order[b] for b in range(len(order)) if mask >> b & 1], prune=False)
-            if checks >= MAX_CHECKS:
+            if checks >= max_checks:
                 exhausted = True
                 break
     assert best is not None or not all_certified
@@ -604,15 +618,15 @@ def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, fl
 
 
 def select_bruteforce(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
-                     timeout_ms: int = 5000) -> Selection:
+                     timeout_ms: int = 5000, max_checks: int = MAX_CHECKS) -> Selection:
     """Reference selection: every subset is certification-checked (small pools only)."""
-    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=False)
+    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=False, max_checks=max_checks)
 
 
 def select(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
-           timeout_ms: int = 5000) -> Selection:
+           timeout_ms: int = 5000, max_checks: int = MAX_CHECKS) -> Selection:
     """Branch-and-bound selection at one λ; cross-checked against select_bruteforce in tests."""
-    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=True)
+    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=True, max_checks=max_checks)
 
 
 def hull_intervals(certified: list[list[str]], pool: list[Formula],
@@ -788,7 +802,8 @@ def _coverage(record: Record, timeout_ms: int) -> dict:
 
 
 def report_camp(record: Record, source: CandidateSource, plausibilities: dict[str, float] | None = None,
-                lam: float = 0.3, timeout_ms: int = 5000, lean_bin: str | None = None) -> dict:
+                lam: float = 0.3, timeout_ms: int = 5000, lean_bin: str | None = None,
+                max_checks: int = MAX_CHECKS) -> dict:
     """The full per-camp report as plain JSON-able data (design §2)."""
     record.validate()
     plausibilities = dict(plausibilities or {})
@@ -808,10 +823,10 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
     # brute force gives the hull all certified systems; beyond 12 pool items the
     # branch-and-bound search is used and the hull covers what it found
     if len(pool) <= 12:
-        sel = select_bruteforce(pool, record, plausibilities, lam, timeout_ms)
+        sel = select_bruteforce(pool, record, plausibilities, lam, timeout_ms, max_checks)
         search = "bruteforce"
     else:
-        sel = select(pool, record, plausibilities, lam, timeout_ms)
+        sel = select(pool, record, plausibilities, lam, timeout_ms, max_checks)
         search = "branch-and-bound"
     by_text = {fol.to_text(f): f for f in pool}
     hull = hull_intervals(sel.all_certified, pool, plausibilities)

@@ -4,6 +4,8 @@
     analyze   conflicts, concessions and justifications for a debate file
     extract   extract the statements of text files, with verbatim spans
     camp      per-camp report: statements -> axioms -> load -> certificates
+    crosscamp common ground + fault lines for two or more camp records
+    co2       the bundled CO2 golden example, end to end (headless)
     folio     run the FOLIO benchmark (reference formalizations, or a language model)
     compare   paired comparison of two language-model runs, as JSON
     report    the same comparison as a Markdown summary
@@ -220,6 +222,70 @@ def _crosscamp(args) -> int:
     return 0
 
 
+def _camp_from_corpus(camp_id, statements, golden_camp):
+    """Build a Record plus scripted candidates from the CO2 corpus files. The corpus ships
+    statement texts, not whole booklet pages: the document is the camp's statements joined
+    by newline, spans located in it, so the verbatim-span discipline still holds."""
+    from . import abduce, fol
+    texts = {s["id"]: s["text"] for s in statements if s["camp"] == camp_id}
+    fol_by_id = {s["id"]: s["fol"] for s in golden_camp["statements"]}
+    doc_id = f"doc-{camp_id}"
+    parts, spans = [], {}
+    offset = 0
+    for s in golden_camp["statements"]:
+        t = texts[s["id"]]
+        parts.append(t)
+        spans[s["id"]] = (offset, offset + len(t))
+        offset += len(t) + 1
+    record = abduce.Record(camp_id, [abduce.Document(doc_id, "\n".join(parts))],
+                           [abduce.RecordStatement(s["id"], "endorsed", fol_by_id[s["id"]], doc_id,
+                                                   texts[s["id"]], spans[s["id"]])
+                            for s in golden_camp["statements"]])
+    cands = [abduce.Candidate(c["fol"], [(doc_id, texts[ev], spans[ev]) for ev in c["evidence"]])
+             for c in golden_camp["candidate_axioms"]]
+    plaus = {fol.to_text(fol.parse(c["fol"])): c["plausibility"] for c in golden_camp["candidate_axioms"]}
+    return record, cands, plaus
+
+
+def _co2(args) -> int:
+    from . import abduce, crosscamp
+    from .argmap import TooMany
+    ex = Path(args.dir)
+    try:
+        statements = json.loads((ex / "statements.json").read_text(encoding="utf-8"))["statements"]
+        golden = json.loads((ex / "golden.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"cannot read the corpus in {ex}: {exc}", file=sys.stderr)
+        return 2
+    lean_bin = lean.find_lean() if args.lean else None
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    camps = []
+    try:
+        for camp_id, g in golden["camps"].items():
+            record, cands, plaus = _camp_from_corpus(camp_id, statements, g)
+            report = abduce.report_camp(record, abduce.ScriptedSource(cands), plaus, args.lam,
+                                        args.timeout_ms, lean_bin, args.max_checks)
+            camp_dir = out / camp_id
+            camp_dir.mkdir(parents=True, exist_ok=True)
+            (camp_dir / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False),
+                                                  encoding="utf-8")
+            (camp_dir / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+            camps.append(crosscamp.Camp(record, report))
+        result = crosscamp.analyze(camps, args.timeout_ms, lean_bin)
+    except TooMany as exc:
+        print(f"input too large for the documented scope: {exc}; per-camp reports were written",
+              file=sys.stderr)
+        return 2
+    (out / "crosscamp.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
+    (out / "crosscamp.md").write_text(crosscamp.render_markdown(result), encoding="utf-8")
+    n_mus = sum(len(p.get("mus") or []) for p in result["fault_lines"]["per_system_pair"])
+    print(json.dumps({"out": str(out), "camps": result["camps"],
+                      "stated_agreed": len(result["common_ground"]["stated"]["agreed"]),
+                      "fault_lines_found": n_mus}, ensure_ascii=False))
+    return 0
+
+
 def _extract(args) -> int:
     from . import extract as extract_mod
     from .formalize import OpenAICompatible, ProviderError
@@ -304,6 +370,19 @@ def main(argv: list[str] | None = None) -> int:
     xc.add_argument("--out", required=True,
                     help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
     xc.set_defaults(run=_crosscamp)
+
+    co2 = commands.add_parser("co2", help="run the bundled CO2 golden example end to end (headless)")
+    co2.add_argument("--dir",
+                     default=str(Path(__file__).resolve().parents[2] / "examples" / "co2-2021"),
+                     help="corpus directory holding statements.json and golden.json")
+    co2.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
+    co2.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
+    co2.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")
+    co2.add_argument("--max-checks", type=int, default=4000,
+                    help="cap on certification checks per camp (default 4000; see AUDIT.md AUDIT-4)")
+    co2.add_argument("--out", required=True,
+                     help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
+    co2.set_defaults(run=_co2)
 
     ex = commands.add_parser("extract", help="extract the statements of text files, with verbatim spans")
     ex.add_argument("files", nargs="+", help="text files; each file is one document, id = the path as given")

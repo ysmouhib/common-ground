@@ -174,6 +174,20 @@ python -m commonground check --premise "∀x (Human(x) → Mortal(x))" --premise
                              --conclusion "Mortal(socrates)" --lean
 ```
 
+v2 adds the reconstruction pipeline (per-camp axiom systems, then cross-camp common
+ground and fault lines). Both bundled examples run headless end to end (recorded
+2026-11-14, exit 0):
+
+```bash
+python -m commonground analyze examples/plastic_bags.json   # v1 debate analysis
+python -m commonground co2 --max-checks 150 --out co2-out    # CO2 golden corpus: <camp>/report.{json,md} + crosscamp.{json,md}
+```
+
+At λ=0.3 the CO2 camps' stated system is cheaper than the candidate set, so the report
+says so (abstention) — see `AUDIT.md` (AUDIT-3); the pool search is bounded by
+`--max-checks` (AUDIT-4). Divergences between the pipeline and the hand-worked golden
+are audited in `AUDIT.md`, never silently substituted.
+
 ## The web app
 
 One debate (should a city adopt a well-designed single-use plastic bag policy?)
