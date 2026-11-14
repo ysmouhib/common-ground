@@ -275,7 +275,7 @@ number guard; the README evidence tables.
 - [x] **CG9-9** — CI publishes the container to GHCR. Files:
   `.github/workflows/ci.yml` (or a new release workflow). Done-when: workflow
   validated; green or "not run" locally.
-- [ ] **CG9-10** — `SECURITY.md` refresh + `examples/` index. Files:
+- [x] **CG9-10** — `SECURITY.md` refresh + `examples/` index. Files:
   `SECURITY.md`, `examples/README.md`. Done-when: committed.
 - [ ] **CG9-11** — Final acceptance: a person outside the project clones on a
   clean machine and completes an analysis in under 10 minutes following only
@@ -479,3 +479,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   is NOT run (needs the v2.0.0 tag pushed by the owner and repo Packages
   permission). Docs-only; suite unchanged (exit 0, 169 passed). Committed as
   this session's commit. Escalations: none. Next: CG9-10.
+- 2026-11-13 — CG9-10: SECURITY.md gained a "What leaves the machine" section:
+  the only three calls that send text anywhere are `commonground extract` (full
+  input files to the user-configured --base-url), `commonground folio` (FOLIO
+  sentences), and the web app's AI-draft button (stored statements to the
+  server-configured endpoint); key handling (env var, Bearer header only, never
+  in output files), https-only except localhost, outage-never-scored. Added
+  `examples/README.md` indexing co2-2021/ and the two engine examples; verified
+  both bundled examples run headless just now (analyze on plastic_bags.json and
+  remote_work.json, exit 0). Docs-only; suite unchanged (exit 0, 169 passed at
+  1252a9a). Committed as this session's commit. Escalations: none. Next: CG9-11
+  (clean-clone acceptance — expected "not run" on this machine).

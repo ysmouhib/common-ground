@@ -56,13 +56,36 @@ a server with Lean, and against a server with no token.
 ## The model benchmark
 
 `python -m commonground folio --mode llm|direct` sends FOLIO's sentences to the
-endpoint you name. The API key is read from an environment variable, sent only as
+endpoint you name, and `python -m commonground extract <files>` sends the full text
+of each input file (section "What leaves the machine" below lists all three calls
+that send anything anywhere). The API key is read from an environment variable, sent only as
 the `Authorization` header to that endpoint, and never written to the results
 (`config.json` holds the model name, the host and the request settings). Plain
 `http` is refused except for localhost. The manual workflow
 (`.github/workflows/model-benchmark.yml`) reads the key from a repository secret
 and can be started only by someone with write access; its inputs reach the shell
 as environment variables, not as script text.
+
+## What leaves the machine
+
+The engine and the app are local-first: verdicts, countermodels and Lean
+certificates are computed by local processes, and there is no telemetry, no
+analytics and no tracking of any kind. Text leaves the machine only in the three
+calls below, and each goes only to an endpoint you configure yourself:
+
+| Call | What is sent | Where it goes |
+|---|---|---|
+| `python -m commonground extract <files> --base-url … --model …` | The full text of each input file, as the user message of one `POST {base_url}/chat/completions` per document, next to a fixed system prompt | Only to `--base-url`, which must be https (plain http is accepted for localhost only) |
+| `python -m commonground folio --mode llm|direct` | The FOLIO dataset's sentences — not your texts — one per request | Only to the endpoint named on the command line (same rules as above) |
+| The web app's AI-draft button | The texts of the statements of the current debate, which are already stored on the server | Only to the endpoint configured server-side; needs the reviewer token and counts against the daily AI budget |
+
+In all three, the API key is read from an environment variable (the CLI's
+`--api-key-env`, default `LLM_API_KEY`), sent only as the `Authorization: Bearer`
+header of that request, and never written to any output file: `config.json` and
+the run records hold the model name, the host and the request settings, not the
+key. A provider outage stops an engine run with its own exit code and is never
+scored as a wrong answer; finished documents stay in `runs.jsonl` and the same
+command resumes.
 
 ## Known limits
 
