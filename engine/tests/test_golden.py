@@ -92,11 +92,14 @@ def test_crosscamp_on_the_golden_camps():
         record, cands, _, _, _ = build_camp(camp)
         axioms = [fol.parse(c["fol"]) for c, _ in cands]
         lv = load.load_vector(axioms, abduce._targets(record), timeout_ms=5000)
+        # the certified flag comes from the engine's own checks, not from this test
+        certified = abduce.check_system(axioms, record, timeout_ms=5000).certified
+        assert certified
         report = {"camp": camp,
                   "pool": {"candidates": [{"fol": c["fol"], "quotes": []} for c, _ in cands],
                            "dropped": []},
                   "systems": [{"axioms": [fol.to_text(a) for a in axioms],
-                               "certified": True, "load": lv}]}
+                               "certified": certified, "load": lv}]}
         camps.append(crosscamp.Camp(record, report))
     result = crosscamp.analyze(camps, timeout_ms=5000)
     json.dumps(result)
@@ -125,8 +128,21 @@ def test_cli_co2_runs_the_bundled_example_headless(tmp_path):
     assert code == 0
     result = json.loads((out / "crosscamp.json").read_text(encoding="utf-8"))
     assert result["camps"] == ["yes", "no"]
+    # stated systems on the conjunction-splitting normal form: 10 and 9 conjuncts at λ = 0.3.
+    # Each camp has a candidate identical to a stated claim (YA1, NA3); its plausibility
+    # estimate must not be charged to the stated copy.
+    stated_cost = {"yes": 3.0, "no": 2.7}
     for camp in ("yes", "no"):
         report = json.loads((out / camp / "report.json").read_text(encoding="utf-8"))
         assert report["systems"] and all(s["certified"] for s in report["systems"])
-        assert (out / camp / "report.md").exists()
-    assert (out / "crosscamp.md").read_text(encoding="utf-8").startswith("# Cross-camp")
+        assert report["systems"][0]["cost"] == pytest.approx(stated_cost[camp])
+        assert len(report["plausibility"]["ignored_for_stated"]) == 1
+        # 150 checks do not finish either search: what is reported is certified but not shown
+        # to be cost-minimal, and the report must say so instead of claiming abstention
+        assert report["selection"]["exhausted"] and report["search_complete"] is False
+        assert report["abstention"] is None and report["hull_complete"] is False
+        md = (out / camp / "report.md").read_text(encoding="utf-8")
+        assert "SEARCH INCOMPLETE" in md and "No proposed unstated axiom pays for itself" not in md
+    assert result["search_incomplete"] == ["yes", "no"]
+    cross_md = (out / "crosscamp.md").read_text(encoding="utf-8")
+    assert cross_md.startswith("# Cross-camp") and "Search incomplete for `yes`, `no`" in cross_md

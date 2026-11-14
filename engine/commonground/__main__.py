@@ -139,35 +139,80 @@ def _folio(args) -> int:
     return 0
 
 
+def _load_plausibilities(path: str | None) -> dict:
+    if not path:
+        return {}
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("the plausibilities file must be a JSON object mapping FOL text to a number in [0, 1]")
+    return data
+
+
+def _lean_for(args) -> tuple[str | None, bool]:
+    """(lean executable or None, ok). Asking for kernel certificates without a Lean of the
+    pinned version is an error, not a silent fall-back to solver-only badges."""
+    if not args.lean:
+        return None, True
+    lean_bin = lean.find_lean()
+    if lean_bin is None:
+        print(f"no Lean {lean.TOOLCHAIN} found (set LEAN_BIN), or drop --lean for solver-checked verdicts",
+              file=sys.stderr)
+    return lean_bin, lean_bin is not None
+
+
+def _camp_dir(out: Path, camp: str) -> Path:
+    """<out>/<camp>; a camp name that is not a plain directory name is refused, so a
+    record cannot make the report land outside the output directory."""
+    if (camp != camp.strip() or camp in ("", ".", "..") or camp.endswith(".")
+            or any(ch in '/\\:*?"<>|' or ord(ch) < 32 for ch in camp)):
+        raise ValueError(f"camp name {camp!r} cannot be used as a directory name")
+    return out / camp
+
+
+def _write_camp_report(directory: Path, report: dict) -> None:
+    from . import abduce
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    (directory / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+
+
 def _camp(args) -> int:
     from . import abduce
     from .argmap import TooMany
     try:
         record = abduce.load_record(args.record)
-        raw = json.loads(Path(args.candidates).read_text(encoding="utf-8"))
-        candidates = [abduce.Candidate(c["fol"],
-                                       [(q["document"], q["text"], (q["span"][0], q["span"][1]))
-                                        for q in c.get("quotes", [])])
-                      for c in raw["candidates"]]
-        plausibilities = (json.loads(Path(args.plausibilities).read_text(encoding="utf-8"))
-                         if args.plausibilities else {})
-    except (OSError, ValueError, KeyError) as exc:
+        candidates = abduce.load_candidates(args.candidates)
+        plausibilities = _load_plausibilities(args.plausibilities)
+    except (OSError, ValueError) as exc:
         print(f"cannot read the inputs: {exc}", file=sys.stderr)
         return 2
-    lean_bin = lean.find_lean() if args.lean else None
+    lean_bin, ok = _lean_for(args)
+    if not ok:
+        return 2
     try:
         report = abduce.report_camp(record, abduce.ScriptedSource(candidates), plausibilities,
-                                    args.lam, args.timeout_ms, lean_bin)
+                                    args.lam, args.timeout_ms, lean_bin, args.max_checks)
     except TooMany as exc:
         print(f"input too large for the documented scope: {exc}", file=sys.stderr)
         return 2
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    (out / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
-    print(json.dumps({"out": str(out), "camp": report["camp"], "selected_systems": len(report["systems"]),
+    except ValueError as exc:
+        print(f"cannot run the analysis: {exc}", file=sys.stderr)
+        return 2
+    _write_camp_report(Path(args.out), report)
+    print(json.dumps({"out": str(Path(args.out)), "camp": report["camp"],
+                      "selected_systems": len(report["systems"]),
+                      "search_complete": report["search_complete"],
                       "abstention": report["abstention"]}, ensure_ascii=False))
     return 0
+
+
+def _crosscamp_summary(out: Path, result: dict, reports: list[dict]) -> str:
+    n_mus = sum(len(p.get("mus") or []) for p in result["fault_lines"]["per_system_pair"])
+    return json.dumps({"out": str(out), "camps": result["camps"],
+                       "stated_agreed": len(result["common_ground"]["stated"]["agreed"]),
+                       "fault_lines_found": n_mus,
+                       "search_complete": {r["camp"]: r["search_complete"] for r in reports}},
+                      ensure_ascii=False)
 
 
 def _crosscamp(args) -> int:
@@ -179,46 +224,41 @@ def _crosscamp(args) -> int:
     if len(args.candidates) != len(args.records):
         print("--candidates once per record, in the same order", file=sys.stderr)
         return 2
+    out = Path(args.out)
     try:
-        plausibilities = (json.loads(Path(args.plausibilities).read_text(encoding="utf-8"))
-                         if args.plausibilities else {})
+        plausibilities = _load_plausibilities(args.plausibilities)
         camps = []
         for rec_path, cand_path in zip(args.records, args.candidates):
             record = abduce.load_record(rec_path)
-            raw = json.loads(Path(cand_path).read_text(encoding="utf-8"))
-            candidates = [abduce.Candidate(c["fol"],
-                                           [(q["document"], q["text"], (q["span"][0], q["span"][1]))
-                                            for q in c.get("quotes", [])])
-                          for c in raw["candidates"]]
-            camps.append((record, candidates))
-    except (OSError, ValueError, KeyError) as exc:
+            camps.append((record, abduce.load_candidates(cand_path), _camp_dir(out, record.camp)))
+        names = [record.camp for record, _, _ in camps]
+        if len(set(names)) != len(names):
+            raise ValueError(f"camp names must be unique, got {names}")
+    except (OSError, ValueError) as exc:
         print(f"cannot read the inputs: {exc}", file=sys.stderr)
         return 2
-    lean_bin = lean.find_lean() if args.lean else None
-    out = Path(args.out)
+    lean_bin, ok = _lean_for(args)
+    if not ok:
+        return 2
     out.mkdir(parents=True, exist_ok=True)
     camp_objs = []
     try:
-        for record, candidates in camps:
+        for record, candidates, camp_dir in camps:
             report = abduce.report_camp(record, abduce.ScriptedSource(candidates), plausibilities,
-                                        args.lam, args.timeout_ms, lean_bin)
-            camp_dir = out / record.camp
-            camp_dir.mkdir(parents=True, exist_ok=True)
-            (camp_dir / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False),
-                                                  encoding="utf-8")
-            (camp_dir / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+                                        args.lam, args.timeout_ms, lean_bin, args.max_checks)
+            _write_camp_report(camp_dir, report)
             camp_objs.append(crosscamp.Camp(record, report))
         result = crosscamp.analyze(camp_objs, args.timeout_ms, lean_bin)
     except TooMany as exc:
         print(f"input too large for the documented scope: {exc}; per-camp reports were written",
               file=sys.stderr)
         return 2
+    except ValueError as exc:
+        print(f"cannot run the analysis: {exc}", file=sys.stderr)
+        return 2
     (out / "crosscamp.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     (out / "crosscamp.md").write_text(crosscamp.render_markdown(result), encoding="utf-8")
-    n_mus = sum(len(p.get("mus") or []) for p in result["fault_lines"]["per_system_pair"])
-    print(json.dumps({"out": str(out), "camps": result["camps"],
-                      "stated_agreed": len(result["common_ground"]["stated"]["agreed"]),
-                      "fault_lines_found": n_mus}, ensure_ascii=False))
+    print(_crosscamp_summary(out, result, [c.report for c in camp_objs]))
     return 0
 
 
@@ -257,7 +297,9 @@ def _co2(args) -> int:
     except (OSError, ValueError, KeyError) as exc:
         print(f"cannot read the corpus in {ex}: {exc}", file=sys.stderr)
         return 2
-    lean_bin = lean.find_lean() if args.lean else None
+    lean_bin, ok = _lean_for(args)
+    if not ok:
+        return 2
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     camps = []
@@ -266,23 +308,19 @@ def _co2(args) -> int:
             record, cands, plaus = _camp_from_corpus(camp_id, statements, g)
             report = abduce.report_camp(record, abduce.ScriptedSource(cands), plaus, args.lam,
                                         args.timeout_ms, lean_bin, args.max_checks)
-            camp_dir = out / camp_id
-            camp_dir.mkdir(parents=True, exist_ok=True)
-            (camp_dir / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False),
-                                                  encoding="utf-8")
-            (camp_dir / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+            _write_camp_report(_camp_dir(out, camp_id), report)
             camps.append(crosscamp.Camp(record, report))
         result = crosscamp.analyze(camps, args.timeout_ms, lean_bin)
     except TooMany as exc:
         print(f"input too large for the documented scope: {exc}; per-camp reports were written",
               file=sys.stderr)
         return 2
+    except (ValueError, KeyError) as exc:
+        print(f"cannot run the analysis on the corpus in {ex}: {exc}", file=sys.stderr)
+        return 2
     (out / "crosscamp.json").write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     (out / "crosscamp.md").write_text(crosscamp.render_markdown(result), encoding="utf-8")
-    n_mus = sum(len(p.get("mus") or []) for p in result["fault_lines"]["per_system_pair"])
-    print(json.dumps({"out": str(out), "camps": result["camps"],
-                      "stated_agreed": len(result["common_ground"]["stated"]["agreed"]),
-                      "fault_lines_found": n_mus}, ensure_ascii=False))
+    print(_crosscamp_summary(out, result, [c.report for c in camps]))
     return 0
 
 
@@ -356,6 +394,9 @@ def main(argv: list[str] | None = None) -> int:
     camp.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate")
     camp.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     camp.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
+    camp.add_argument("--max-checks", type=int, default=4000,
+                      help="budget of certification checks (default 4000); a search it stops is reported "
+                           "as incomplete, never as cost-minimal")
     camp.add_argument("--out", required=True, help="output directory: report.json and report.md")
     camp.set_defaults(run=_camp)
 
@@ -367,6 +408,9 @@ def main(argv: list[str] | None = None) -> int:
     xc.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     xc.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     xc.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")
+    xc.add_argument("--max-checks", type=int, default=4000,
+                    help="budget of certification checks per camp (default 4000); a search it stops is "
+                         "reported as incomplete, never as cost-minimal")
     xc.add_argument("--out", required=True,
                     help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
     xc.set_defaults(run=_crosscamp)

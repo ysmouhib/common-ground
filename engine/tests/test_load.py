@@ -32,3 +32,13 @@ def test_load_zero_for_a_redundant_axiom():
     vec = load.load_vector(axioms, TARGETS)
     by_axiom = {v["axiom"]: v["load"] for v in vec}
     assert by_axiom[fol.to_text(parse("Mortal(socrates)"))] == 0
+
+
+def test_a_removal_check_without_verdict_is_pending_not_load_zero(monkeypatch):
+    # the solver (the dependency) gives no verdict on any removal: that is neither "still
+    # entailed" nor "no longer entailed", so the count stays a lower bound with its pending tally
+    from commonground import verdict
+    assert all(v["pending"] == 0 for v in load.load_vector(AXIOMS, TARGETS))
+    monkeypatch.setattr(verdict, "decide", lambda *a, **k: verdict.Verdict("Undecided", None, notes=["forced"]))
+    vec = load.load_vector(AXIOMS, TARGETS)
+    assert all(v["load"] == 0 and v["pending"] == len(TARGETS) for v in vec)

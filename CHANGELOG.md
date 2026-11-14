@@ -22,6 +22,31 @@ format. Versions follow Semantic Versioning.
 - `LICENSE` (MIT), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, PR and issue
   templates.
 
+### Fixed (soundness review of the v2 certification layer, 2026-11-14)
+
+- A search stopped by the check budget is reported as incomplete: `report.md`
+  says "SEARCH INCOMPLETE", `search_complete` is false, `abstention` is null and
+  the hull is labelled partial. It was reported as cost-minimal, with abstention.
+- "No system was certified" is no longer reported as "no axiom system exists":
+  `existence` gives the reason (inconsistent, a soft rejection entailed) or says
+  pending (unformalized statements, no verdict, search stopped).
+- Cross-camp: no stated common ground from a camp whose stated claims are
+  inconsistent; with unformalized statements, joint consistency and the absence
+  of a stated conflict are pending; the stated tier lists reviewed statements
+  only; root-divergence pairs without a verdict are listed as pending.
+- The system headline reads "SUFFICIENT (kernel-checked)" only when every
+  entailment was kernel-checked, and "NOT CERTIFIED" when the re-check fails.
+- λ must be positive and plausibility estimates in [0, 1]; keys of the
+  plausibilities file are matched in any spelling; a stated claim is never
+  charged an estimate; the 0.5 default for an unscored candidate is reported.
+- The hull lists only systems that some λ > 0 selects; load counts a removal
+  check without verdict as pending; checks export their evidence (finite model,
+  or Lean source with its SHA-256).
+- Negative controls test the check they name, and a Lean that rejects everything
+  no longer passes; record and candidate JSON are validated with a reason
+  (exit 2, no traceback); a camp name cannot move a report outside `--out`;
+  `--lean` without Lean is an error; `camp` and `crosscamp` gained `--max-checks`.
+
 ## [0.2.0] - 2026-11-13
 
 ### Added

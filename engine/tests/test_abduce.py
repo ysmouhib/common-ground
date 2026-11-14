@@ -373,13 +373,21 @@ def test_negative_controls_lean_rejects_the_negations():
     axioms = [fol.parse(AXIOM_ALL), fol.parse(AXIOM_SOC)]
     report = abduce.negative_controls(axioms, check_record(), lean_bin=LEAN)
     assert report["controls"]["lean_negations_rejected"] is True
+    assert report["controls"]["lean_accepts_a_theorem"] is True   # the rejections are not a broken Lean
     assert report["all_passed"]
 
 
 def test_negative_controls_detect_a_broken_system():
-    # a system that does not entail an endorsed claim: control 1 must NOT pass
+    # a system that does not entail an endorsed claim is not certified, and the battery says
+    # exactly that, by name — not through a side effect of some other control
     report = abduce.negative_controls([fol.parse(AXIOM_SOC)], check_record())
+    assert report["controls"]["system_certified"] is False
     assert not report["all_passed"]
+    # the checker-side controls that do not presuppose sufficiency still behave
+    assert report["controls"]["fresh_claim_not_entailed"] and report["controls"]["violated_rejection_caught"]
+    # an inconsistent system entails anything, even a claim over a symbol the record never uses
+    bad = abduce.negative_controls([fol.parse("Mortal(socrates)"), fol.parse("Q(a) ∧ ¬Q(a)")], check_record())
+    assert bad["controls"]["fresh_claim_not_entailed"] is False and not bad["all_passed"]
 
 
 def test_baseline_system_runs_stated_and_minimal_stated_through_the_checks():
@@ -397,3 +405,255 @@ def test_baseline_minimal_subset_drops_a_redundant_stated_claim():
     # e2 duplicates e1's formula and the firm negation is entailed by e1: the minimal subset is smaller
     assert len(base["minimal_formulas"]) < len(base["stated_formulas"])
     assert base["minimal_stated"].certified
+
+
+# --- soundness review 2026-11-14: one regression test per hole that was found ----------
+
+import hashlib
+import random
+
+P = fol.parse
+UNDECIDED = abduce._verdict.Verdict("Undecided", None, notes=["forced"])
+
+
+def test_non_entailment_and_consistency_without_verdict_are_pending(monkeypatch):
+    # the solvers (the dependency) give no verdict; the checks must not turn that into one
+    monkeypatch.setattr(abduce._verdict, "decide", lambda *a, **k: UNDECIDED)
+    c = abduce.non_entailment_check([P(AXIOM_SOC)], P("Flies(socrates)"))
+    assert c.outcome == "pending" and c.badge == abduce.BADGE_PENDING and c.model_false is None
+    monkeypatch.setattr(abduce._verdict, "satisfiable",
+                        lambda *a, **k: abduce._verdict.SatAnswer("unknown", note="forced"))
+    c = abduce.consistency_check([P(AXIOM_SOC)])
+    assert c.outcome == "pending" and c.badge == abduce.BADGE_PENDING and c.model is None
+
+
+def test_minimality_without_verdict_blocks_certification(monkeypatch):
+    axioms = [P(AXIOM_ALL), P(AXIOM_SOC)]
+    real = abduce._verdict.decide
+
+    def decide(premises, conclusion, *a, **k):   # only the removal checks get no verdict
+        return UNDECIDED if len(premises) < len(axioms) else real(premises, conclusion, *a, **k)
+
+    monkeypatch.setattr(abduce._verdict, "decide", decide)
+    checks = abduce.check_system(axioms, check_record())
+    assert checks.minimality and all(c.outcome == "pending" for c in checks.minimality)
+    assert not checks.certified
+
+
+def test_checks_carry_their_evidence():
+    ok = abduce.consistency_check([P(AXIOM_SOC)])
+    assert ok.model is not None and ok.to_json()["model"]["size"] >= 1
+    checks = abduce.check_system([P(AXIOM_ALL), P(AXIOM_SOC)], check_record())
+    assert checks.consistent.to_json()["model"] is not None
+    # a needed axiom shows the model of the rest in which the witness claim fails
+    assert all(m.outcome == "holds" and m.to_json()["model_where_claim_fails"] for m in checks.minimality)
+    assert all(c.to_json()["model_where_claim_fails"] for c in checks.soft_rejections)
+
+
+@needs_lean
+def test_kernel_check_exports_the_lean_source_and_its_hash():
+    c = abduce.entailment_check([P(AXIOM_ALL), P(AXIOM_SOC)], P("Mortal(socrates)"), lean_bin=LEAN)
+    cert = c.to_json()["certificate"]
+    assert cert["toolchain"] == lean.TOOLCHAIN and "theorem t_0" in cert["lean_source"]
+    assert cert["sha256"] == hashlib.sha256(cert["lean_source"].encode("utf-8")).hexdigest()
+    lean.assert_generated(cert["lean_source"])   # the exported text is the generated text
+    # a solver-only verdict carries no certificate
+    assert abduce.entailment_check([P(AXIOM_ALL), P(AXIOM_SOC)], P("Mortal(socrates)")).certificate is None
+
+
+def test_a_refutation_outside_the_decidable_class_says_what_it_rests_on():
+    inside = abduce.entailment_check([P(AXIOM_ALL), P(AXIOM_SOC)], P("Mortal(socrates)"))
+    assert inside.outcome == "holds" and "Bernays" not in inside.detail
+    for premises, goal in ((["∀x P(f(x))"], "P(f(a))"),                       # function symbol
+                           (["a = b", "P(a)"], "P(b)"),                         # equality
+                           (["∀x ∃y R(x, y)", "∀x ∀y (R(x, y) → Q(x))"], "Q(a)")):  # ∃ under ∀
+        outside = abduce.entailment_check([P(p) for p in premises], P(goal))
+        assert outside.outcome == "holds" and outside.badge == abduce.BADGE_SOLVER
+        assert "rests on Z3 alone" in outside.detail
+
+
+def test_a_system_is_a_set_duplicate_axioms_count_once():
+    checks = abduce.check_system([P(AXIOM_ALL), P(AXIOM_SOC), P(AXIOM_SOC)], check_record())
+    assert checks.certified and len(checks.minimality) == 2
+
+
+def test_negated_iff_and_xor_reach_the_normal_form():
+    assert abduce.normal_form_size(P("¬(A ⊕ B)")) == abduce.normal_form_size(P("A ↔ B")) == 2
+    assert abduce.normal_form_size(P("¬(A ↔ B)")) == abduce.normal_form_size(P("A ⊕ B")) == 1
+
+
+C1T = fol.to_text(fol.parse(C1))
+
+
+@pytest.mark.parametrize("plaus, lam", [
+    ({C1T: 1.5}, 0.3), ({C1T: -0.1}, 0.3), ({C1T: float("nan")}, 0.3), ({C1T: "0.9"}, 0.3), ({C1T: True}, 0.3),
+    ({}, 0.0), ({}, -1.0), ({}, float("inf")), ({}, "0.3"),
+])
+def test_charges_outside_their_range_are_refused(plaus, lam):
+    # outside λ > 0 and p in [0, 1] a charge can be negative, and cost pruning is no longer valid
+    for search in (abduce.select, abduce.select_bruteforce):
+        with pytest.raises(ValueError):
+            search(big_pool(), big_record(), plaus, lam)
+
+
+def test_the_check_budget_is_reported_and_is_not_a_false_alarm():
+    pool, rec, plaus = big_pool(), big_record(), {C1T: 0.9}
+    full = abduce.select_bruteforce(pool, rec, plaus, 0.3)
+    assert not full.exhausted
+    # a budget of exactly the checks needed finishes the search: no "exhausted" then
+    exact = abduce.select_bruteforce(pool, rec, plaus, 0.3, max_checks=full.checks)
+    assert not exact.exhausted and exact.systems == full.systems
+    for search in (abduce.select, abduce.select_bruteforce):
+        capped = search(pool, rec, plaus, 0.3, max_checks=1)
+        assert capped.exhausted and capped.checks == 1
+        # the one check went to the stated system A₀: certified, yet not the optimum
+        assert len(capped.systems) == 1 and capped.systems != full.systems
+        assert capped.best_cost > full.best_cost
+
+
+def test_hull_keeps_only_systems_that_some_lambda_selects():
+    pool = [P("A1"), P("B1"), P("C1")]
+    # (size 2, implausibility 0.5) is larger and less plausible than (1, 0): on no interval
+    hull = abduce.hull_intervals([["A1"], ["B1", "C1"]], pool, {"C1": 0.5})
+    assert [(h["size"], h["lam_interval"]) for h in hull] == [(1, [0.0, float("inf")])]
+    # equal size: the less implausible one only; systems on the same point are ties
+    hull = abduce.hull_intervals([["A1"], ["B1"], ["C1"]], pool, {"C1": 0.5})
+    assert len(hull) == 1 and hull[0]["system"] == ["A1"] and hull[0]["tied_systems"] == [["B1"]]
+
+
+def test_hull_intervals_agree_with_a_scan_on_random_systems():
+    rng = random.Random(7)
+    atoms = [f"Q{i}" for i in range(6)]
+    pool = [P(a) for a in atoms]
+    for _ in range(200):
+        plaus = {a: rng.choice([0.1, 0.3, 0.5, 0.7, 0.9, 1.0]) for a in atoms}
+        systems = [sorted(rng.sample(atoms, rng.randint(1, 6))) for _ in range(rng.randint(1, 7))]
+
+        def c(texts, lam):
+            return abduce.cost([P(t) for t in texts], plaus, lam)
+
+        hull = abduce.hull_intervals(systems, pool, plaus)
+        assert hull
+        for h in hull:   # every reported interval is real, and the system is optimal inside it
+            lo, hi = h["lam_interval"]
+            assert 0 <= lo < hi
+            mid = lo + 1.0 if hi == float("inf") else (lo + hi) / 2
+            assert c(h["system"], mid) == pytest.approx(min(c(s, mid) for s in systems))
+        for lam in (0.013, 0.07, 0.21, 0.37, 0.93, 2.3):   # and every λ > 0 is covered
+            inside = [h for h in hull if h["lam_interval"][0] - 1e-9 <= lam <= h["lam_interval"][1] + 1e-9]
+            assert inside
+            assert all(c(h["system"], lam) == pytest.approx(min(c(s, lam) for s in systems)) for h in inside)
+
+
+CLAIM = "Claim."
+
+
+def varied_record(statements):
+    return abduce.Record("campV", [abduce.Document("dv", CLAIM)],
+                         [abduce.RecordStatement(sid, stance, f, "dv", CLAIM, (0, len(CLAIM)))
+                          for sid, stance, f in statements])
+
+
+VARIED = {
+    # a firm rejection in E⁺, an axiom of normal-form size 2, a chain of two unstated axioms
+    "firm-and-conjunct": (
+        [("e1", "endorsed", "Human(socrates)"), ("e2", "endorsed", "Mortal(socrates)"),
+         ("r1", "rejected_firm", "Immortal(socrates)"), ("s1", "rejected_soft", "Flies(socrates)")],
+        ["∀x (Human(x) → Mortal(x))", "∀x (Mortal(x) → ¬Immortal(x))",
+         "∀x (Human(x) → (Mortal(x) ∧ ¬Immortal(x)))"]),
+    # a candidate that violates the soft rejection, and a conjunction of two stated claims
+    "soft-violation": (
+        [("e1", "endorsed", "Human(socrates)"), ("e2", "endorsed", "Mortal(socrates)"),
+         ("e3", "endorsed", "Human(plato)"), ("e4", "endorsed", "Mortal(plato)"),
+         ("s1", "rejected_soft", "Flies(plato)")],
+        ["∀x (Human(x) → Mortal(x))", "∀x (Human(x) → Flies(x))", "Human(socrates) ∧ Human(plato)"]),
+}
+
+
+@pytest.mark.parametrize("case, seed, lam", [
+    ("firm-and-conjunct", 1, 0.05), ("firm-and-conjunct", 2, 0.3), ("firm-and-conjunct", 3, 0.8),
+    ("soft-violation", 4, 0.1), ("soft-violation", 5, 0.45),
+])
+def test_bnb_matches_brute_force_on_varied_pools(case, seed, lam):
+    statements, candidates = VARIED[case]
+    rec = varied_record(statements)
+    pool = abduce._targets(rec) + [P(c) for c in candidates]
+    rng = random.Random(seed)
+    plaus = {fol.to_text(P(c)): rng.choice([0.1, 0.3, 0.5, 0.7, 0.9]) for c in candidates}
+    a = abduce.select(pool, rec, plaus, lam)
+    b = abduce.select_bruteforce(pool, rec, plaus, lam)
+    assert not a.exhausted and not b.exhausted
+    assert a.systems and sorted(map(sorted, a.systems)) == sorted(map(sorted, b.systems))
+    assert a.best_cost == pytest.approx(b.best_cost)
+    by_text = {fol.to_text(f): f for f in pool}
+    for texts in a.systems:   # what is selected is certified, and never breaks the soft rejection
+        assert abduce.check_system([by_text[t] for t in texts], rec).certified
+    # every system the pruned search certified is one the exhaustive search certified
+    assert {tuple(s) for s in a.all_certified} <= {tuple(s) for s in b.all_certified}
+
+
+def test_negative_controls_pass_when_the_system_refutes_its_soft_rejection():
+    # A ⊨ ¬r, so A ∪ {r} has no model: the violated-rejection control is still about the
+    # rejection check, and a certified system passes the battery
+    rec = varied_record([("e1", "endorsed", "Purr(cats) ∧ ¬Bark(cats)"), ("s1", "rejected_soft", "Bark(cats)")])
+    axioms = [P("Purr(cats) ∧ ¬Bark(cats)")]
+    assert abduce.check_system(axioms, rec).certified
+    report = abduce.negative_controls(axioms, rec)
+    assert report["all_passed"], report["controls"]
+    assert report["controls"]["violated_rejection_caught"] is True
+
+
+def test_a_lean_that_rejects_everything_does_not_pass_the_control(monkeypatch):
+    # the Lean runner (the dependency) fails on every problem, as after a timeout or a bad
+    # install: "the negations were rejected" must not then read as a passed control
+    monkeypatch.setattr(abduce._lean, "certify", lambda problems, lean_bin, **k: [
+        abduce._lean.Certificate(f"t_{i}", False, reason="forced") for i, _ in enumerate(problems)])
+    report = abduce.negative_controls([P(AXIOM_ALL), P(AXIOM_SOC)], check_record(), lean_bin="broken-lean")
+    assert report["controls"]["lean_negations_rejected"] is True
+    assert report["controls"]["lean_accepts_a_theorem"] is False
+    assert not report["all_passed"]
+
+
+@pytest.mark.parametrize("mutate, problem", [
+    (lambda r: r.__setitem__("statements", "oops"), "must be lists"),
+    (lambda r: r.pop("camp"), 'needs "camp"'),
+    (lambda r: r.__setitem__("camp", "  "), "non-empty name"),
+    (lambda r: r["statements"][0].__setitem__("span", ["0", "22"]), "two integers"),
+    (lambda r: r["statements"][0].__setitem__("span", [0.0, 22.0]), "two integers"),
+    (lambda r: r["statements"][0].__setitem__("span", [0, 22, 3]), "two integers"),
+    (lambda r: r["statements"][0].__setitem__("fol", 5), "must be a formula"),
+    (lambda r: r["statements"][0].__setitem__("fol", ""), "must be a formula"),
+    (lambda r: r["statements"][0].__setitem__("fol", "Mortal((socrates)"), "does not parse"),
+    (lambda r: r["statements"][0].__setitem__("quote", "All humans are mortals"), "does not match"),
+    (lambda r: r["statements"][0].pop("quote"), 'needs "quote"'),
+    (lambda r: r["statements"].append("not an object"), "must be an object"),
+    (lambda r: r["documents"].append({"id": "d2"}), 'needs "id" and "text"'),
+])
+def test_record_json_is_validated_with_a_reason(mutate, problem):
+    raw = {"camp": "campA", "documents": [{"id": "d1", "text": DOC}],
+           "statements": [{"id": "e1", "stance": "endorsed", "fol": "Mortal(socrates)", "document": "d1",
+                           "quote": DOC[S1[0]:S1[1]], "span": list(S1)}]}
+    assert abduce.record_from_json(json.loads(json.dumps(raw))).camp == "campA"
+    mutate(raw)
+    with pytest.raises(ValueError, match=problem):
+        abduce.record_from_json(raw)
+
+
+@pytest.mark.parametrize("data", [[], {"candidates": "x"}, {"candidates": ["P(a)"]},
+                                  {"candidates": [{"fol": "P(a)", "quotes": "x"}]},
+                                  {"candidates": [{"fol": "P(a)", "quotes": ["x"]}]}])
+def test_candidates_json_shape_is_validated(data):
+    with pytest.raises(ValueError):
+        abduce.candidates_from_json(data)
+
+
+def test_a_candidate_with_a_malformed_quote_is_dropped_not_a_crash():
+    data = {"candidates": [{"fol": "Human(socrates)", "quotes": [{"document": ["d1"], "text": 3, "span": "x"}]},
+                           {"fol": 7, "quotes": []}]}
+    pool = abduce.collect(abduce.ScriptedSource(abduce.candidates_from_json(data)), record())
+    assert pool.candidates == [] and len(pool.dropped) == 2
+
+
+def test_the_prompt_shows_formulas_the_grammar_accepts():
+    assert fol.to_text(P("∀x (Human(x) → Mortal(x))")) and "∀x (Human(x) → Mortal(x))" in abduce.PROMPT
+    assert "forall" not in abduce.PROMPT   # the grammar has no such keyword

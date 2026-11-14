@@ -185,9 +185,11 @@ def test_root_divergence_when_the_union_is_consistent():
 
 def test_analyze_combines_and_renders_json_and_markdown():
     report = crosscamp.analyze(camps_shared_q())
-    assert set(report) == {"camps", "common_ground", "fault_lines"}
+    assert set(report) == {"camps", "search_incomplete", "common_ground", "fault_lines"}
+    assert report["search_incomplete"] == []
     json.dumps(report)
     md = crosscamp.render_markdown(report)
+    assert "Search incomplete" not in md
     assert "Common ground among stated claims" in md
     assert "`Q(a)`" in md
     assert "Fault lines" in md
@@ -233,3 +235,167 @@ def test_cli_crosscamp_end_to_end(tmp_path):
     assert (out / "A" / "report.json").exists() and (out / "B" / "report.md").exists()
     assert "crosscamp.md" in [p.name for p in out.iterdir()]
     assert pathlib.Path(out / "crosscamp.md").read_text(encoding="utf-8").startswith("# Cross-camp")
+
+
+# --- soundness review 2026-11-14: one regression test per hole that was found ----------
+
+from commonground import verdict
+
+NO_VERDICT = verdict.SatAnswer("unknown", note="forced")
+
+
+def inconsistent_and_other():
+    # camp A contradicts itself and firmly rejects Q(a); camp B endorses Q(a)
+    a = make_camp("A", "da", "A says: P(a) holds. A says: not P(a). A says: Z(a) is false.",
+                  [("e1", "endorsed", "P(a)", "P(a) holds."),
+                   ("e2", "endorsed", "¬P(a)", "not P(a)."),
+                   ("r1", "rejected_firm", "Q(a)", "Z(a) is false.")])
+    b = make_camp("B", "db", "B says: Q(a) holds.", [("e1", "endorsed", "Q(a)", "Q(a) holds.")])
+    return [a, b]
+
+
+def test_an_inconsistent_camp_gives_no_vacuous_common_ground():
+    camps = inconsistent_and_other()
+    cg = crosscamp.common_ground(camps)
+    # everything follows from A's contradiction, Q(a) included — which A firmly rejects
+    assert cg["stated"]["agreed"] == []
+    assert cg["stated"]["vacuous_camps"] == ["A"] and cg["stated"]["pending_camps"] == []
+    assert [c["outcome"] for c in cg["stated"]["camp_consistency"]] == ["fails", "holds"]
+    md = crosscamp.render_markdown(crosscamp.analyze(camps))
+    assert "vacuously" in md and "| agreed statement |" not in md
+
+
+@needs_lean
+def test_the_kernel_does_not_turn_a_vacuous_agreement_into_common_ground():
+    # Lean proves Q(a) from P(a) and ¬P(a) without complaint: the consistency gate is what refuses it
+    cg = crosscamp.common_ground(inconsistent_and_other(), lean_bin=LEAN)
+    assert cg["stated"]["agreed"] == []
+
+
+def test_the_stated_tier_lists_reviewed_statements_only():
+    a = make_camp("A", "da", "A says: P(a) holds.", [("e1", "endorsed", "P(a)", "P(a) holds.")],
+                  candidates=[("P(a) ∨ Z(a)", "P(a) holds.")])
+    b = make_camp("B", "db", "B says: P(a) holds as well.", [("e1", "endorsed", "P(a)", "P(a) holds as well.")])
+    cg = crosscamp.common_ground([a, b])
+    # both E⁺ entail the candidate, but it is nobody's stated claim: tier 2 is where it belongs
+    assert [e["statement"] for e in cg["stated"]["agreed"]] == ["P(a)"]
+    assert cg["stated"]["pool"] == ["P(a)"]
+    assert "(P(a) ∨ Z(a))" in {e["statement"] for e in cg["per_system_pair"][0]["agreed"]}
+
+
+def camps_partly_formalized():
+    a = make_camp("A", "da", "A says: P(a) holds. A also says something not yet formalized.",
+                  [("e1", "endorsed", "P(a)", "P(a) holds."),
+                   ("e2", "endorsed", None, "A also says something not yet formalized.")])
+    b = make_camp("B", "db", "B says: not P(a), in words only. B says: R(a) holds.",
+                  [("e1", "endorsed", None, "not P(a), in words only."),
+                   ("e2", "endorsed", "R(a)", "R(a) holds.")])
+    return [a, b]
+
+
+def test_unformalized_statements_leave_consistency_and_fault_lines_pending():
+    report = crosscamp.analyze(camps_partly_formalized())
+    stated = report["common_ground"]["stated"]
+    assert stated["union_consistent"]["outcome"] == "pending"
+    assert stated["union_consistent"]["badge"] == abduce.BADGE_PENDING
+    assert {(u["camp"], u["id"]) for u in stated["unformalized"]} == {("A", "e2"), ("B", "e1")}
+    fl = report["fault_lines"]["stated"]
+    assert fl["consistent"]["outcome"] == "pending" and fl["complete"] is False and fl["mus"] == []
+    md = crosscamp.render_markdown(report)
+    assert "The stated claims are jointly consistent" not in md
+    assert "No conflict among the formalized stated claims. PENDING" in md
+    assert "Union of the camps' stated E⁺ is consistent: **pending**" in md
+
+
+def test_a_conflict_among_formalized_statements_stands_whatever_is_unformalized():
+    a = make_camp("A", "da", "A says: P(a) holds. A also says more.",
+                  [("e1", "endorsed", "P(a)", "P(a) holds."), ("e2", "endorsed", None, "A also says more.")])
+    b = make_camp("B", "db", "B says: not P(a).", [("e1", "rejected_firm", "P(a)", "not P(a).")])
+    report = crosscamp.analyze([a, b])
+    fl = report["fault_lines"]["stated"]
+    assert fl["consistent"]["outcome"] == "fails"          # adding statements cannot remove it
+    assert [set(m) for m in fl["mus"]] == [{"P(a)", "¬P(a)"}] and fl["complete"] is False
+    assert "the list may be incomplete" in crosscamp.render_markdown(report)
+
+
+def test_no_verdict_stays_pending_in_fault_lines_and_common_ground(monkeypatch):
+    camps = camps_disjoint()            # built with the real solver, then the solver stops answering
+    monkeypatch.setattr(verdict, "satisfiable", lambda *a, **k: NO_VERDICT)
+    fl = crosscamp.fault_lines(camps)
+    assert fl["stated"]["mus"] is None and fl["stated"]["mcs"] is None and "pending" in fl["stated"]
+    assert fl["stated"]["consistent"]["outcome"] == "pending" and fl["stated"]["complete"] is False
+    pair = fl["per_system_pair"][0]
+    assert pair["mus"] is None and pair["consistent"] is None and "pending" in pair
+    assert pair["root_divergence"] == []                    # nothing published without a verdict
+    cg = crosscamp.common_ground(camps)
+    assert cg["stated"]["agreed"] == [] and cg["stated"]["pending_camps"] == ["A", "B"]
+    assert cg["stated"]["union_consistent"]["outcome"] == "pending"
+    assert cg["per_system_pair"][0]["agreed"] == []
+    md = crosscamp.render_markdown({"camps": ["A", "B"], "common_ground": cg, "fault_lines": fl})
+    assert "jointly consistent" not in md and "Pending: no verdict" in md
+    assert "Stated common ground is PENDING" in md
+
+
+def test_a_root_divergence_pair_without_verdict_is_listed_as_pending(monkeypatch):
+    camps = camps_disjoint()
+    undecided = verdict.Verdict("Undecided", None, notes=["forced"])
+    monkeypatch.setattr(verdict, "decide", lambda *a, **k: undecided)   # satisfiability still answers
+    pair = crosscamp.fault_lines(camps)["per_system_pair"][0]
+    assert pair["consistent"] is True and pair["root_divergence"] == []
+    assert [(p["a1"], p["a2"], p["pending"]) for p in pair["root_divergence_pending"]] == [
+        ("P(a)", "R(a)", "non-entailment undecided")]
+
+
+def test_an_axiom_whose_load_has_no_verdict_is_not_dropped_from_root_divergence():
+    camps = camps_disjoint()
+    camps[0].report["systems"][0]["load"] = [{"axiom": "P(a)", "load": 0, "pending": 1}]
+    pair = crosscamp.fault_lines(camps)["per_system_pair"][0]
+    assert pair["root_divergence"] == []
+    assert [p["pending"] for p in pair["root_divergence_pending"]] == ["load not established"]
+    md = crosscamp.render_markdown({"camps": ["A", "B"], "common_ground": crosscamp.common_ground(camps),
+                                    "fault_lines": crosscamp.fault_lines(camps)})
+    assert "1 further axiom pair(s) are PENDING" in md
+
+
+def test_two_camps_with_the_same_name_are_refused():
+    a, b = camps_shared_q()
+    b.record.camp = "A"
+    with pytest.raises(ValueError, match="unique"):
+        crosscamp.common_ground([a, b])
+    with pytest.raises(ValueError, match="unique"):
+        crosscamp.fault_lines([a, b])
+
+
+def cli_two_camps(tmp_path, camp_a="A", camp_b="B", extra=()):
+    ra, rb, ca = tmp_path / "a.json", tmp_path / "b.json", tmp_path / "c.json"
+    write_record_file(ra, camp_a, "da", TEXT_A, [("e1", "endorsed", "P(a)", "P(a) holds.")])
+    write_record_file(rb, camp_b, "db", TEXT_B, [("e1", "endorsed", "Q(a)", "Q(a) holds.")])
+    ca.write_text(json.dumps({"candidates": []}), encoding="utf-8")
+    out = tmp_path / "deep" / "out"
+    return main(["crosscamp", str(ra), str(rb), "--candidates", str(ca), str(ca), "--out", str(out), *extra]), out
+
+
+@pytest.mark.parametrize("name", ["../escaped", "..", "sub/dir", "C:\\elsewhere", "a:b", " padded", "dot."])
+def test_cli_refuses_a_camp_name_that_is_not_a_plain_directory_name(tmp_path, capsys, name):
+    code, out = cli_two_camps(tmp_path, camp_a=name)
+    assert code == 2 and "cannot be used as a directory name" in capsys.readouterr().err
+    # nothing was written, inside the output directory or beside it
+    assert not out.exists() and not (tmp_path / "deep").exists() and not (tmp_path / "escaped").exists()
+
+
+def test_cli_refuses_two_records_of_the_same_camp(tmp_path, capsys):
+    code, out = cli_two_camps(tmp_path, camp_a="A", camp_b="A")
+    assert code == 2 and "unique" in capsys.readouterr().err and not out.exists()
+
+
+def test_cli_crosscamp_summary_reports_each_search(tmp_path, capsys):
+    code, out = cli_two_camps(tmp_path, extra=("--max-checks", "1"))
+    assert code == 0
+    summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert summary["search_complete"] == {"A": False, "B": False}
+    assert "SEARCH INCOMPLETE" in (out / "A" / "report.md").read_text(encoding="utf-8")
+    # the comparison of systems that are not shown to be cost-minimal is labelled provisional
+    result = json.loads((out / "crosscamp.json").read_text(encoding="utf-8"))
+    assert result["search_incomplete"] == ["A", "B"]
+    md = (out / "crosscamp.md").read_text(encoding="utf-8")
+    assert "Search incomplete for `A`, `B`" in md and "provisional" in md

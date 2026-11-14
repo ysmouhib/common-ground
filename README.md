@@ -199,10 +199,14 @@ python -m commonground analyze examples/plastic_bags.json   # v1 debate analysis
 python -m commonground co2 --max-checks 150 --out co2-out    # CO2 golden corpus: <camp>/report.{json,md} + crosscamp.{json,md}
 ```
 
-At λ=0.3 the CO2 camps' stated system is cheaper than the candidate set, so the report
-says so (abstention) — see `AUDIT.md` (AUDIT-3); the pool search is bounded by
-`--max-checks` (AUDIT-4). Divergences between the pipeline and the hand-worked golden
-are audited in `AUDIT.md`, never silently substituted.
+The pool search is bounded by `--max-checks` (AUDIT-4). With 150 checks neither camp's
+search finishes, and the reports say so: each shows its certified stated system under
+"SEARCH INCOMPLETE", with abstention pending and the hull marked partial — a search the
+budget stopped is never reported as cost-minimal. For the `no` camp the exhaustive search
+was run once (2,048 checks, several minutes): at λ=0.3 the stated system is the
+cost-minimal one, so the report says so (abstention); for the `yes` camp this is not
+established — see `AUDIT.md` (AUDIT-3). Divergences between the pipeline and the
+hand-worked golden are audited in `AUDIT.md`, never silently substituted.
 
 ## The web app
 
