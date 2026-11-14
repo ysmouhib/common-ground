@@ -102,6 +102,24 @@ def test_abduction_parse_error_and_pool_cap_are_counted_not_crashed(tmp_path):
     assert summary["definite"] == 0 and summary["recovery_rate"] is None
 
 
+def test_abduction_unequal_sentence_and_formula_counts_are_flagged_not_crashed(tmp_path):
+    """FOLIO has examples with more formulas than sentences, and the reverse: the full run
+    stopped on the first one with an IndexError (2026-11-14)."""
+    more_formulas = {"premises": ["-"], "premises-FOL": ["P(a)", "P(a) → Q(a)"],
+                     "conclusion": "-", "conclusion-FOL": "Q(a)", "label": "True"}
+    more_sentences = {"premises": ["-", "-", "-"], "premises-FOL": ["P(a)", "P(a) → Q(a)"],
+                      "conclusion": "-", "conclusion-FOL": "Q(a)", "label": "True"}
+    root = dataset(tmp_path, [more_formulas, more_sentences, folio_row(["P(a)", "P(a) → Q(a)"], "Q(a)")])
+    summary = bench.abduction(root / "data" / "v0.0" / "folio-validation.jsonl",
+                              tmp_path / "out", timeout_ms=3000)
+    assert summary["parsed"] == 3 and summary["unequal_counts"] == 2
+    assert summary["recovered"] == 3  # every premise formula is still in the pool
+    rows = [json.loads(line) for line in
+            (tmp_path / "out" / "runs.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [r.get("unequal_counts", False) for r in rows] == [True, True, False]
+    assert all(r["min_recovered_size"] == 2 and r["reference_premises"] == 2 for r in rows)
+
+
 def test_abduction_cli_mode_end_to_end(tmp_path):
     from commonground.__main__ import main
     root = dataset(tmp_path, [folio_row(["P(a)", "P(a) → Q(a)"], "Q(a)")])

@@ -246,8 +246,15 @@ def abduction(data_file: Path, out_dir: Path, limit: int | None = None, timeout_
                 f"ex-{ex.index}", [abduce.Document("doc", doc)],
                 [abduce.RecordStatement("conclusion", "endorsed", to_text(parsed.conclusion),
                                         "doc", ex.conclusion_text, spans[-1])])
-            candidates = [abduce.Candidate(to_text(p), [("doc", ex.premises_text[i], spans[i])])
+            # One candidate per premise formula, each citing a verbatim sentence. In some FOLIO
+            # examples the sentence and formula counts differ (results/folio-validation/AUDIT.md):
+            # the pairing is then positional only, a formula beyond the last sentence cites the
+            # last one, and the row says so. Recovery is graded on the formulas, not the quotes.
+            last = max(len(ex.premises_text) - 1, 0)
+            candidates = [abduce.Candidate(to_text(p), [("doc", texts[min(i, last)], spans[min(i, last)])])
                           for i, p in enumerate(parsed.premises)]
+            if len(parsed.premises) != len(ex.premises_text):
+                row["unequal_counts"] = True
             try:
                 report = abduce.report_camp(record_, abduce.ScriptedSource(candidates), {}, lam=lam,
                                             timeout_ms=timeout_ms, lean_bin=lean_bin,
@@ -282,6 +289,7 @@ def abduction(data_file: Path, out_dir: Path, limit: int | None = None, timeout_
         "examples": len(rows),
         "parsed": len(parsed_rows),
         "pool_too_large": sum(1 for r in rows if r.get("pool_too_large")),
+        "unequal_counts": sum(1 for r in rows if r.get("unequal_counts")),
         "search_incomplete": sum(1 for r in parsed_rows if not r.get("search_complete", True)),
         "definite": len(definite),
         "recovered": len(recovered),
