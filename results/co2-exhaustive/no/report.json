@@ -1,0 +1,2409 @@
+{
+  "camp": "no",
+  "lam": 0.3,
+  "source": {
+    "model": "scripted",
+    "temperature": 0.0
+  },
+  "statements": [
+    {
+      "id": "no-1",
+      "stance": "endorsed",
+      "fol": "PriceRise(petrol) ∧ PriceRise(diesel)",
+      "document": "doc-no",
+      "span": [
+        0,
+        52
+      ]
+    },
+    {
+      "id": "no-2",
+      "stance": "endorsed",
+      "fol": "CostsRise(averageFamily, high)",
+      "document": "doc-no",
+      "span": [
+        53,
+        207
+      ]
+    },
+    {
+      "id": "no-3",
+      "stance": "endorsed",
+      "fol": "NoEffectOnClimate(law)",
+      "document": "doc-no",
+      "span": [
+        208,
+        260
+      ]
+    },
+    {
+      "id": "no-4",
+      "stance": "endorsed",
+      "fol": "TinyShareOfEmissions(switzerland)",
+      "document": "doc-no",
+      "span": [
+        261,
+        330
+      ]
+    },
+    {
+      "id": "no-5",
+      "stance": "endorsed",
+      "fol": "MainlyHitsLowIncome(law) ∧ Unjust(law)",
+      "document": "doc-no",
+      "span": [
+        331,
+        427
+      ]
+    },
+    {
+      "id": "no-6",
+      "stance": "endorsed",
+      "fol": "Radical(law) ∧ OnlyBansAndRules(law)",
+      "document": "doc-no",
+      "span": [
+        428,
+        542
+      ]
+    }
+  ],
+  "pool": {
+    "candidates": [
+      {
+        "fol": "CO2Law(law) ∧ AppliesTo(law, switzerland)",
+        "quotes": [
+          [
+            "doc-no",
+            "Benzin und Diesel werden 12 Rappen pro Liter teurer.",
+            [
+              0,
+              52
+            ]
+          ]
+        ],
+        "plausibility": 0.95,
+        "plausibility_source": "given"
+      },
+      {
+        "fol": "∀l (CO2Law(l) → (PriceRise(petrol) ∧ PriceRise(diesel) ∧ CostsRise(averageFamily, high)))",
+        "quotes": [
+          [
+            "doc-no",
+            "Benzin und Diesel werden 12 Rappen pro Liter teurer.",
+            [
+              0,
+              52
+            ]
+          ],
+          [
+            "doc-no",
+            "Für eine durchschnittliche vierköpfige Familie verteuern all diese zusätzlichen Abgaben je nach Situation den Lebensunterhalt um bis zu Fr. 1000 pro Jahr.",
+            [
+              53,
+              207
+            ]
+          ]
+        ],
+        "plausibility": 0.8,
+        "plausibility_source": "given"
+      },
+      {
+        "fol": "∀l ∀c (CO2Law(l) ∧ AppliesTo(l, c) ∧ TinyShareOfEmissions(c) → NoEffectOnClimate(l))",
+        "quotes": [
+          [
+            "doc-no",
+            "Das CO2-Gesetz hat keinerlei Einfluss auf das Klima.",
+            [
+              208,
+              260
+            ]
+          ],
+          [
+            "doc-no",
+            "Die Schweiz trägt gerade einmal 0,1% zum weltweiten CO2-Ausstoss bei.",
+            [
+              261,
+              330
+            ]
+          ]
+        ],
+        "plausibility": 0.85,
+        "plausibility_source": "given"
+      },
+      {
+        "fol": "∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l)))",
+        "quotes": [
+          [
+            "doc-no",
+            "Das Gesetz trifft vor allem die mittleren und unteren Einkommen; das ist ungerecht und unsozial.",
+            [
+              331,
+              427
+            ]
+          ]
+        ],
+        "plausibility": 0.75,
+        "plausibility_source": "given"
+      },
+      {
+        "fol": "∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l)))",
+        "quotes": [
+          [
+            "doc-no",
+            "Das neue CO2-Gesetz ist kein Kompromiss, sondern ein radikales Gesetz, das nur auf Verbote und Vorschriften setzt.",
+            [
+              428,
+              542
+            ]
+          ]
+        ],
+        "plausibility": 0.7,
+        "plausibility_source": "given"
+      }
+    ],
+    "dropped": [
+      {
+        "fol": "TinyShareOfEmissions(switzerland)",
+        "reason": "duplicate of a stated claim"
+      }
+    ]
+  },
+  "plausibility": {
+    "default": 0.5,
+    "defaulted": [],
+    "ignored_for_stated": {
+      "TinyShareOfEmissions(switzerland)": 0.9
+    }
+  },
+  "warnings": [],
+  "selection": {
+    "lam": 0.3,
+    "best_cost": 2.6999999999999997,
+    "systems": [
+      [
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ]
+    ],
+    "all_certified": [
+      [
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "CostsRise(averageFamily, high)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "CostsRise(averageFamily, high)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "CostsRise(averageFamily, high)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "(∀l (∀c (((CO2Law(l) ∧ AppliesTo(l, c)) ∧ TinyShareOfEmissions(c)) → NoEffectOnClimate(l))))",
+        "CostsRise(averageFamily, high)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ]
+    ],
+    "checks": 2048,
+    "exhausted": false
+  },
+  "search": "bruteforce",
+  "plausibility_sensitivity": null,
+  "search_complete": true,
+  "hull": [
+    {
+      "size": 7,
+      "implausibility": 0.8,
+      "system": [
+        "(CO2Law(law) ∧ AppliesTo(law, switzerland))",
+        "(∀l (CO2Law(l) → ((PriceRise(petrol) ∧ PriceRise(diesel)) ∧ CostsRise(averageFamily, high))))",
+        "(∀l (CO2Law(l) → (MainlyHitsLowIncome(l) ∧ Unjust(l))))",
+        "(∀l (CO2Law(l) → (Radical(l) ∧ OnlyBansAndRules(l))))",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      "tied_systems": [],
+      "lam_interval": [
+        0.4,
+        Infinity
+      ]
+    },
+    {
+      "size": 9,
+      "implausibility": 0.0,
+      "system": [
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      "tied_systems": [],
+      "lam_interval": [
+        0.0,
+        0.4
+      ]
+    }
+  ],
+  "hull_complete": true,
+  "margin_to_runner_up": 0.20000000000000018,
+  "systems": [
+    {
+      "axioms": [
+        "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+        "(PriceRise(petrol) ∧ PriceRise(diesel))",
+        "(Radical(law) ∧ OnlyBansAndRules(law))",
+        "CostsRise(averageFamily, high)",
+        "NoEffectOnClimate(law)",
+        "TinyShareOfEmissions(switzerland)"
+      ],
+      "cost": 2.6999999999999997,
+      "certified": true,
+      "badge": "SOLVER-CHECKED (not kernel-certified)",
+      "checks": {
+        "consistent": {
+          "kind": "consistency",
+          "claim": "(all axioms)",
+          "outcome": "holds",
+          "badge": "SOLVER-CHECKED (not kernel-certified)",
+          "detail": "explicit finite model of size 6",
+          "model_where_claim_fails": null,
+          "model": {
+            "size": 6,
+            "constants": {
+              "averageFamily": 4,
+              "diesel": 5,
+              "high": 1,
+              "law": 2,
+              "petrol": 3,
+              "switzerland": 0
+            },
+            "predicates": {
+              "CostsRise/2": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  0,
+                  2
+                ],
+                [
+                  0,
+                  3
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  0,
+                  5
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  2
+                ],
+                [
+                  1,
+                  3
+                ],
+                [
+                  1,
+                  4
+                ],
+                [
+                  1,
+                  5
+                ],
+                [
+                  2,
+                  0
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  2,
+                  2
+                ],
+                [
+                  2,
+                  3
+                ],
+                [
+                  2,
+                  4
+                ],
+                [
+                  2,
+                  5
+                ],
+                [
+                  3,
+                  0
+                ],
+                [
+                  3,
+                  1
+                ],
+                [
+                  3,
+                  2
+                ],
+                [
+                  3,
+                  3
+                ],
+                [
+                  3,
+                  4
+                ],
+                [
+                  3,
+                  5
+                ],
+                [
+                  4,
+                  0
+                ],
+                [
+                  4,
+                  1
+                ],
+                [
+                  4,
+                  2
+                ],
+                [
+                  4,
+                  3
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  4,
+                  5
+                ],
+                [
+                  5,
+                  0
+                ],
+                [
+                  5,
+                  1
+                ],
+                [
+                  5,
+                  2
+                ],
+                [
+                  5,
+                  3
+                ],
+                [
+                  5,
+                  4
+                ],
+                [
+                  5,
+                  5
+                ]
+              ],
+              "MainlyHitsLowIncome/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "NoEffectOnClimate/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "OnlyBansAndRules/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "PriceRise/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "Radical/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "TinyShareOfEmissions/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ],
+              "Unjust/1": [
+                [
+                  0
+                ],
+                [
+                  1
+                ],
+                [
+                  2
+                ],
+                [
+                  3
+                ],
+                [
+                  4
+                ],
+                [
+                  5
+                ]
+              ]
+            },
+            "functions": {}
+          },
+          "certificate": null
+        },
+        "sufficiency": [
+          {
+            "kind": "sufficiency",
+            "claim": "(PriceRise(petrol) ∧ PriceRise(diesel))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "sufficiency",
+            "claim": "CostsRise(averageFamily, high)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "sufficiency",
+            "claim": "NoEffectOnClimate(law)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "sufficiency",
+            "claim": "TinyShareOfEmissions(switzerland)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "sufficiency",
+            "claim": "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "sufficiency",
+            "claim": "(Radical(law) ∧ OnlyBansAndRules(law))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "solver refutation",
+            "model_where_claim_fails": null,
+            "model": null,
+            "certificate": null
+          }
+        ],
+        "firm_rejections": [],
+        "soft_rejections": [],
+        "minimality": [
+          {
+            "kind": "minimality",
+            "claim": "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, (MainlyHitsLowIncome(law) ∧ Unjust(law)) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 4,
+                "diesel": 3,
+                "high": 1,
+                "law": 5,
+                "petrol": 2,
+                "switzerland": 0
+              },
+              "predicates": {
+                "CostsRise/2": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    2
+                  ],
+                  [
+                    0,
+                    3
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    0,
+                    5
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    1,
+                    3
+                  ],
+                  [
+                    1,
+                    4
+                  ],
+                  [
+                    1,
+                    5
+                  ],
+                  [
+                    2,
+                    0
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    3
+                  ],
+                  [
+                    2,
+                    4
+                  ],
+                  [
+                    2,
+                    5
+                  ],
+                  [
+                    3,
+                    0
+                  ],
+                  [
+                    3,
+                    1
+                  ],
+                  [
+                    3,
+                    2
+                  ],
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    3,
+                    4
+                  ],
+                  [
+                    3,
+                    5
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    4,
+                    1
+                  ],
+                  [
+                    4,
+                    2
+                  ],
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    5
+                  ],
+                  [
+                    5,
+                    0
+                  ],
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    5,
+                    2
+                  ],
+                  [
+                    5,
+                    3
+                  ],
+                  [
+                    5,
+                    4
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ],
+                "MainlyHitsLowIncome/1": [],
+                "NoEffectOnClimate/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "OnlyBansAndRules/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "PriceRise/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Radical/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "TinyShareOfEmissions/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Unjust/1": []
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "minimality",
+            "claim": "(PriceRise(petrol) ∧ PriceRise(diesel))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, (PriceRise(petrol) ∧ PriceRise(diesel)) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 3,
+                "diesel": 0,
+                "high": 5,
+                "law": 2,
+                "petrol": 1,
+                "switzerland": 4
+              },
+              "predicates": {
+                "CostsRise/2": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    2
+                  ],
+                  [
+                    0,
+                    3
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    0,
+                    5
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    1,
+                    3
+                  ],
+                  [
+                    1,
+                    4
+                  ],
+                  [
+                    1,
+                    5
+                  ],
+                  [
+                    2,
+                    0
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    3
+                  ],
+                  [
+                    2,
+                    4
+                  ],
+                  [
+                    2,
+                    5
+                  ],
+                  [
+                    3,
+                    0
+                  ],
+                  [
+                    3,
+                    1
+                  ],
+                  [
+                    3,
+                    2
+                  ],
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    3,
+                    4
+                  ],
+                  [
+                    3,
+                    5
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    4,
+                    1
+                  ],
+                  [
+                    4,
+                    2
+                  ],
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    5
+                  ],
+                  [
+                    5,
+                    0
+                  ],
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    5,
+                    2
+                  ],
+                  [
+                    5,
+                    3
+                  ],
+                  [
+                    5,
+                    4
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ],
+                "MainlyHitsLowIncome/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "NoEffectOnClimate/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "OnlyBansAndRules/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "PriceRise/1": [],
+                "Radical/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "TinyShareOfEmissions/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Unjust/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ]
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "minimality",
+            "claim": "(Radical(law) ∧ OnlyBansAndRules(law))",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, (Radical(law) ∧ OnlyBansAndRules(law)) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 4,
+                "diesel": 5,
+                "high": 1,
+                "law": 2,
+                "petrol": 3,
+                "switzerland": 0
+              },
+              "predicates": {
+                "CostsRise/2": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    2
+                  ],
+                  [
+                    0,
+                    3
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    0,
+                    5
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    1,
+                    3
+                  ],
+                  [
+                    1,
+                    4
+                  ],
+                  [
+                    1,
+                    5
+                  ],
+                  [
+                    2,
+                    0
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    3
+                  ],
+                  [
+                    2,
+                    4
+                  ],
+                  [
+                    2,
+                    5
+                  ],
+                  [
+                    3,
+                    0
+                  ],
+                  [
+                    3,
+                    1
+                  ],
+                  [
+                    3,
+                    2
+                  ],
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    3,
+                    4
+                  ],
+                  [
+                    3,
+                    5
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    4,
+                    1
+                  ],
+                  [
+                    4,
+                    2
+                  ],
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    5
+                  ],
+                  [
+                    5,
+                    0
+                  ],
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    5,
+                    2
+                  ],
+                  [
+                    5,
+                    3
+                  ],
+                  [
+                    5,
+                    4
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ],
+                "MainlyHitsLowIncome/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "NoEffectOnClimate/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "OnlyBansAndRules/1": [],
+                "PriceRise/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Radical/1": [],
+                "TinyShareOfEmissions/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Unjust/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ]
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "minimality",
+            "claim": "CostsRise(averageFamily, high)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, CostsRise(averageFamily, high) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 1,
+                "diesel": 5,
+                "high": 0,
+                "law": 2,
+                "petrol": 3,
+                "switzerland": 4
+              },
+              "predicates": {
+                "CostsRise/2": [],
+                "MainlyHitsLowIncome/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "NoEffectOnClimate/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "OnlyBansAndRules/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "PriceRise/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Radical/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "TinyShareOfEmissions/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Unjust/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ]
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "minimality",
+            "claim": "NoEffectOnClimate(law)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, NoEffectOnClimate(law) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 4,
+                "diesel": 5,
+                "high": 1,
+                "law": 2,
+                "petrol": 3,
+                "switzerland": 0
+              },
+              "predicates": {
+                "CostsRise/2": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    2
+                  ],
+                  [
+                    0,
+                    3
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    0,
+                    5
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    1,
+                    3
+                  ],
+                  [
+                    1,
+                    4
+                  ],
+                  [
+                    1,
+                    5
+                  ],
+                  [
+                    2,
+                    0
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    3
+                  ],
+                  [
+                    2,
+                    4
+                  ],
+                  [
+                    2,
+                    5
+                  ],
+                  [
+                    3,
+                    0
+                  ],
+                  [
+                    3,
+                    1
+                  ],
+                  [
+                    3,
+                    2
+                  ],
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    3,
+                    4
+                  ],
+                  [
+                    3,
+                    5
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    4,
+                    1
+                  ],
+                  [
+                    4,
+                    2
+                  ],
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    5
+                  ],
+                  [
+                    5,
+                    0
+                  ],
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    5,
+                    2
+                  ],
+                  [
+                    5,
+                    3
+                  ],
+                  [
+                    5,
+                    4
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ],
+                "MainlyHitsLowIncome/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "NoEffectOnClimate/1": [],
+                "OnlyBansAndRules/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "PriceRise/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Radical/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "TinyShareOfEmissions/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Unjust/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ]
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          },
+          {
+            "kind": "minimality",
+            "claim": "TinyShareOfEmissions(switzerland)",
+            "outcome": "holds",
+            "badge": "SOLVER-CHECKED (not kernel-certified)",
+            "detail": "needed: without it, TinyShareOfEmissions(switzerland) is not entailed",
+            "model_where_claim_fails": {
+              "size": 6,
+              "constants": {
+                "averageFamily": 4,
+                "diesel": 5,
+                "high": 1,
+                "law": 2,
+                "petrol": 3,
+                "switzerland": 0
+              },
+              "predicates": {
+                "CostsRise/2": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    1
+                  ],
+                  [
+                    0,
+                    2
+                  ],
+                  [
+                    0,
+                    3
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    0,
+                    5
+                  ],
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    1,
+                    3
+                  ],
+                  [
+                    1,
+                    4
+                  ],
+                  [
+                    1,
+                    5
+                  ],
+                  [
+                    2,
+                    0
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    3
+                  ],
+                  [
+                    2,
+                    4
+                  ],
+                  [
+                    2,
+                    5
+                  ],
+                  [
+                    3,
+                    0
+                  ],
+                  [
+                    3,
+                    1
+                  ],
+                  [
+                    3,
+                    2
+                  ],
+                  [
+                    3,
+                    3
+                  ],
+                  [
+                    3,
+                    4
+                  ],
+                  [
+                    3,
+                    5
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    4,
+                    1
+                  ],
+                  [
+                    4,
+                    2
+                  ],
+                  [
+                    4,
+                    3
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    5
+                  ],
+                  [
+                    5,
+                    0
+                  ],
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    5,
+                    2
+                  ],
+                  [
+                    5,
+                    3
+                  ],
+                  [
+                    5,
+                    4
+                  ],
+                  [
+                    5,
+                    5
+                  ]
+                ],
+                "MainlyHitsLowIncome/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "NoEffectOnClimate/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "OnlyBansAndRules/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "PriceRise/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "Radical/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ],
+                "TinyShareOfEmissions/1": [],
+                "Unjust/1": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ],
+                  [
+                    3
+                  ],
+                  [
+                    4
+                  ],
+                  [
+                    5
+                  ]
+                ]
+              },
+              "functions": {}
+            },
+            "model": null,
+            "certificate": null
+          }
+        ],
+        "certified": true
+      },
+      "load": [
+        {
+          "axiom": "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+          "load": 1,
+          "pending": 0
+        },
+        {
+          "axiom": "(PriceRise(petrol) ∧ PriceRise(diesel))",
+          "load": 1,
+          "pending": 0
+        },
+        {
+          "axiom": "(Radical(law) ∧ OnlyBansAndRules(law))",
+          "load": 1,
+          "pending": 0
+        },
+        {
+          "axiom": "CostsRise(averageFamily, high)",
+          "load": 1,
+          "pending": 0
+        },
+        {
+          "axiom": "NoEffectOnClimate(law)",
+          "load": 1,
+          "pending": 0
+        },
+        {
+          "axiom": "TinyShareOfEmissions(switzerland)",
+          "load": 1,
+          "pending": 0
+        }
+      ],
+      "negative_controls": {
+        "controls": {
+          "system_certified": true,
+          "fresh_claim_not_entailed": true,
+          "contradiction_caught": true,
+          "redundant_axiom_caught": true,
+          "lean_negations_rejected": null
+        },
+        "all_passed": true
+      }
+    }
+  ],
+  "existence": {
+    "status": "certified"
+  },
+  "baseline": {
+    "stated_certified": true,
+    "minimal_stated_certified": true,
+    "stated_formulas": [
+      "(PriceRise(petrol) ∧ PriceRise(diesel))",
+      "CostsRise(averageFamily, high)",
+      "NoEffectOnClimate(law)",
+      "TinyShareOfEmissions(switzerland)",
+      "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+      "(Radical(law) ∧ OnlyBansAndRules(law))"
+    ],
+    "minimal_formulas": [
+      "(PriceRise(petrol) ∧ PriceRise(diesel))",
+      "CostsRise(averageFamily, high)",
+      "NoEffectOnClimate(law)",
+      "TinyShareOfEmissions(switzerland)",
+      "(MainlyHitsLowIncome(law) ∧ Unjust(law))",
+      "(Radical(law) ∧ OnlyBansAndRules(law))"
+    ]
+  },
+  "coverage": null,
+  "abstention": true
+}

@@ -208,10 +208,12 @@ python -m commonground co2 --max-checks 150 --out co2-out    # CO2 golden corpus
 The pool search is bounded by `--max-checks` (AUDIT-4). With 150 checks neither camp's
 search finishes, and the reports say so: each shows its certified stated system under
 "SEARCH INCOMPLETE", with abstention pending and the hull marked partial — a search the
-budget stopped is never reported as cost-minimal. For the `no` camp the exhaustive search
-was run once (2,048 checks, several minutes): at λ=0.3 the stated system is the
-cost-minimal one, so the report says so (abstention); for the `yes` camp this is not
-established — see `AUDIT.md` (AUDIT-3). Divergences between the pipeline and the
+budget stopped is never reported as cost-minimal. The exhaustive search was run once for
+both camps (recorded 2026-11-14 in `results/co2-exhaustive/`, `--max-checks 70000
+--timeout-ms 3000`, about 20 minutes: 2,048 checks for `no`, 10,044 for `yes`, none
+undecided): at λ=0.3 each camp's stated system is the only cost-minimal one, so both
+reports say so (abstention) — see `AUDIT.md` (AUDIT-3). The default cap of 4000 checks is
+enough for `no` and not for `yes`. Divergences between the pipeline and the
 hand-worked golden are audited in `AUDIT.md`, never silently substituted.
 
 ## The web app

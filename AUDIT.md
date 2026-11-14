@@ -41,9 +41,17 @@ reported alongside, never silently substituted.
   systems): the stated system (9 conjuncts, cost 2.7) is the only cost-minimal one,
   margin 0.2 to the runner-up; on the hull it is cost-minimal for λ ≤ 0.4, and above
   that the 7-conjunct system with NA1, NA2, NA5, NA6 (implausibility 0.8) is.
-  Camp `yes`: **not established** — its search does not finish (AUDIT-4), and a
-  capped run shows only that the stated system is certified, not that it is the
-  cheapest. Until the review the capped CLI run printed "abstention" for both camps;
+  Camp `yes`: **established on 2026-11-14 by a complete search** (`python -m
+  commonground co2 --max-checks 70000 --timeout-ms 3000`, reports in
+  `results/co2-exhaustive/`): branch-and-bound over the 16-item pool examined every
+  subset that costs at most the stated system's 3.0 — 10,044 subsets, search complete —
+  and certified exactly one, the stated system itself (7 statements, 10 conjuncts,
+  cost 3.0). No system with a candidate in it is as cheap, so the report says
+  abstention. No certification in either camp's search came back undecided (counted
+  by wrapping `abduce.check_system` in a throwaway script; the report does not record
+  undecided subsets — `docs/BACKLOG.md`). The hull of this camp stays partial
+  (branch-and-bound), so the run does not say for which other λ the stated system
+  stays cost-minimal. Until the review the capped CLI run printed "abstention" for both camps;
   it now prints "SEARCH INCOMPLETE" with abstention pending.
 - **AUDIT-4** (2026-11-14, class SCOPE, performance). `report_camp` on the 16-item
   yes-camp pool (7 stated + 10 candidates, one duplicate dropped) did not finish within
@@ -51,7 +59,12 @@ reported alongside, never silently substituted.
   exhausted, design §7), never wrong — pending entries are shown as pending. The
   certified checks, load vector and cross-camp analysis on the same data complete in
   seconds and are what `test_golden.py` asserts. Status: recorded; revisit if the CLI
-  run (CG7-4) needs the full search on this pool. Since 2026-11-14 a search the cap
+  run (CG7-4) needs the full search on this pool. **Measured 2026-11-14:** the search
+  finishes after 10,044 checks, about 15 minutes on this machine (Python 3.12.10, Z3
+  5.4.1, `--timeout-ms 3000`); the default cap of 4000 stops it before that, so `co2`
+  without `--max-checks` still reports this camp as SEARCH INCOMPLETE. The whole
+  command (both searches, 12,092 checks, and the cross-camp analysis) took about 20
+  minutes. Since 2026-11-14 a search the cap
   stopped is labelled in the report itself (`search_complete: false`, `abstention:
   null`, "SEARCH INCOMPLETE" and a partial hull in `report.md`), and `test_golden.py`
   asserts that for the 150-check CLI run.
