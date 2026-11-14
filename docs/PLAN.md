@@ -257,10 +257,10 @@ number guard; the README evidence tables.
 - [x] **CG9-3** — `CODE_OF_CONDUCT.md` (Contributor Covenant) + PR template.
   Files: `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
   Done-when: committed.
-- [ ] **CG9-4** — Issue templates: bug report + feature request. Files:
+- [x] **CG9-4** — Issue templates: bug report + feature request. Files:
   `.github/ISSUE_TEMPLATE/bug.md`, `.github/ISSUE_TEMPLATE/feature.md`.
   Done-when: committed.
-- [ ] **CG9-5** — Issue template: research question. Files:
+- [x] **CG9-5** — Issue template: research question. Files:
   `.github/ISSUE_TEMPLATE/research.md`. Done-when: committed.
 - [ ] **CG9-6** — `CHANGELOG.md` (Keep a Changelog) and tag `v2.0.0`. Files:
   `CHANGELOG.md`. Done-when: committed; tag created (push only with owner
@@ -446,3 +446,8 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   .github/PULL_REQUEST_TEMPLATE.md added. Docs-only; suite unchanged (exit 0,
   169 passed). Committed as this session's commit. Escalations: none. Next:
   CG9-4.
+- 2026-11-13 — CG9-4 + CG9-5: issue templates added (.github/ISSUE_TEMPLATE/:
+  bug.md, feature.md, research.md — the research one points at the Phase R
+  rules, incl. never inventing citations). Docs-only; suite unchanged (exit 0,
+  169 passed). Committed as this session's commit. Escalations: none. Next:
+  CG9-6.
