@@ -42,6 +42,22 @@ works today. On a clean machine the engine-only path reaches a first analysis
 in a few minutes; the 10-minute acceptance test for the full release is
 CG9-11 in the plan (not run here).
 
+## What you can do with it today
+
+All engine commands run headless (no server, no database). Every verdict is
+kernel-checked, solver-checked, or shown as pending — never silently picked.
+
+| You want to… | Command | You get |
+|---|---|---|
+| Check whether a conclusion follows from premises | `python -m commonground check --premise "∀x (Human(x) → Mortal(x))" --premise "Human(socrates)" --conclusion "Mortal(socrates)" --lean` | a verdict backed by a Lean-kernel proof, or a solver refutation with an explicit countermodel (on FOLIO: 128/128 kernel-certified, 0/278 false accepted) |
+| See where a debate stands | `python -m commonground analyze examples/plastic_bags.json` | compatible / minimal conflicts / smallest concessions; `examples/remote_work.json` shows 2 conflicts and 8 ways out |
+| Turn texts into statements | `python -m commonground extract doc.txt --base-url … --model … --out out` | statements with verbatim quotes and spans, plus support/attack relations |
+| Reconstruct what one camp's claims rest on | `python -m commonground camp record.json --candidates cand.json --lam 0.3 --lean --out out` | `out/report.md`: the selected axioms are **verified sufficient** — e.g. "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)" — with load ranking and negative controls |
+| Compare two camps | `python -m commonground co2 --out co2-out` (bundled CO2 vote), or `crosscamp A.json B.json --candidates a.json b.json --out out` | `crosscamp.md`: provable common ground (two tiers) and the exact fault lines; on the CO2 example the camps are consistent and diverge at the root (top-ranked axiom pair, rank 8) |
+
+The web UI for pasting your own debate is Phase 6 of [`docs/PLAN.md`](docs/PLAN.md)
+and is not built yet; the CLI above works today.
+
 ## What has been shown, and by what
 
 | Claim | Evidence | Reproduce |
