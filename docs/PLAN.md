@@ -83,7 +83,7 @@ number guard; the README evidence tables.
   items: Ng & Mooney 1990, Charniak & Shimony 1994, Doherty et al. 2001 page
   range, Reiter & de Kleer 1987. Files: `docs/research/RESEARCH.md`. Deps: none.
   Done-when: owner records the session in this file.
-- [ ] **CGR-3** — Session 3, psychology (owner): D1, E1, E3, E5; RQ4, RQ5;
+- [x] **CGR-3** — Session 3, psychology (done 2026-11-14, assigned by the owner; see the session log): D1, E1, E3, E5; RQ4, RQ5;
   draft H6, H8; coverage measure; load vs. centrality; plausibility elicitation
   protocol. Files: `docs/research/RESEARCH.md`, `docs/research/THEORY.md`.
   Deps: CGR-2. Done-when: owner records the session.
@@ -564,3 +564,15 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   owner). Not read through: ACL, EMNLP, AAAI 2026; COMMA 2026 not located.
   Docs-only; suites unchanged (engine 170 passed at 96704be). Committed as this
   session's commit. Escalations: none. Next: CGR-3 (psychology).
+- 2026-11-14 — CGR-3 (Phase R session 3) finished: `docs/research/RESEARCH.md`
+  §12–§16 — RQ4 and RQ5 answered; load is not Converse's centrality (use "load"
+  only); two coverage measures defined (consistent coverage κ, derived share δ);
+  the holdout test is the measure of constraint; a plausibility elicitation
+  protocol proposed (quotes first, anchored five-level scale, blind to camp
+  identity, k samples reported as a range). H6 and H8 written into `THEORY.md`.
+  Three more pack errors (D4, E5, F2) annotated in `sources.md`. Read at abstract
+  level only: Graham et al. 2009, Tetlock et al. 2000, Kunda 1990, Lord et al.
+  1979. Not located: the SemEval-2026 Task 11 overview paper. Docs-only; suites
+  unchanged (engine 170 passed at 96704be). Committed as this session's commit.
+  Escalations: none. Next: the FOLIO 4000-token run (publish next to the
+  2000-token run), then CGR-4.

@@ -101,6 +101,7 @@ Model-based diagnosis: given a system and an observation that contradicts it, co
 ## Theme D. Belief systems: what people actually have `[answers RQ2, RQ4]`
 
 **D1. Converse, P. (1964). The nature of belief systems in mass publics.** In D. Apter (ed.), *Ideology and Discontent*. Free Press. Republished in *Critical Review* 18(1-3): https://www.tandfonline.com/doi/pdf/10.1080/08913810608443650 `[✓ web-verified]` `[M]`
+> **S3.** Record and quotation verified; the opening sections and Tables 1 and 8 read. See `RESEARCH.md` §13–§14.
 The founding result of political psychology. A belief system is "a configuration of ideas and attitudes in which the elements are bound together by some form of constraint or functional interdependence." Crucially, Converse found that *mass publics* show little constraint: most people's political beliefs do not form a tight logical system; only elites approximate ideological structure.
 → *Design implication (double-edged):* (a) Converse legitimates the concept of constraint between beliefs, which is what our entailment checks exploit; (b) but he also warns that for most people, a *perfectly consistent* axiom system will not exist. This is why the design already separates firm rejections (verified non-entailment) from soft ones, and why we report the *best systematization* of a corpus, never claim to have found "the person's actual beliefs". THEORY.md must confront Converse explicitly; the two-layer language ("sufficient to explain", not "what they believe") is the correct response and must be justified here.
 
@@ -113,6 +114,7 @@ Systematic evaluation of LLM belief inference capabilities.
 → *Design implication:* cite alongside D2 when reporting how much trust the LLM proposal layer has earned; use their evaluation methodology ideas for our own abduce.py validation (Phase 8).
 
 **D4. SemEval-2026 Task 11: Disentangling reasoning from belief.** Task overview and system descriptions: https://aclanthology.org/2026.semeval-1.65/ (RvH-40 system paper: symbolic abstraction to remove belief bias) `[✓ web-verified]` `[S]`
+> **S3 correction.** The address is one system paper, not the task overview: Biesterbos, Den Ouden & De Rijke (2026), "RvH-40 at SemEval-2026 Task 11: Disentangling reasoning from belief through symbolic abstraction", *Proc. SemEval-2026*, 451–456. The task overview was not located; "the winning approaches" is unconfirmed. See `RESEARCH.md` §12.
 Shared task on the finding that LLMs (like humans) suffer **belief bias**: semantic world knowledge overrides formal logical structure in syllogistic reasoning. The winning approaches use symbolic abstraction: strip content, keep logical form, reason on the form.
 → *Design implication (critical):* this is the strongest empirical argument for our two-layer architecture. The LLM proposes; a symbolic layer (Z3, then Lean for the certified tier) decides entailment. Never let the LLM be the judge of its own proposed axiom systems. It also suggests a concrete technique: when verifying, abstract away predicate names to prevent content bias from leaking into verdicts.
 
@@ -125,6 +127,7 @@ Moral Foundations Theory made empirical: across four studies, political left and
 → *Design implication:* the psychological warrant for our central claim that surface disagreements trace to *foundational* differences: disagreements are often two different prioritarian axiom sets, not different facts. Our golden CO2 corpus should be annotatable by foundation: the Yes camp's axioms (responsibility, harm to nature) vs. the No camp's (fairness of cost, efficacy/efficiency).
 
 **E2. Schwartz, S. (1992). Universals in the content and structure of values. *Advances in Experimental Social Psychology*, 25, 1-65.** `[classic, verify]` `[S]`
+> **S3.** The title continues ": Theoretical advances and empirical tests in 20 countries"; doi:10.1016/S0065-2601(08)60281-6. Record verified, not read.
 Ten basic human values with a circumplex structure (opposing motivations, e.g., self-direction vs. conformity). Cross-culturally validated across dozens of countries.
 → *Design implication:* an off-the-shelf, validated value vocabulary for the axiom candidate generator. Rather than free-form axioms only, abduce.py can propose "value-prior axioms" (e.g., "preserving nature takes priority over short-term economic cost" as a self-transcendence value axiom) and tag them with Schwartz categories, which makes outputs comparable across speakers.
 
@@ -137,6 +140,7 @@ Recent work placing LLM moral/political behavior within Moral Foundations Theory
 → *Design implication:* methodology reference for probing which value priors an LLM brings, which we need for calibrating our own proposal layer.
 
 **E5. Tracing moral foundations in large language models (2026).** https://arxiv.org/abs/2601.05437 `[✓ web-verified]` `[S]`
+> **S3 correction.** Authors: Yu, Yi, Karimi-Malekabadi, Abdurahman, Ye, Narayanan, Zhao & Dehghani. The annotation below misdescribes the paper, which studies how moral-foundation concepts are represented and steered inside models. "Moral hypocrisy", "moral mimicry" and the WEIRD skew are claims of other papers cited in its related work (Nunes et al. 2024; Simmons 2023; Atari et al. 2023). See `RESEARCH.md` §12 and §15.2.
 Documents LLM moral judgment pathologies: "moral hypocrisy" (gap between abstract principles and concrete judgments), "moral mimicry" (justifications adapt to the prompter's perceived identity), and WEIRD (Western, Educated, Industrialized, Rich, Democratic) value skew persisting even in multilingual settings.
 → *Design implication (critical):* the plausibility(a) prior in cost(A) comes from an LLM, and this literature says LLM value judgments are biased and unstable. Design responses: (1) plausibility scores must be presented as *proposed priors* with textual evidence, never as measurements of the person; (2) run the proposal layer with a calibrated, documented model and record model identity in outputs; (3) the human review queue is mandatory for any axiom tagged as value-laden; (4) consider reporting plausibility intervals or multi-sample agreement rather than point scores.
 
@@ -149,10 +153,12 @@ People experience inconsistency between beliefs/behavior as aversive and reduce 
 → *Design implication:* explains why real corpora sometimes *will* show inconsistency the speaker does not acknowledge; our system must surface it gently (dispute suspension, not "you are contradictory" verdicts).
 
 **F2. Kunda, Z. (1990). The case for motivated reasoning. *Journal of Personality and Social Psychology*, 53(5), 636-647.** `[classic, verify]` `[S]`
+> **S3 correction.** Wrong journal, volume and pages: *Psychological Bulletin* 108(3), 480–498, doi:10.1037/0033-2909.108.3.480.
 Reasoning is goal-driven: people "can" reason to desired conclusions while feeling objective. Mechanism: biased memory access, credulous evaluation of congenial evidence.
 → *Design implication:* expected artifact: axiom systems reconstructed from motivated text may be *post-hoc rationalizations*, not true generative axioms. THEORY.md must carry this caveat verbatim: we reconstruct the system that best explains the text; the speaker's operative psychology may differ.
 
 **F3. Lord, C., Ross, L., & Lepper, M. (1979). Biased assimilation and attitude polarization. *Journal of Personality and Social Psychology*, 37(11), 2098-2109.** `[classic, verify]` `[R]`
+> **S3.** The title continues ": The effects of prior theories on subsequently considered evidence"; doi:10.1037/0022-3514.37.11.2098. Abstract read.
 When shown mixed evidence, opposing camps polarize: same evidence, different assimilation.
 → *Design implication:* a warning for our evaluation: do not expect common-ground presentation to reduce disagreement mechanically; measure effects modestly (if at all) and never market the tool as a depolarization machine.
 
@@ -211,3 +217,5 @@ Session 4 (evaluation): A6, D2, D3, G3 skim; answer RQ6; define the Phase 7 gold
 
 - **Session 1, 2026-11-13.** B1, B2, B5 and C2 checked and corrected in place above. Two entries tagged "web-verified" (B1, C2) carried errors, so that tag is not to be relied on in later sessions. Findings, the RQ1 and RQ3 drafts, and the sources added for Themes B and C are in [`RESEARCH.md`](RESEARCH.md); the draft definitions are in [`THEORY.md`](THEORY.md). The note under D1 and question I.6 conflate firm/soft rejection with proved/unproved; see `RESEARCH.md` §2.5.
 - **Session 2, 13–14 November 2026.** A3, A4, B3, B4, C1 and C3 checked and corrected in place above (A1, A2, A5, A6 verified as records). Four more pack errors: A4's first author, B3's author initial and title, B4's venue and pages, C3's pages. The novelty claim under A3 does not hold as worded: reconstruction of unstated premises with a formal check was published by two groups in 2026, and optimization over a whole argument map in 2025. RQ2, the terminology decision, the systems found and the limits of the search are in `RESEARCH.md` §7–§10. A3 and A4 still need full texts from the owner.
+
+- **Session 3, 14 November 2026.** D1, D4, E1–E5 and F1–F3 checked; D4, E2, E5, F2 and F3 annotated in place above. Three pack errors: D4's address is a system paper, not the task overview; E5 is misdescribed (it cites the pathologies it is said to document); F2 is in *Psychological Bulletin*, not *JPSP*. RQ4, RQ5, load against centrality, the coverage measures and the plausibility protocol are in `RESEARCH.md` §12–§16; H6 and H8 are in `THEORY.md`. Brief §3's expectation that Converse justifies load as centrality is not met (`RESEARCH.md` §14.1).

@@ -1,9 +1,10 @@
 # Research notes for Common Ground v2 (Phase R)
 
-**Status, 14 November 2026.** Sessions 1 and 2 of 4 are complete: RQ1 and RQ3 (formal
-core, sections 2–3) and RQ2 with the terminology decision and the novelty search
-(reconstruction precedent, sections 7–10) have draft answers. RQ4, RQ5 and RQ6 are not
-started. Nothing below has been reviewed by the owner. The input to this file is the source pack, [`sources.md`](sources.md);
+**Status, 14 November 2026.** Sessions 1 to 3 of 4 are complete: RQ1 and RQ3 (formal
+core, sections 2–3), RQ2 with the terminology decision and the novelty search
+(reconstruction precedent, sections 7–10), and RQ4 and RQ5 with the coverage measures,
+load against centrality and the plausibility protocol (psychology, sections 12–16) have
+draft answers. RQ6 is not started. Nothing below has been reviewed by the owner. The input to this file is the source pack, [`sources.md`](sources.md);
 section 4 lists where this file contradicts it and why.
 
 ## 0. Verification tags
@@ -854,11 +855,314 @@ word for lay readers, "starting point" is the candidate that loses least.
 
 ## 11. Carried to Sessions 3 and 4
 
-- Session 3: Converse and the question of section 8.3, item 1; the coverage metric;
-  whether a model's plausibility estimate can be read as a probability; elicitation.
+- Session 3: done, sections 12–16 (Converse and the question of section 8.3, item 1;
+  coverage; plausibility as probability; elicitation).
 - Session 4: A6, D2, D3, G3 and RQ6; the finding the pack attributes to A6; write H1
   into `THEORY.md` in the wording of section 10; record the terminology decision there
   if the owner approves it.
 - Open, any session: full text of A3 and A4 (copies from the owner); Charniak and
   Shimony (1994) itself; the three venues not read through (ACL, EMNLP, AAAI 2026) and
   COMMA 2026.
+
+## 12. Session 3: sources (14 November 2026)
+
+Psychology and the value priors of language models. Tags as in section 0. Abstracts of
+paywalled articles were read through the open APIs of Europe PMC and OpenAlex, which
+serve them for automated use; "abstract" below means exactly that and no more.
+
+| Entry | Result |
+|---|---|
+| D1 Converse, P. E. (1964). The nature of belief systems in mass publics. In D. Apter (ed.), *Ideology and Discontent*, Free Press. Republished in *Critical Review* 18(1–3), 1–74 (2006), doi:10.1080/08913810608443650 | `[read]` The opening sections (pp. 3–9 of the reprint: definitions; logical, psychological and social sources of constraint), Table 1 and its paragraph (p. 17), Table 8 and its paragraph (p. 32), the opening of the conclusion (p. 65), in a copy of the *Critical Review* reprint hosted on a university course page. Not read: the case material between these passages (some 50 pages), including the panel analysis of attitude stability. The pack's quotation of the definition is exact. |
+| E1 Graham, J., Haidt, J., & Nosek, B. A. (2009). Liberals and conservatives rely on different sets of moral foundations. *Journal of Personality and Social Psychology* 96(5), 1029–1046. doi:10.1037/a0015141 | `[abstract]` |
+| E2 Schwartz, S. H. (1992). Universals in the content and structure of values: Theoretical advances and empirical tests in 20 countries. *Advances in Experimental Social Psychology* 25, 1–65. doi:10.1016/S0065-2601(08)60281-6 | `[bib]` The pack's title omits the subtitle. Not read; nothing below rests on it. |
+| E3 Tetlock, P. E., Kristel, O. V., Elson, S. B., Green, M. C., & Lerner, J. S. (2000). The psychology of the unthinkable: Taboo trade-offs, forbidden base rates, and heretical counterfactuals. *Journal of Personality and Social Psychology* 78(5), 853–870. doi:10.1037/0022-3514.78.5.853 | `[abstract]` An open repository copy refused automated access. Also `[bib]`: Tetlock, P. E. (2003). Thinking the unthinkable: Sacred values and taboo cognitions. *Trends in Cognitive Sciences* 7(7), 320–324. doi:10.1016/S1364-6613(03)00135-9. |
+| E4 Yuan, C., Ma, B., Zhang, Z., Prenkaj, B., Kreuter, F., & Kasneci, G. (2026). Moral lenses, political coordinates: Towards ideological positioning of morally conditioned LLMs. *Proc. EMNLP 2026*, 5950–5984 | `[abstract]` Record confirmed on the ACL Anthology. |
+| Abdulhai, M., Serapio-García, G., Crepy, C., Valter, D., Canny, J., & Jaques, N. (2024). Moral foundations of large language models. *Proc. EMNLP 2024*, 17737–17752. doi:10.18653/v1/2024.emnlp-main.982 | `[abstract]` The pack mentions it under E4 as "existence verified via citation". |
+| E5 Yu, C., Yi, B., Karimi-Malekabadi, F., Abdurahman, S., Ye, J., Narayanan, S., Zhao, Y., & Dehghani, M. (2026). Tracing moral foundations in large language models. arXiv:2601.05437v4 | `[read]` Abstract and the related-work paragraph on moral judgment in language models (§2). **Pack error of substance:** the pack says this paper "documents" moral hypocrisy, moral mimicry and a WEIRD value skew. It does not. It is a study of how moral-foundation concepts are represented inside 14 models and can be steered. The three phenomena appear in its related-work section, each attributed to someone else: hypocrisy to Nunes et al. (2024), mimicry to Simmons, the WEIRD skew to Henrich et al. (2010) and Atari et al. (2023). |
+| Nunes, J. L., Almeida, G. F. C. F., de Araujo, M., & Barbosa, S. D. J. (2024). Are large language models moral hypocrites? A study based on moral foundations. *Proc. AAAI/ACM Conference on AI, Ethics, and Society* 7, 1074–1087. doi:10.1609/aies.v7i1.31704 | `[bib]` Content as characterized by Yu et al. (2026, §2). |
+| Simmons, G. (2023). Moral mimicry: Large language models produce moral rationalizations tailored to political identity. *Proc. ACL 2023 Student Research Workshop*, 282–297. doi:10.18653/v1/2023.acl-srw.40 | `[bib]` Content as characterized by Yu et al. (2026, §2), who cite its 2022 preprint. |
+| Atari, M., Xue, M. J., Park, P. S., Blasi, D. E., & Henrich, J. (2023). Which humans? PsyArXiv. doi:10.31234/osf.io/5b26t | `[bib]` Content as characterized by Yu et al. (2026, §2). |
+| D4 "SemEval-2026 Task 11" at aclanthology.org/2026.semeval-1.65 | `[abstract]` **Pack error:** the address is not the task overview. It is one system paper: Biesterbos, N., Den Ouden, M., & De Rijke, J. (2026). RvH-40 at SemEval-2026 Task 11: Disentangling reasoning from belief through symbolic abstraction. *Proc. SemEval-2026*, 451–456. The task overview paper was not located and is `[unverified]`; the pack's statement about "the winning approaches" is not confirmed. |
+| F1 Festinger, L. (1957). *A Theory of Cognitive Dissonance*. Stanford University Press | `[bib]` doi:10.1515/9781503620766 (the publisher's digital edition). Not read. |
+| F2 Kunda, Z. (1990). The case for motivated reasoning | `[abstract]` **Pack error:** *Psychological Bulletin* 108(3), 480–498, doi:10.1037/0033-2909.108.3.480. The pack gives *Journal of Personality and Social Psychology* 53(5), 636–647. |
+| F3 Lord, C. G., Ross, L., & Lepper, M. R. (1979). Biased assimilation and attitude polarization: The effects of prior theories on subsequently considered evidence. *Journal of Personality and Social Psychology* 37(11), 2098–2109. doi:10.1037/0022-3514.37.11.2098 | `[abstract]` The pack's title omits the subtitle. |
+| Tian, K., Mitchell, E., Zhou, A., Sharma, A., Rafailov, R., Yao, H., Finn, C., & Manning, C. (2023). Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback. *Proc. EMNLP 2023*, 5433–5442. doi:10.18653/v1/2023.emnlp-main.330 | `[abstract]` Added in S3 for the question whether a model's stated confidence can be read as a probability. |
+
+## 13. RQ4. Do disagreements trace back to divergent values?
+
+**Short answer.** The sources support three narrower statements: groups differ
+systematically in which moral concerns they endorse and use, and the difference shows
+in the vocabulary of their texts; some values are held as not open to trade-off, and
+proposals to trade them meet outrage, not counter-argument; and the coherence of an
+ideology is, on Converse's account, mostly social in origin with argument supplied
+afterwards. None of them shows that a given disagreement between two camps is rooted
+in values and not in beliefs about facts. That is a hypothesis for the golden corpus,
+and the product must not assume it.
+
+### 13.1 What the sources say
+
+*Converse (1964).* A belief system is "a configuration of ideas and attitudes in which
+the elements are bound together by some form of constraint or functional
+interdependence". Constraint has a static sense, "the success we would have in
+predicting, given initial knowledge that an individual holds a specified attitude, that
+he holds certain further ideas and attitudes", and a dynamic one, the probability that
+a change in one element would "psychologically require" compensating changes
+elsewhere. He names logic as "the most obvious form of such constraint (although in
+some ways the most trivial)" and then ranks the sources: "the sources of constraint are
+much less logical in the classical sense than they are psychological—and less
+psychological than social". Purely logical constraint exists "within very narrow
+portions of belief systems" (his example is revenue, expenditure and budget balance),
+and even there it is felt only when the elements are brought together. It "seems
+obvious that few belief systems of any range at all depend for their constraint upon
+logic in this classical sense"; with "a great deal of labor", parts of a tight system
+such as Marx's "could be made to resemble a structure of logical propositions"; there
+is "a broad gulf between strict logic and the quasi-logic of cogent argument". The social source is twofold:
+positions co-occur because of interests tied to social position, with arguments then
+"developed to lend some more positive rationale to the fact of constraint"; and belief
+systems are shaped into "apparently logical wholes" by "a minuscule proportion of any
+population" and diffused as packages, so that most holders know "what goes with what"
+without knowing why.
+
+The empirical part read: about one respondent in nine in a cross-section sample of the
+American electorate was classed as an ideologue or near-ideologue (Table 1; the two
+top levels are about 2½ and 9 percent of the sample, read from an imperfect text
+extraction of the table), and average coefficients of constraint among issue positions
+were .53 within domestic issues for the elite sample against .23 for the mass sample
+(Table 8). In his words, "the strongest constraint
+within a domain for the mass public is less than that between domestic and foreign
+domains for the elite sample".
+
+*Graham, Haidt and Nosek (2009), abstract.* Across four studies, "liberals consistently
+showed greater endorsement and use of the Harm/care and Fairness/reciprocity
+foundations compared to the other 3 foundations, whereas conservatives endorsed and
+used the 5 foundations more equally". Study 4 found the difference in "use of
+foundation-related words in the moral texts of religious sermons". The authors present
+this as illuminating "the nature and intractability of moral disagreements in the
+American 'culture war'".
+
+*Tetlock et al. (2000), abstract.* Experiments 1 and 2 "revealed that people responded
+to taboo trade-offs that monetized sacred values with moral outrage and cleansing". The authors
+add that their model "must draw on cross-cultural taxonomies of relational schemata to
+specify normative boundaries on thought": what is sacred is not fixed by the model.
+
+### 13.2 What follows for the design
+
+1. **The unit we analyse is the favourable case, and the warning still applies.** A camp
+   is "one author or one coordinated campaign" (brief §4): the stratum in which Converse
+   finds constraint and deliberate synthesis. His findings about mass publics are a
+   reason not to apply the method to a sample of citizens' opinions and call the result
+   a belief system. They are not a reason to expect campaign texts to be loose.
+2. **A deductive reconstruction is a regimentation.** Even for elites, Converse places
+   the binding force in psychology and society, not in logic, and describes recasting a
+   doctrine as logical propositions as laborious and optional. An axiom system is that
+   recasting. It can be verified sufficient and still describe nothing about how the
+   position was arrived at or why its parts go together. This is the content of H6
+   (section 16).
+3. **Value differences are a hypothesis to test, with a vocabulary available.** Graham
+   et al. show group differences in moral vocabulary for one country and one political
+   axis. Whether the two camps of a Swiss votation divide the same way is unknown, and
+   the hand-worked CO2 statements include disagreements about cost and effectiveness
+   that are factual in form. Recommendation: allow reviewers to attach a value label to
+   an unstated axiom as a description, keep the label out of cost(A), and report in
+   Phase 7 how the load-bearing axioms of each camp divide between labelled value
+   statements and factual ones. Schwartz (1992) and the foundations of Graham et al. are
+   candidate vocabularies; neither was read beyond an abstract, so the choice is left to
+   Session 4 or the owner.
+4. **Sacredness: no special charge, an existing mechanism, a language rule.** The pack
+   (§I.2) asks whether axioms tagged sacred should be exempt from discounting. No: what
+   Tetlock et al. measured is people's reaction to trade-off proposals, and inferring
+   that reaction from a text is a claim about persons that nothing here can certify. The
+   formal core already has the right object: a camp that refuses a trade-off *rejects
+   the claim that the trade is acceptable*, firmly or softly, and that rejection
+   constrains the system like any other (S2, S3). The interface rule that follows from
+   the abstract is modest and firm: a refusal to trade is reported as a rejection the
+   camp makes, never as a bias or an error of calculation.
+5. **Do not promise that showing common ground reduces disagreement.** Lord, Ross and
+   Lepper (1979, abstract): exposing "contending factions in a social dispute to an
+   identical body of relevant empirical evidence may be not a narrowing of disagreement
+   but rather an increase in polarization". The product claim stays what the brief says:
+   it shows the provable common ground and the fault lines.
+
+## 14. Load, centrality and coverage
+
+### 14.1 Load is not centrality
+
+Brief §3 expects Converse to justify "the load score as an operationalization of
+'centrality'". He does not. His centrality is dynamic and behavioural: when new
+information forces a change, "the element more likely to change is defined as less
+central to the belief system than the element that … has its stability ensured by the
+change in the first element". He adds that centrality can shift over time (the miser,
+for whom a means became an end). Load is static and deductive: the number of claims
+that cannot be derived without the axiom, inside one selected system (RQ1 §2.4). The two
+can come apart in both directions. A high-load axiom may be the first thing a camp
+would drop under pressure, keeping its conclusions and finding new premises, which is
+what Kunda's account of justification predicts (section 15.1). A central commitment in
+Converse's sense may carry little load if the texts argue from it only once.
+
+What can be said: load is *deductive indispensability within a selected system*. The
+informal assumption Converse reports, that "ends" are more central than "means",
+suggests that load-bearing axioms and central elements will often coincide, but that is
+a conjecture, and this corpus cannot test it: testing centrality needs observations of
+change, such as the same camp's texts before and after a challenge.
+
+**Recommendation.** Use "load" and "load-bearing" only. Do not write "central", "core
+belief" or "foundational belief" in the interface or the README. `THEORY.md` should say
+in one sentence that load is not Converse's centrality and why.
+
+### 14.2 What Converse does license: the holdout test as a measure of constraint
+
+His static constraint is predictive success: knowing some of a holder's positions,
+how well can the others be predicted? The Phase 8 holdout test has that form, with
+derivation in place of correlation: withhold some reviewed statements, build the system
+from the rest, and count the withheld endorsements it derives and the withheld
+rejections it wrongly derives. This is the brief's "falsifiable expectation", and it is
+the one place where a statistical treatment is appropriate: the proportion re-derived
+over repeated holdouts is a sample proportion and takes a Wilson interval, as the FOLIO
+harness does.
+
+### 14.3 Coverage, for records with and without an axiom system (pack §I.1)
+
+Two descriptive measures, both computable from what `argmap.py` already enumerates.
+
+- **Consistent coverage.** κ = 1 − m/|E⁺|, where m is the size of a smallest set of
+  statements whose removal leaves E⁺ consistent and free of entailed soft rejections (a
+  smallest correction set). κ = 1 exactly when an axiom system exists (F1). When κ < 1
+  the report lists the minimal conflicts and every maximal consistent subset, and a
+  system may be reconstructed for each such subset; no single subset is chosen
+  silently.
+- **Derived share.** For a selected system A, δ(A) = |E⁺ ∖ A| / |E⁺|: the share of
+  stated claims that are derived instead of assumed. δ = 0 when the system is the stated
+  claims themselves, and grows as fewer starting points generate more of the record.
+  This is the "systematization score" the pack asks for.
+
+Both are properties of one reviewed record and one selection, not estimates from a
+sample, so no confidence interval is attached to them; the interval belongs to the
+holdout proportion of 14.2. κ < 1 is reported as "these statements cannot all hold
+together", with the conflict sets, and never as a judgement of the camp (brief §5).
+
+## 15. RQ5. Failure modes to design against
+
+### 15.1 On the side of the texts and the reviewers
+
+1. **Texts are justifications.** Kunda (1990, abstract): "people are more likely to
+   arrive at conclusions that they want to arrive at, but their ability to do so is
+   constrained by their ability to construct seemingly reasonable justifications for
+   these conclusions". Campaign material is the constructed justification. A system that
+   is verified sufficient for it reconstructs the justification, and is silent on what
+   produced the conclusion. This is a limit to state, not a defect to repair.
+2. **Internal conflict will occur and is not a verdict on anyone.** Converse's example
+   of respondents who want more services and lower taxes, and his remark that logical
+   constraint is felt only when elements are brought together, predict minimal
+   conflicts inside a camp's record, most of all when the record joins texts by several
+   authors. Report them as conflict sets with coverage κ (14.3).
+3. **Review is subject to the bias it is meant to remove.** Lord et al. (1979,
+   abstract): people with strong opinions "are apt to accept 'confirming' evidence at
+   face value" while subjecting evidence against their view "to critical evaluation". A reviewer who approves
+   formalizations and unstated axioms for a camp they oppose, or favour, is in that
+   position. Mitigations within the existing mechanism: every unstated axiom needs a
+   verbatim quote; approval and rejection are recorded with the reviewer; a dispute
+   suspends dependent certificates; and the report states how many unstated axioms each
+   camp's system contains, so that an asymmetry in generosity is visible.
+
+### 15.2 On the side of the language model
+
+4. **A model must not judge entailment.** The system paper read for SemEval-2026 Task 11
+   (Biesterbos et al. 2026, abstract) describes "belief bias", "where semantic world
+   knowledge overrides formal logical structure" in syllogistic reasoning, and removes
+   much of it by replacing content words with variables or pseudowords. In our design
+   the question never reaches the model: entailment is decided by solvers and the
+   kernel on formulas. The paper is evidence that the separation is needed, not a
+   technique to import.
+5. **A free generator makes anything provable.** Quan et al. (2026; section 8.3). The
+   named checks of section 8.5 and amendment A3 answer this.
+6. **Value judgments of a model depend on the model and on the prompt.** Abdulhai et al.
+   (2024, abstract) find that models "exhibit particular moral foundations", measure how
+   far these vary with the prompt, and show that prompts can be chosen "adversarially"
+   to induce a chosen set of foundations, with effects on downstream tasks. Yuan et al.
+   (2026, abstract) condition models to endorse or reject moral values and observe
+   "pronounced, value-specific shifts" in their measured political position, modulated
+   by "role framing and model scale". Yu et al. (2026, abstract) show that such
+   behaviour can be steered through internal representations. A plausibility estimate
+   for a value-laden axiom is a value judgment made under a prompt. It will vary with
+   the model, the framing, and any cue to the camp's identity.
+7. **The estimate is not a probability.** Tian et al. (2023, abstract) report that for
+   chat models "verbalized confidences emitted as output tokens are typically
+   better-calibrated than the model's conditional probabilities" on three
+   question-answering benchmarks. That is calibration against answers with a known
+   truth. "How plausible is it that this camp's texts rest on this axiom" has no truth
+   to calibrate against, and no source read measures it. So p(a) cannot be read as a
+   probability, the logarithmic charge of RQ3 has no privileged status over the linear
+   one, and both stay reported side by side.
+
+What the pack asserts and was not confirmed: that language models show "moral
+hypocrisy", "moral mimicry" and a WEIRD skew. These are claims of three papers verified
+only as records (section 12). H8 is therefore worded on items 6 and 7 alone.
+
+### 15.3 Plausibility elicitation protocol (pack §I.5; a proposal, for Phase 3)
+
+Each step answers a failure mode above; none is taken from a source as a recipe.
+
+1. *Evidence before score.* The model first returns the quotes (document and span) that
+   support the candidate, validated verbatim as in `extract.py`; a candidate without a
+   valid quote is dropped before any score exists (brief §4).
+2. *An anchored scale, not a free decimal.* Five levels with fixed wording and fixed
+   values (0.1, 0.3, 0.5, 0.7, 0.9), for instance "the texts state this in other words"
+   down to "the texts are compatible with this and do not suggest it". Free decimals
+   convey a precision that item 7 denies.
+3. *Blind to identity.* The prompt contains the camp's texts under a neutral label and
+   the candidate. It does not contain the camp's name, political label, or the other
+   camp's material (item 6).
+4. *Several samples, reported as a range.* k independent samples (k = 5 to start) under
+   the recorded settings; the output keeps the median, the minimum and the maximum. An
+   estimate whose range spans more than one level is marked unstable.
+5. *Provenance.* Model, endpoint host, temperature, k and a hash of the prompt go into
+   the run's `config.json`, as for the benchmark runs.
+6. *Human precedence.* A reviewer can replace the estimate, with a note; reviewed stated
+   claims have p = 1 (amendment A4).
+7. *Sensitivity follows through.* The selection is recomputed with every unstated axiom
+   at its minimum and at its maximum; a system selected under one and not the other is
+   reported as dependent on the estimate (Phase 8, sensitivity task).
+8. *Wording.* The interface says "plausibility estimate (model, k samples, range)" and
+   never "probability" or "confidence".
+
+## 16. Hypotheses drafted in Session 3, and the critique of the pack (Themes D, E, F)
+
+**H6 (a regimentation of a justification).** A camp's texts can be given a deductive
+form in which a few axioms are verified sufficient for its claims. The form is the
+analyst's: the sources of constraint in a belief system are, on Converse's account,
+"much less logical in the classical sense than they are psychological—and less
+psychological than social", and the texts are
+justifications constructed for conclusions (Kunda 1990). *Sources:* Converse (1964);
+Kunda (1990). *Expected:* minimal conflicts inside records, more often when several
+authors are joined. *Test:* the holdout proportion of 14.2 is our measure of how far a
+record is constrained in Converse's static sense. *Not claimed:* that the system is the
+camp's reasoning, that load is centrality, or that the method applies to the opinions
+of a sample of citizens.
+
+**H8 (the plausibility estimate is a model's judgment).** The estimate that weights an
+unstated axiom is produced by a language model whose value judgments depend on the
+model and the prompt (Abdulhai et al. 2024; Yuan et al. 2026). Calibration results
+exist for factual answers (Tian et al. 2023) and none for this judgment. So the
+estimate is evidence-grounded, blind to camp identity, sampled and reported as a range,
+attributed to a model, open to human replacement, and never called a probability; the
+selection is reported with its sensitivity to the estimate. *Not claimed:* the specific
+pathologies the pack lists, which rest on sources not read.
+
+Wording for Session 4 to place in `THEORY.md`: **H5** as a hypothesis under test, not a
+premise (13.2, item 3); **H7** resting on the separation of proposal and decision, with
+Biesterbos et al. (2026) as illustration and the unverified task overview left out.
+
+| Entry | Finding |
+|---|---|
+| D1 | Record and quotation correct. The entry's reading is fair. Its response to the tension ("firm rejections … from soft ones") repeats the conflation corrected in RQ1 §2.5; the right response is H6 and the coverage measures. Pack §I.1 is answered in 14.3. |
+| D4 | The address is a system paper, not the task overview (section 12). "The winning approaches use symbolic abstraction" is unconfirmed. The suggested technique, abstracting predicate names when verifying, does not apply: our verifiers see formulas, not sentences. |
+| E1 | Record correct. The entry extrapolates from American liberals and conservatives to the two camps of a Swiss vote; that is the hypothesis, not a finding. |
+| E2 | Record correct, subtitle missing. Not read. |
+| E3 | Record correct. "Axioms flagged as sacred should arguably be non-discountable": rejected in 13.2, item 4. The interface rule is kept. |
+| E4 | Record correct. |
+| E5 | **Misdescribed** (section 12). H8 as the pack words it cannot be cited to this paper. |
+| F1 | Record correct. Not read; H6 does not need it. |
+| F2 | **Wrong journal, volume and pages** (section 12). |
+| F3 | Record correct, subtitle missing. The entry's caution is supported by the abstract. |
+| H5–H8 | H6 and H8 redrafted above. H5 demoted to a hypothesis under test. H7 stands on the architecture. |
+| I.1, I.2, I.5 | Answered in 14.3, 13.2 (item 4) and 15.3. |

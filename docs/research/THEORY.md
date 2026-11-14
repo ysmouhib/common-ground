@@ -1,10 +1,10 @@
 # Theory: what Common Ground v2 reconstructs, and what it does not claim
 
-> **Draft, 13 November 2026. Phase R, session 1 of 4.** Written so far: the
-> definitions, the facts that follow from them, and hypotheses H2 to H4. Not written:
-> H1 and H5 to H9, and the limits that rest on the psychology literature (Converse,
-> motivated reasoning, value bias in language models). Their sources are not verified
-> yet and this file cites nothing unverified. The definitions amend brief §4 in seven
+> **Draft, 14 November 2026. Phase R, sessions 1 to 3 of 4.** Written so far: the
+> definitions, the facts that follow from them, hypotheses H2 to H4, H6 and H8, and the
+> limits that rest on the psychology literature. Not written: H1, H5, H7 and H9
+> (session 4, which also brings this file within two pages). This file cites nothing
+> unverified. The definitions amend brief §4 in seven
 > places ([`RESEARCH.md`](RESEARCH.md) §5). On 13 November 2026 the owner said to proceed
 > on those amendments, so they are adopted for drafting and still subject to review. Not
 > reviewed by the owner. A review on the strong
@@ -94,8 +94,7 @@ source, and each is to be cross-checked by brute force in the Phase 3 tests.
 
 ## 4. Hypotheses
 
-Numbering follows the source pack. H1 and H5 to H9 will be added when their sources
-are verified.
+Numbering follows the source pack. H1, H5, H7 and H9 will be added in session 4.
 
 **H2 (formal core).** The object reconstructed for a camp is a sufficient condition
 for its reviewed claims, selected from a finite pool. The weakest sufficient condition
@@ -122,6 +121,25 @@ and Sakallah 2008). Both are enumerated with MARCO (Liffiton et al. 2016). By F2
 lines among stated claims are invariant and fault lines among reconstructed axioms are
 relative to the selection.
 
+**H6 (a regimentation of a justification).** A camp's texts can be given a deductive
+form in which a few axioms are verified sufficient for its claims. The form is the
+analyst's. The sources of constraint in a belief system are "much less logical in the
+classical sense than they are psychological—and less psychological than social"
+(Converse 1964), and the texts are justifications constructed for conclusions (Kunda
+1990). *Expected:* minimal conflicts inside a record, more often when several authors
+are joined. *Test:* the Phase 8 holdout proportion measures how far a record is
+constrained in Converse's static sense, predicting some positions from others. *Not
+claimed:* that the system is the camp's reasoning; that the method applies to the
+opinions of a sample of citizens, where Converse found little constraint.
+
+**H8 (the plausibility estimate is a model's judgment).** The value judgments of a
+language model depend on the model and on the prompt (Abdulhai et al. 2024; Yuan et al.
+2026). Stated confidence has been calibrated against factual answers (Tian et al.
+2023); nothing read calibrates the judgment "these texts rest on this axiom", which has
+no truth to check against. The estimate is therefore tied to quotes, made blind to the
+camp's identity, sampled and reported as a range, attributed to a model, replaceable by
+a reviewer, and never called a probability (protocol: RESEARCH.md §15.3).
+
 ## 5. Limits established so far
 
 1. **Sufficient, not necessary.** Many systems are sufficient. The statements
@@ -145,27 +163,40 @@ relative to the selection.
 7. **Faithfulness.** A formula can be provably entailed and still not say what the
    sentence meant (README).
 
+8. **A regimentation, not a description.** The deductive form is imposed by the
+   analysis (H6). A system can be verified sufficient and say nothing about how a
+   position was reached.
+9. **Load is not centrality.** Load counts the claims that cannot be derived without
+   an axiom, inside one selected system. Converse's centrality is which element
+   yields when a change is forced. Nothing here measures the second (RESEARCH.md
+   §14.1).
+
 ## 6. Open problems
 
 - The normal form on which size is counted, and whether literal count should replace
   axiom count.
 - Linear charge against logarithmic charge, and whether the plausibility estimates
   behave like probabilities at all.
-- Records for which no axiom system exists: partial systems on maximal consistent
-  subsets, and a coverage measure.
+- Records for which no axiom system exists: coverage is defined (RESEARCH.md §14.3);
+  how to present one system per maximal consistent subset is open.
 - Whether soft rejections should hold jointly as well as separately.
 - Whether an uncontested background theory, shared by all camps, should exist.
-- Economy against explanatory coherence as the selection principle; only one side of
-  that exchange has been read.
+- Economy against explanatory coherence: both sides are read (RESEARCH.md §8.5);
+  whether the load vector should break ties between systems of equal cost is open.
 
 ## References
 
-Verified as described in RESEARCH.md §1. Section numbers refer to the copies read.
+Verified as described in RESEARCH.md §1, §7 and §12. Section numbers refer to the copies read.
 
+- Abdulhai, M., Serapio-García, G., Crepy, C., Valter, D., Canny, J., & Jaques, N.
+  (2024). Moral foundations of large language models. *Proc. EMNLP 2024*, 17737–17752.
 - Charniak, E., & Shimony, S. E. (1990). Probabilistic semantics for cost based
   abduction. *Proc. AAAI-90*. Content as reported by Hobbs et al. (1993).
 - Doherty, P., Łukaszewicz, W., & Szałas, A. (2001). Computing strongest necessary and
-  weakest sufficient conditions of first-order formulas. *Proc. IJCAI-01*.
+  weakest sufficient conditions of first-order formulas. *Proc. IJCAI-01*,
+  145–153.
+- Converse, P. E. (1964). The nature of belief systems in mass publics. Republished in
+  *Critical Review* 18(1–3), 1–74 (2006).
 - Doherty, P., & Szałas, A. (2024). Dual forgetting operators in the context of weakest
   sufficient and strongest necessary conditions. *Artificial Intelligence* 326, 104036.
 - Eiter, T., & Gottlob, G. (1995). The complexity of logic-based abduction. *Journal of
@@ -174,6 +205,8 @@ Verified as described in RESEARCH.md §1. Section numbers refer to the copies re
   principle. arXiv:math/0406077.
 - Hobbs, J. R., Stickel, M. E., Appelt, D. E., & Martin, P. (1993). Interpretation as
   abduction. *Artificial Intelligence* 63(1–2), 69–142.
+- Kunda, Z. (1990). The case for motivated reasoning. *Psychological Bulletin* 108(3),
+  480–498.
 - Liffiton, M. H., Previti, A., Malik, A., & Marques-Silva, J. (2016). Fast, flexible
   MUS enumeration. *Constraints* 21(2), 223–250.
 - Liffiton, M. H., & Sakallah, K. A. (2008). Algorithms for computing minimal
@@ -184,3 +217,10 @@ Verified as described in RESEARCH.md §1. Section numbers refer to the copies re
   methods. *Journal of Logic Programming* 19–20, 629–679.
 - Rissanen, J. (1978). Modeling by shortest data description. *Automatica* 14(5),
   465–471.
+- Tian, K., Mitchell, E., Zhou, A., Sharma, A., Rafailov, R., Yao, H., Finn, C., &
+  Manning, C. (2023). Just ask for calibration: Strategies for eliciting calibrated
+  confidence scores from language models fine-tuned with human feedback. *Proc. EMNLP
+  2023*, 5433–5442.
+- Yuan, C., Ma, B., Zhang, Z., Prenkaj, B., Kreuter, F., & Kasneci, G. (2026). Moral
+  lenses, political coordinates: Towards ideological positioning of morally conditioned
+  LLMs. *Proc. EMNLP 2026*, 5950–5984.
