@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { BookOpen, Braces, Check, Download, FlaskConical, RefreshCw, Scale, ShieldCheck } from "lucide-react";
+import { BookOpen, Braces, Check, Download, FlaskConical, RefreshCw, Scale, ShieldCheck, Users } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { DebateView } from "@/components/DebateView";
 import { ProofLab } from "@/components/ProofLab";
 import { EvidenceView } from "@/components/EvidenceView";
 import { MethodView } from "@/components/MethodView";
 import { StatementDialog } from "@/components/StatementDialog";
+import { CampInputView } from "@/components/CampInputView";
 import { ReviewerAccess } from "@/components/ReviewerAccess";
 
 const views = [
@@ -13,6 +14,7 @@ const views = [
   { id: "proofs", label: "Proof lab", icon: FlaskConical },
   { id: "evidence", label: "Evidence", icon: BookOpen },
   { id: "method", label: "Method", icon: Braces },
+  { id: "camps", label: "Camps", icon: Users },
 ] as const;
 
 type ViewId = (typeof views)[number]["id"];
@@ -84,7 +86,7 @@ export default function App() {
           </button>
           </div>
         </div>
-        <nav className="content-wrap grid grid-cols-2 border-t border-[#d5d9df] sm:grid-cols-4" aria-label="Workspace views">
+        <nav className="content-wrap grid grid-cols-2 border-t border-[#d5d9df] sm:grid-cols-5" aria-label="Workspace views">
           {views.map((item) => (
             <button
               type="button"
@@ -128,6 +130,7 @@ export default function App() {
             <div className={view === "proofs" ? undefined : "hidden"}><ProofLab key={selectedProofId} workspace={workspace} selectedProofId={selectedProofId} onSelectProof={setSelectedProofId} onOpenStatement={setSelectedStatementId} /></div>
             <div className={view === "evidence" ? undefined : "hidden"}><EvidenceView workspace={workspace} /></div>
             <div className={view === "method" ? undefined : "hidden"}><MethodView workspace={workspace} /></div>
+            <div className={view === "camps" ? undefined : "hidden"}><CampInputView workspace={workspace} /></div>
             <StatementDialog
               key={selectedStatementId ?? "closed"}
               statement={workspace.statements.find((statement) => statement.id === selectedStatementId)}

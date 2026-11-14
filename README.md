@@ -55,8 +55,8 @@ kernel-checked, solver-checked, or shown as pending — never silently picked.
 | Reconstruct what one camp's claims rest on | `python -m commonground camp record.json --candidates cand.json --lam 0.3 --lean --out out` | `out/report.md`: the selected axioms are **verified sufficient** — e.g. "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)" — with load ranking, negative controls, and — when `--plausibilities` gives ranges — a plausibility-sensitivity section |
 | Compare two camps | `python -m commonground co2 --out co2-out` (bundled CO2 vote), or `crosscamp A.json B.json --candidates a.json b.json --out out` | `crosscamp.md`: provable common ground (two tiers) and the exact fault lines; on the CO2 example the camps are consistent and diverge at the root (top-ranked axiom pair, rank 8) |
 
-The web UI for pasting your own debate is Phase 6 of [`docs/PLAN.md`](docs/PLAN.md)
-and is not built yet; the CLI above works today.
+The Camps view takes pasted texts and statements now; the report and comparison views are
+still Phase 6 of [`docs/PLAN.md`](docs/PLAN.md). The CLI above works today.
 
 ## What has been shown, and by what
 
