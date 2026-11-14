@@ -3,10 +3,7 @@
 
 
 ## Model strategy (owner is on a limited plan)
-- Default model (Fable 5.2): Phases 0, R, 2, 6, 7, 9 — reading, research
-  synthesis, planning, running tests, scaffolding, UI, documentation,
-  statement/corpus drafting, release hygiene.
-- Escalate to Opus 5.5 ONLY for: (1) the abduction design doc and abduce.py
+
   implementation (Phase 3), (2) the cross-camp reduced-disagreement algorithm
   (Phase 5), (3) Lean certificate edge cases and failing negative controls,
   (4) fol.py grammar edge cases, (5) any bug after two failed fix attempts,

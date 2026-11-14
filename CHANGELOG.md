@@ -11,7 +11,9 @@ format. Versions follow Semantic Versioning.
   verbatim quotes located by the engine in the source text (a quote that is not there is
   rejected; every statement carries its span), support/
   runs with `config.json`/`runs.jsonl` provenance; `python -m commonground
-  extract <files> --out DIR`.
+  extract <files> --out DIR`.; since 2026-11-14 the prompt asks only for
+  verbatim quotes (the engine locates them; default reply limit 8000) — re-run live:
+  2 of 2 short CO2 documents at 2000 and at 8000, one attempt each.
 - Live language-model benchmark on FOLIO validation (deepseek-flash,
   2026-11-13, results in `results/direct` and `results/llm`): direct answering
   162/204 (79.4 %), formalize-then-solve 119/204 (58.3 %, 81.5 % when a

@@ -58,6 +58,32 @@ kernel-checked, solver-checked, or shown as pending — never silently picked.
 The Camps, Axiom queue and Compare views all work now (CG6-3/CG6-4); the engine CLI
 above works standalone too.
 
+### What a report looks like
+
+The Axiom queue view running a small demo record (screenshot from a real run of this build —
+one selected system with its badge, its axioms, and every check with its outcome, badge and
+detail):
+
+![Axiom queue view: System 1 with badge SOLVER-CHECKED, two axioms, and the per-check rows](docs/demo-axiom-queue.png)
+
+The same report as Markdown, as the CLI writes it for the bundled CO2 `no` camp
+(`results/co2-exhaustive/no/report.md`, exhaustive search complete, 2,048 checks):
+
+```markdown
+## Selected systems (cost-minimal, ties reported)
+
+### System 1 — cost 2.7000 — SOLVER-CHECKED (not kernel-certified)
+
+Axioms:
+
+- `(MainlyHitsLowIncome(law) ∧ Unjust(law))`
+- `(PriceRise(petrol) ∧ PriceRise(diesel))`
+- `(Radical(law) ∧ OnlyBansAndRules(law))`
+- `CostsRise(averageFamily, high)`
+- `NoEffectOnClimate(law)`
+- `TinyShareOfEmissions(switzerland)`
+```
+
 ## What has been shown, and by what
 
 | Claim | Evidence | Reproduce |
@@ -152,9 +178,13 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   tested with scripted clients and a local HTTP stub, including a full CLI run against
   the stub. Every statement it returns is a verbatim quote that the engine locates in
   the source text (first unused occurrence; any quote that is not there is rejected).
-  The recorded runs above predate the 2026-11-14 prompt change — since then the prompt
-  asks only for quotes, no character offsets, and the default reply limit is 8000 — and
-  were not re-run live after it (no `LLM_API_KEY` in that session).
+  The recorded runs above predate the 2026-11-14 prompt change (quotes only, no offsets;
+  default reply limit 8000). Re-run live after the change (2026-11-14, `results/extract-co2-v2/`
+  at the 8000 default and `results/extract-co2-v2-2000/` at 2000): 2 of 2 documents, 13 statements,
+  5–6 relations, 0 failed, **one attempt each**, 955–1,470 completion tokens per document at 8000
+  and 964–987 at 2000, all 13 golden statements returned exactly, every quote verbatim. So with the
+  quote-only prompt the extractor works on these short documents even at a 2000-token limit; the
+  longer-document failures above were recorded with the old prompt and were not re-run.
 
   ```bash
   export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions

@@ -1,0 +1,26 @@
+{
+  "mode": "extract",
+  "client": {
+    "model": "deepseek-flash",
+    "host": "api.deepseek.com",
+    "json_mode": true,
+    "temperature": 0.0,
+    "max_tokens": 2000
+  },
+  "documents": 2,
+  "statements": 13,
+  "relations": 5,
+  "failed": 0,
+  "tokens": {
+    "prompt_tokens": 926,
+    "completion_tokens": 1951,
+    "total_tokens": 2877
+  },
+  "environment": {
+    "python": "3.12.10",
+    "z3": "5.4.1",
+    "pysat": "1.9.dev22",
+    "lean": null,
+    "engine_sha256": "ec5791396ec6e700fa125ae28e2e4e38a045fa78b1ef359957288ffbc6fb9f9c"
+  }
+}
