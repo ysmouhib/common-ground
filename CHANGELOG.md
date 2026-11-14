@@ -8,8 +8,8 @@ format. Versions follow Semantic Versioning.
 ### Added (v2 build-out, phases 0-2 and 7 so far)
 
 - `engine/commonground/extract.py`: statement extraction from text with
-  verbatim quotes and character spans (validated against the source), support/
-  attack relations between statements, schema-validated repair loop, resumable
+  verbatim quotes located by the engine in the source text (a quote that is not there is
+  rejected; every statement carries its span), support/
   runs with `config.json`/`runs.jsonl` provenance; `python -m commonground
   extract <files> --out DIR`.
 - Live language-model benchmark on FOLIO validation (deepseek-flash,

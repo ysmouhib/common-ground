@@ -139,7 +139,7 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   live model** — deepseek-flash, temperature 0, 14 November 2026, on the two CO2 camps'
   statements (587 and 542 characters, `results/extract-co2/yes.txt` and `no.txt`),
   recorded in `results/extract-co2/`, `results/extract-co2-4000/` and
-  `results/extract-co2-8000/`. At the default 2000-token reply limit and at 4000, both
+  `results/extract-co2-8000/`. At a 2000-token reply limit and at 4000, both
   documents failed (NoExtraction after 3 attempts each) — diagnosed as the model spending
   the whole reply limit on reasoning tokens before writing any JSON. At an 8000-token
   limit: 2 of 2 documents, 13 statements and 6 relations, every span verbatim, and all 13
@@ -150,8 +150,11 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   even at 16000. So on this model it works on short documents only with a reply limit of
   8000, and on no document of 3,000 characters or more at any limit tried. It is also
   tested with scripted clients and a local HTTP stub, including a full CLI run against
-  the stub. Every statement it returns is validated to be a verbatim span of the source
-  text. To run it against a real endpoint:
+  the stub. Every statement it returns is a verbatim quote that the engine locates in
+  the source text (first unused occurrence; any quote that is not there is rejected).
+  The recorded runs above predate the 2026-11-14 prompt change — since then the prompt
+  asks only for quotes, no character offsets, and the default reply limit is 8000 — and
+  were not re-run live after it (no `LLM_API_KEY` in that session).
 
   ```bash
   export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions

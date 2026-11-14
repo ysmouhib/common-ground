@@ -12,8 +12,8 @@ DOC = "Socrates is a human. All humans are mortal. Therefore Socrates is mortal.
 S1 = (0, DOC.index(".") + 1)                       # "Socrates is a human."
 S2 = (S1[1] + 1, S1[1] + 1 + len("All humans are mortal."))
 GOOD = json.dumps({"statements": [
-    {"text": DOC[S1[0]:S1[1]], "span": [S1[0], S1[1]]},
-    {"text": DOC[S2[0]:S2[1]], "span": [S2[0], S2[1]]},
+    {"text": DOC[S1[0]:S1[1]]},
+    {"text": DOC[S2[0]:S2[1]]},
 ]})
 
 
@@ -50,16 +50,12 @@ def test_fenced_reply_is_accepted():
     ("I think there are two.", "no JSON object"),
     (json.dumps({"claims": []}), '"statements"'),
     (json.dumps({"statements": ["Socrates is a human."]}), "must be an object"),
-    (json.dumps({"statements": [{"text": "x"}]}), '"span"'),
-    (json.dumps({"statements": [{"text": "x", "span": [0]}]}), "two integers"),
-    (json.dumps({"statements": [{"text": "x", "span": [0, True]}]}), "two integers"),
-    (json.dumps({"statements": [{"text": "x", "span": [-1, 5]}]}), "outside the document"),
-    (json.dumps({"statements": [{"text": "x", "span": [0, 10_000]}]}), "outside the document"),
-    (json.dumps({"statements": [{"text": "Socrates is a mortal.", "span": [S1[0], S1[1]]}]}), "does not match the source"),
-    (json.dumps({"statements": [{"text": DOC[S1[0]:S1[1]], "span": [S1[0], S1[1]]}] * 2}), "repeats the span"),
-    (json.dumps({"statements": [{"text": "a", "span": [0, 1]}] * (extract.MAX_STATEMENTS + 1)}), "at most"),
-    (json.dumps({"statements": [{"text": "x" * (extract.MAX_STATEMENT_CHARS + 1), "span": [0, 1]}]}), "longer than"),
-    (json.dumps({"statements": [{"text": "   ", "span": [0, 1]}]}), "no text"),
+    (json.dumps({"statements": [{"span": [0, 5]}]}), "no text"),
+    (json.dumps({"statements": [{"text": "no such passage in this document"}]}), "not a passage"),
+    (json.dumps({"statements": [{"text": DOC[S1[0]:S1[1]]}, {"text": DOC[S1[0]:S1[1]]}]}), "repeats"),
+    (json.dumps({"statements": [{"text": "a"}] * (extract.MAX_STATEMENTS + 1)}), "at most"),
+    (json.dumps({"statements": [{"text": "x" * (extract.MAX_STATEMENT_CHARS + 1)}]}), "longer than"),
+    (json.dumps({"statements": [{"text": "   "}]}), "no text"),
 ])
 def test_bad_reply_is_sent_back_with_the_reason_then_repaired(bad, problem):
     client = Scripted(bad, GOOD)
@@ -188,7 +184,7 @@ def test_extraction_works_over_real_http_with_the_standard_client(stub):
 
 # ------------------------------------------------------------- property tests (CG2-2)
 
-from hypothesis import given, settings
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 TEXTS = st.text(alphabet="abc ABC.!", min_size=1, max_size=200).filter(lambda t: t.strip())
@@ -200,33 +196,52 @@ def _span(doc):
 
 
 def _reply(doc, spans):
-    return json.dumps({"statements": [{"text": doc[s:e], "span": [s, e]} for s, e in spans]})
+    return json.dumps({"statements": [{"text": doc[s:e]} for s, e in spans]})
+
+
+def _clean(doc, spans):
+    """Drawn spans whose quote starts at its first occurrence, pairwise disjoint: the
+    engine then locates each quote exactly at its drawn span."""
+    if any(doc.find(doc[s:e]) != s for s, e in spans):
+        return False
+    return all(a[1] <= b[0] or b[1] <= a[0] for i, a in enumerate(spans) for b in spans[i + 1:])
 
 
 @given(TEXTS, st.data())
 @settings(max_examples=150, deadline=None)
-def test_every_accepted_span_is_verbatim_in_the_source(doc, data):
+def test_every_accepted_quote_is_verbatim_in_the_source(doc, data):
     """Whatever the document, a well-formed reply is accepted in one attempt and every
     statement's quote equals the source at its span."""
-    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: p, max_size=5))
+    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: doc[p[0]:p[1]], max_size=5)
+                      .filter(lambda sp: _clean(doc, sp)))
     result = extract.extract(Scripted(_reply(doc, spans)), "doc", doc)
     assert result.attempts == 1
-    assert [(s.start, s.end) for s in result.statements] == spans
+    assert [(s.text, s.start, s.end) for s in result.statements] == [(doc[s:e], s, e) for s, e in spans]
     for s in result.statements:
         assert doc[s.start:s.end] == s.text
 
 
+def test_a_repeated_quote_gets_its_second_occurrence_and_a_third_is_rejected():
+    doc = "ab ab"
+    reply = json.dumps({"statements": [{"text": "ab"}, {"text": "ab"}]})
+    result = extract.extract(Scripted(reply), "doc", doc)
+    assert [(s.start, s.end) for s in result.statements] == [(0, 2), (3, 5)]
+    with pytest.raises(extract.ExtractionError) as caught:
+        extract.extract(Scripted(json.dumps({"statements": [{"text": "ab"}] * 3})), "doc", doc, max_repairs=0)
+    assert "repeats" in caught.value.history[0]["problem"]
+
+
 @given(TEXTS, st.data())
 @settings(max_examples=150, deadline=None)
-def test_a_span_off_by_one_is_rejected_with_the_reason(doc, data):
-    """A quote that does not match the source at its span never passes validation."""
+def test_a_quote_that_is_not_in_the_document_is_rejected_with_the_reason(doc, data):
+    """A quote that is not a passage of the source never passes validation."""
     s, e = data.draw(_span(doc))
-    broken_end = min(e + 1, len(doc)) if e < len(doc) else e - 1  # stay in range, change the slice
-    bad = json.dumps({"statements": [{"text": doc[s:e], "span": [s, broken_end]}]})
+    bad_quote = doc[s:e][::-1]
+    assume(bad_quote not in doc)
+    bad = json.dumps({"statements": [{"text": bad_quote}]})
     with pytest.raises(extract.ExtractionError) as caught:
         extract.extract(Scripted(bad), "doc", doc, max_repairs=0)
-    problem = caught.value.history[0]["problem"]
-    assert "does not match the source" in problem or "outside the document" in problem
+    assert "not a passage" in caught.value.history[0]["problem"]
 
 
 @given(TEXTS)
@@ -279,11 +294,11 @@ def test_an_outage_at_any_position_leaves_exactly_the_finished_rows_then_resumes
 
 # ------------------------------------------------------------- discourse relations (CG2-4)
 
-REL = {"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "supports"}
+REL = {"from": 1, "to": 2, "kind": "supports"}
 GOOD_REL = json.dumps({"statements": json.loads(GOOD)["statements"], "relations": [REL]})
 
 
-def test_relations_are_accepted_and_must_reference_statement_spans():
+def test_relations_are_accepted_and_must_reference_statement_positions():
     result = extract.extract(Scripted(GOOD_REL), "doc1", DOC)
     assert result.attempts == 1
     assert [(r.source, r.target, r.kind) for r in result.relations] == [(S1, S2, "supports")]
@@ -297,11 +312,13 @@ def test_a_reply_without_relations_is_still_valid():
 
 
 @pytest.mark.parametrize("bad_rel, problem", [
-    ({"from": [0, 5], "to": [S2[0], S2[1]], "kind": "supports"}, '"from" span [0, 5] is not one of the statements'),
-    ({"from": [S1[0], S1[1]], "to": [0, 5], "kind": "attacks"}, '"to" span [0, 5] is not one of the statements'),
-    ({"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "refutes"}, "kind must be one of"),
-    ({"from": [S1[0], S1[1]], "to": [S1[0], S1[1]], "kind": "supports"}, "relates a statement to itself"),
-    ({"from": [S1[0], S1[1]], "to": [S2[0], S2[1]], "kind": "supports", "extra": 1}, None),  # extra keys tolerated
+    ({"from": 0, "to": 2, "kind": "supports"}, 'needs "from"'),
+    ({"from": 3, "to": 2, "kind": "supports"}, 'needs "from"'),               # only two statements
+    ({"from": [S1[0], S1[1]], "to": 2, "kind": "supports"}, 'needs "from"'),   # spans are not accepted
+    ({"from": True, "to": 2, "kind": "supports"}, 'needs "from"'),
+    ({"from": 1, "to": 2, "kind": "refutes"}, "kind must be one of"),
+    ({"from": 1, "to": 1, "kind": "supports"}, "relates a statement to itself"),
+    ({"from": 1, "to": 2, "kind": "supports", "extra": 1}, None),  # extra keys tolerated
 ])
 def test_bad_relation_is_sent_back_with_the_reason(bad_rel, problem):
     reply = json.dumps({"statements": json.loads(GOOD)["statements"], "relations": [bad_rel]})
@@ -318,10 +335,8 @@ def test_duplicate_and_oversized_relation_lists_are_rejected():
     with pytest.raises(extract.ExtractionError) as caught:
         extract.extract(Scripted(dup), "doc1", DOC, max_repairs=0)
     assert "repeats" in caught.value.history[0]["problem"]
-    big = json.dumps({"statements": json.loads(GOOD)["statements"],
-                      "relations": [dict(REL, to=[S1[0], S1[1]] if i == 0 else [S2[0], S2[1]]) for i in range(0)]})
     many = json.dumps({"statements": json.loads(GOOD)["statements"],
-                       "relations": [{**REL, "to": [S2[0], S2[1]], "kind": "attacks"}] * (extract.MAX_RELATIONS + 1)})
+                       "relations": [{**REL, "to": 2, "kind": "attacks"}] * (extract.MAX_RELATIONS + 1)})
     with pytest.raises(extract.ExtractionError) as caught2:
         extract.extract(Scripted(many), "doc1", DOC, max_repairs=0)
     assert "at most" in caught2.value.history[0]["problem"]
@@ -337,15 +352,15 @@ def test_run_rows_and_summary_carry_relations(tmp_path):
 @given(TEXTS, st.data())
 @settings(max_examples=100, deadline=None)
 def test_every_relation_endpoint_is_a_statement_span(doc, data):
-    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: p, min_size=2, max_size=5))
-    pairs = data.draw(st.lists(st.tuples(st.sampled_from(spans), st.sampled_from(spans)),
-                               max_size=4))
-    rels = [{"from": [a[0], a[1]], "to": [b[0], b[1]],
+    spans = data.draw(st.lists(_span(doc), unique_by=lambda p: doc[p[0]:p[1]], min_size=2, max_size=5)
+                      .filter(lambda sp: _clean(doc, sp)))
+    n = len(spans)
+    pairs = data.draw(st.lists(st.tuples(st.integers(1, n), st.integers(1, n)), max_size=4))
+    rels = [{"from": a, "to": b,
              "kind": data.draw(st.sampled_from(["supports", "attacks"]))}
             for a, b in pairs if a != b]
-    rels = list({(tuple(r["from"]), tuple(r["to"]), r["kind"]): r for r in rels}.values())
-    reply = _reply(doc, spans)
-    reply = json.dumps({**json.loads(reply), "relations": rels})
+    rels = list({(r["from"], r["to"], r["kind"]): r for r in rels}.values())
+    reply = json.dumps({**json.loads(_reply(doc, spans)), "relations": rels})
     result = extract.extract(Scripted(reply), "doc", doc)
     stmt_spans = {(s.start, s.end) for s in result.statements}
     assert all(r.source in stmt_spans and r.target in stmt_spans for r in result.relations)

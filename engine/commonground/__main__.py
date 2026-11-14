@@ -459,7 +459,7 @@ def main(argv: list[str] | None = None) -> int:
     ex.add_argument("--temperature", type=float, default=0.0, help="sampling temperature (default 0)")
     ex.add_argument("--no-temperature", action="store_true",
                     help="send no temperature (for models that accept only their default)")
-    ex.add_argument("--max-tokens", type=int, default=2000, help="reply length limit (default 2000)")
+    ex.add_argument("--max-tokens", type=int, default=8000, help="reply length limit (default 8000)")
     ex.set_defaults(run=_extract)
 
     fol = commands.add_parser("folio", help="run the FOLIO benchmark")
