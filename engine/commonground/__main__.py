@@ -227,7 +227,7 @@ def main(argv: list[str] | None = None) -> int:
     fol.add_argument("--temperature", type=float, default=0.0, help="model modes: sampling temperature (default 0)")
     fol.add_argument("--no-temperature", action="store_true",
                      help="send no temperature (for models that accept only their default)")
-    fol.add_argument("--max-tokens", type=int, default=2000, help="model modes: reply length limit (default 2000)")
+    fol.add_argument("--max-tokens", type=int, default=4000, help="model modes: reply length limit (default 4000)")
     fol.set_defaults(run=_folio)
 
     for name, text in (("compare", "paired comparison of two model runs (McNemar), as JSON"),

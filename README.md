@@ -95,7 +95,10 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   numbers. In the recorded deepseek-flash runs the two modes disagreed on 61 of
   204 examples (52 right only when answering directly, 9 only when formalizing;
   exact McNemar p ≈ 1.8×10⁻⁸): the direct mode is ahead on this dataset, mostly because
-  58 of the 204 examples produced no parseable formalization. A run is resumable, names its
+  58 of the 204 examples produced no parseable formalization. Both runs limited a reply to
+  2000 tokens (`--max-tokens 2000`, which the workflow still passes by default), and all
+  four arguments longer than 1000 characters are among the 58. The command-line default is
+  now 4000; no run at 4000 is published. A run is resumable, names its
   model and settings in `config.json`, and stops instead of scoring a provider
   outage as wrong answers. Providers differ: add `--no-json-mode` or
   `--no-temperature` for one that rejects `response_format=json_object` or any

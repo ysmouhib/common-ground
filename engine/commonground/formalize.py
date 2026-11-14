@@ -82,7 +82,7 @@ class OpenAICompatible:
     RETRYABLE = frozenset({408, 409, 429, 500, 502, 503, 504, 529})
 
     def __init__(self, base_url: str, model: str, api_key: str, timeout_s: float = 120.0,
-                 max_attempts: int = 3, max_tokens: int = 2000, json_mode: bool = True,
+                 max_attempts: int = 3, max_tokens: int = 4000, json_mode: bool = True,
                  temperature: float | None = 0.0):
         """``json_mode`` and ``temperature`` exist because providers differ: some reject
         ``response_format=json_object``, some reject any temperature but their default

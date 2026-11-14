@@ -143,7 +143,7 @@ def test_client_sends_a_standard_chat_completion_request(stub):
     request = handler.seen[0]
     assert request["path"] == "/v1/chat/completions" and request["auth"] == "Bearer secret-key"
     assert request["body"]["model"] == "some-model" and request["body"]["temperature"] == 0
-    assert request["body"]["response_format"] == {"type": "json_object"} and request["body"]["max_tokens"] == 2000
+    assert request["body"]["response_format"] == {"type": "json_object"} and request["body"]["max_tokens"] == 4000
     assert [m["role"] for m in request["body"]["messages"]] == ["system", "user"]
 
 
@@ -151,12 +151,12 @@ def test_client_can_leave_out_what_a_provider_rejects_and_says_so_in_its_descrip
     handler, url = stub
     handler.script = [_ok(GOOD)]
     client = formalize.OpenAICompatible(url, "some-model", "secret-key", json_mode=False, temperature=None,
-                                        max_tokens=4000)
+                                        max_tokens=1000)
     assert client.complete("s", "u")[0] == GOOD
     body = handler.seen[0]["body"]
-    assert "temperature" not in body and "response_format" not in body and body["max_tokens"] == 4000
+    assert "temperature" not in body and "response_format" not in body and body["max_tokens"] == 1000
     described = client.describe()
-    assert described["json_mode"] is False and described["temperature"] is None and described["max_tokens"] == 4000
+    assert described["json_mode"] is False and described["temperature"] is None and described["max_tokens"] == 1000
     assert described["model"] == "some-model" and described["host"].startswith("127.0.0.1:")
     assert "secret-key" not in str(described)
 

@@ -530,3 +530,16 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   entry removed. Docs-only; suites unchanged (engine 170 passed at cc563a3;
   `npm test` 39 passed, 4 skipped at 18df5dc). Committed as this session's
   commit. Escalations: none. Next: the `max_tokens` BACKLOG item.
+- 2026-11-14 — BACKLOG item (owner: "do the fixes"): the formalizer's default
+  reply limit went from 2000 to 4000 tokens (`formalize.OpenAICompatible` and
+  `folio --max-tokens`). Published numbers unchanged: the recorded runs stay
+  at 2000 in their `config.json`, and `model-benchmark.yml` still passes
+  `--max-tokens 2000` by default; README says so. Checked against the
+  committed run + the pinned dataset: the 4 examples over 1000 input chars
+  (1, 2, 110, 155) are all NoFormalization after 3 attempts. No live run made
+  (no key used); no run at 4000 is published (BACKLOG, with the `extract`
+  default and the stale README repository map). Full engine suite with
+  FOLIO_DIR+LEAN_BIN: exit 0, 170 passed, 0 skipped (209 s). e2e not re-run
+  (no api/app change; 33 passed with Lean at cc563a3). Committed as this
+  session's commit. Escalations: none. Next: nothing ungated is left — owner
+  sessions CGR-2..CGR-5, then CG3-1.
