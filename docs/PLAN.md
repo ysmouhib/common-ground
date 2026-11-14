@@ -252,7 +252,7 @@ number guard; the README evidence tables.
 ### Phase 9 — Release readiness
 
 - [x] **CG9-1** — MIT `LICENSE`. Files: `LICENSE`. Done-when: committed.
-- [ ] **CG9-2** — `CONTRIBUTING.md` (dev setup, test commands, PR checklist,
+- [x] **CG9-2** — `CONTRIBUTING.md` (dev setup, test commands, PR checklist,
   reproducible-numbers rule). Files: `CONTRIBUTING.md`. Done-when: committed.
 - [ ] **CG9-3** — `CODE_OF_CONDUCT.md` (Contributor Covenant) + PR template.
   Files: `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
@@ -437,3 +437,8 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
 - 2026-11-13 — CG9-1: MIT LICENSE added (copyright Younes Mouhib, 2026).
   Docs-only; engine suite unchanged (exit 0, 169 passed, CG2-4 run). Committed
   as this session's commit. Escalations: none. Next: CG9-2.
+- 2026-11-13 — CG9-2: CONTRIBUTING.md added (dev setup, exact test commands,
+  PR checklist incl. the reproducible-numbers rule and the no-LLM-to-Lean rule,
+  conventional commits, pointer to PLAN.md/AGENTS.md/BACKLOG.md). Docs-only;
+  suite unchanged (exit 0, 169 passed). Committed as this session's commit.
+  Escalations: none. Next: CG9-3.
