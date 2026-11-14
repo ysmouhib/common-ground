@@ -79,6 +79,7 @@ function SystemCard({ report, index }: { report: CampReport; index: number }) {
             <span className="font-code text-xs">{check.kind}</span>
             <code className="font-code text-xs">{check.claim}</code>
             <span className="text-[#4c5260]">{check.badge}</span>
+            <span className="w-full text-xs text-[#4c5260]">{check.detail}</span>
           </li>
         ))}
       </ul>

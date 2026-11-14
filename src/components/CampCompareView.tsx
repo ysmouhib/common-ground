@@ -10,7 +10,7 @@ import type { WorkspaceData } from "@/hooks/useWorkspace";
 
 import { StatusBadge } from "./Status";
 
-function CheckLine({ label, check }: { label: string; check: { outcome: string; badge: string; claim: string } }) {
+function CheckLine({ label, check }: { label: string; check: { outcome: string; badge: string; claim: string; detail: string } }) {
   const tone = check.outcome === "holds" ? "green" : check.outcome === "fails" ? "red" : "amber";
   return (
     <li className="flex flex-wrap items-center gap-2 text-sm">
@@ -18,6 +18,7 @@ function CheckLine({ label, check }: { label: string; check: { outcome: string; 
       <span className="font-semibold">{label}</span>
       <code className="font-code text-xs">{check.claim}</code>
       <span className="text-[#4c5260]">{check.badge}</span>
+      <span className="w-full text-xs text-[#4c5260]">{check.detail}</span>
     </li>
   );
 }
@@ -58,6 +59,7 @@ function StatedTier({ report }: { report: CrosscampReport }) {
             <span className="font-semibold">{entry.camp}</span>
             <StatusBadge tone={entry.outcome === "holds" ? "green" : entry.outcome === "fails" ? "red" : "amber"}>{entry.outcome}</StatusBadge>
             <span className="text-[#4c5260]">{entry.badge}</span>
+            <span className="w-full text-xs text-[#4c5260]">{entry.detail}</span>
           </li>
         ))}
       </ul>
