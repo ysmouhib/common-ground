@@ -254,7 +254,7 @@ number guard; the README evidence tables.
 - [x] **CG9-1** — MIT `LICENSE`. Files: `LICENSE`. Done-when: committed.
 - [x] **CG9-2** — `CONTRIBUTING.md` (dev setup, test commands, PR checklist,
   reproducible-numbers rule). Files: `CONTRIBUTING.md`. Done-when: committed.
-- [ ] **CG9-3** — `CODE_OF_CONDUCT.md` (Contributor Covenant) + PR template.
+- [x] **CG9-3** — `CODE_OF_CONDUCT.md` (Contributor Covenant) + PR template.
   Files: `CODE_OF_CONDUCT.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
   Done-when: committed.
 - [ ] **CG9-4** — Issue templates: bug report + feature request. Files:
@@ -442,3 +442,7 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   conventional commits, pointer to PLAN.md/AGENTS.md/BACKLOG.md). Docs-only;
   suite unchanged (exit 0, 169 passed). Committed as this session's commit.
   Escalations: none. Next: CG9-3.
+- 2026-11-13 — CG9-3: CODE_OF_CONDUCT.md (Contributor Covenant 2.1) and
+  .github/PULL_REQUEST_TEMPLATE.md added. Docs-only; suite unchanged (exit 0,
+  169 passed). Committed as this session's commit. Escalations: none. Next:
+  CG9-4.
