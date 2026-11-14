@@ -188,6 +188,16 @@ def test_branch_and_bound_hull_is_labelled_partial():
     assert "cost-minimal, ties reported" in md   # the selection itself is established
 
 
+def test_brute_force_is_chosen_exactly_when_the_budget_covers_every_subset():
+    # the hull is complete only after a full enumeration, so the strategy follows the check
+    # budget, not a fixed pool size: this pool has 5 items = 32 subsets
+    record = record_of(good_statements())
+    full = abduce.report_camp(record, c1_source(), {C1T: 0.9}, lam=0.3, max_checks=32)
+    assert full["search"] == "bruteforce" and full["search_complete"] and full["hull_complete"]
+    capped = abduce.report_camp(record, c1_source(), {C1T: 0.9}, lam=0.3, max_checks=31)
+    assert capped["search"] == "branch-and-bound"
+
+
 def test_pending_is_not_reported_as_no_axiom_system():
     statements = good_statements()
     statements[1]["fol"] = None   # e2 has no reviewed formalization yet

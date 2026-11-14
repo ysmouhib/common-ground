@@ -1101,9 +1101,9 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
             plausibilities[text] = DEFAULT_PLAUSIBILITY
             ranges.setdefault(text, (DEFAULT_PLAUSIBILITY, DEFAULT_PLAUSIBILITY))
             defaulted.append(text)
-    # brute force gives the hull all certified systems; beyond 12 pool items the
-    # branch-and-bound search is used and the hull covers only what it found
-    if len(pool) <= 12:
+    # brute force whenever the budget can pay for every subset — that is what makes the
+    # hull complete; beyond that, branch-and-bound, whose hull covers only what it found
+    if (1 << len(pool)) <= max_checks:
         sel = select_bruteforce(pool, record, plausibilities, lam, timeout_ms, max_checks)
         search = "bruteforce"
     else:
@@ -1118,7 +1118,7 @@ def report_camp(record: Record, source: CandidateSource, plausibilities: dict[st
     nontrivial = {t: (lo, hi) for t, (lo, hi) in ranges.items() if lo < hi}
     if nontrivial:
         def _search_at(point: dict[str, float]) -> Selection:
-            if len(pool) <= 12:
+            if (1 << len(pool)) <= max_checks:
                 return select_bruteforce(pool, record, point, lam, timeout_ms, max_checks)
             return select(pool, record, point, lam, timeout_ms, max_checks)
         sel_lo = _search_at({t: lo for t, (lo, hi) in ranges.items()})
