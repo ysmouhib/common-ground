@@ -30,8 +30,8 @@ Add `--lean` to `check` for a kernel-checked certificate (set `LEAN_BIN` to a Le
 
 Commands: `check` (one argument), `analyze` (conflicts, concessions, justifications
 for a debate file), `camp` / `crosscamp` (per-camp axiom systems and cross-camp
-common ground / fault lines from reviewed records), `co2` (the bundled golden
-example, end to end), `extract` (statements from text, with verbatim spans, via a
+common ground / fault lines from reviewed records), `co2` (the golden CO2 example,
+end to end; from a pip install pass `--dir <repo>/examples/co2-2021`, the default corpus path only resolves in a source checkout), `extract` (statements from text, with verbatim spans, via a
 configured LLM endpoint), `folio` / `compare` / `report` (benchmarks and run reports).
 
 ## Documentation
