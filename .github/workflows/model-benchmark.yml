@@ -34,7 +34,7 @@ on:
         description: "Reply length limit per request"
         required: false
         type: string
-        default: "2000"
+        default: "4000"
 
 permissions:
   contents: read
@@ -76,7 +76,7 @@ jobs:
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: |
-          set -- --data "$RUNNER_TEMP/FOLIO" --base-url "$BASE_URL" --model "$MODEL" --max-tokens "${MAX_TOKENS:-2000}"
+          set -- --data "$RUNNER_TEMP/FOLIO" --base-url "$BASE_URL" --model "$MODEL" --max-tokens "${MAX_TOKENS:-4000}"
           if [ -n "$LIMIT" ]; then set -- "$@" --limit "$LIMIT"; fi
           if [ "$JSON_MODE" != "true" ]; then set -- "$@" --no-json-mode; fi
           if [ -n "$TEMPERATURE" ]; then set -- "$@" --temperature "$TEMPERATURE"; else set -- "$@" --no-temperature; fi
