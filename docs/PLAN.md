@@ -151,7 +151,7 @@ number guard; the README evidence tables.
   `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-2.
   Done-when: pytest exits 0; lean-marked tests pass with `LEAN_BIN` or skip
   with the reason recorded.
-- [ ] **CG3-4** — Cost-minimal search over certified subsets
+- [x] **CG3-4** — Cost-minimal search over certified subsets
   (branch-and-bound), cross-checked against brute force in tests, mirroring how
   `argmap.py` is tested. Files: `engine/commonground/abduce.py`,
   `engine/tests/test_abduce.py`. Deps: CG3-3. Done-when: pytest exits 0.
@@ -635,3 +635,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   (redundant axiom was marked pending instead of fails). Full suite: exit 0, 203 passed.
   e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none.
   Next: CG3-4.
+- 2026-11-14 — CG3-4 done: normal form (NNF, conjunctions split top-level and under
+  ∀, amendment A3), cost = Σ(1−p) + λ·|A| with p=1 for stated claims, select()
+  branch-and-bound and select_bruteforce() as the reference, hull_intervals() giving each
+  lower-hull system its λ-interval, margin_at() the runner-up margin; pool capped
+  (MAX_POOL/MAX_CHECKS, TooMany). Tests cross-check bnb vs brute force across λ, ties
+  reported, hull intervals verified against a λ grid incl. the boundary tie, conjunction
+  axiom cannot hide. Two real bugs fixed (redundant-axiom pending bug was CG3-3; hull
+  interval direction; brute force no longer cost-prunes so the hull sees all certified
+  systems). 7 new tests; full suite exit 0, 210 passed (280 s, FOLIO_DIR+LEAN_BIN).
+  e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none.
+  Next: CG3-5.

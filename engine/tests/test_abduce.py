@@ -256,3 +256,103 @@ def test_certify_sufficiency_accepts_a_theorem_and_rejects_a_non_theorem():
     assert good[0].accepted
     bad = abduce.certify_sufficiency(axioms, [fol.parse("Flies(socrates)")], LEAN)
     assert not bad[0].accepted
+
+
+# --- CG3-4: cost, search, hull ---------------------------------------------
+
+from commonground.argmap import TooMany
+
+DOCX = "Socrates is human. Socrates is mortal. Plato is human. Plato is mortal. Socrates does not fly."
+
+
+def span_of(sub):
+    i = DOCX.index(sub)
+    return (i, i + len(sub))
+
+
+def big_record():
+    def st(sid, fol_text, quote):
+        return abduce.RecordStatement(sid, abduce.STANCE_ENDORSED, fol_text, "dx", quote, span_of(quote))
+    return abduce.Record(
+        camp="campX",
+        documents=[abduce.Document("dx", DOCX)],
+        statements=[
+            st("e1", "Human(socrates)", "Socrates is human."),
+            st("e2", "Mortal(socrates)", "Socrates is mortal."),
+            st("e3", "Human(plato)", "Plato is human."),
+            st("e4", "Mortal(plato)", "Plato is mortal."),
+            abduce.RecordStatement("s1", abduce.STANCE_SOFT, "Flies(socrates)", "dx",
+                                  "Socrates does not fly.", span_of("Socrates does not fly.")),
+        ],
+    )
+
+
+C1 = "∀x (Human(x) → Mortal(x))"
+
+
+def big_pool():
+    stated = [st.formula() for st in big_record().statements if st.stance == abduce.STANCE_ENDORSED]
+    return stated + [fol.parse(C1)]
+
+
+def test_normal_form_splits_conjunctions_top_level_and_under_forall():
+    parts = abduce.split_conjunctions(fol.parse("A ∧ B ∧ ∀x (C(x) ∧ D(x))"))
+    assert [fol.to_text(p) for p in parts] == ["A", "B", "(∀x C(x))", "(∀x D(x))"]
+    assert abduce.normal_form_size(fol.parse("A ∧ B")) == 2
+
+
+def test_cost_counts_size_on_normal_form_and_plausibility():
+    assert abduce.cost([fol.parse("A ∧ B")], {}, 0.3) == 0.6          # p = 1, size 2
+    assert abduce.cost([fol.parse(C1)], {fol.to_text(fol.parse(C1)): 0.9}, 0.3) == pytest.approx(0.4)
+
+
+def test_select_prefers_the_unstated_axiom_when_it_replaces_two_stated_claims():
+    pool = big_pool()
+    plaus = {fol.to_text(fol.parse(C1)): 0.9}
+    sel = abduce.select(pool, big_record(), plaus, 0.3)
+    assert sel.best_cost == pytest.approx(1.0)
+    expected = [fol.to_text(fol.parse(C1)), fol.to_text(fol.parse("Human(socrates)")), fol.to_text(fol.parse("Human(plato)"))]
+    assert sorted(sel.systems[0]) == sorted(expected) and len(sel.systems) == 1
+    assert not sel.exhausted
+
+
+def test_bnb_matches_brute_force_across_lambda():
+    pool = big_pool()
+    plaus = {fol.to_text(fol.parse(C1)): 0.9}
+    rec = big_record()
+    for lam in (0.05, 0.1, 0.2, 0.3, 0.5):
+        a = abduce.select(pool, rec, plaus, lam)
+        b = abduce.select_bruteforce(pool, rec, plaus, lam)
+        assert sorted(map(sorted, a.systems)) == sorted(map(sorted, b.systems))
+        assert a.best_cost == pytest.approx(b.best_cost)
+
+
+def test_ties_are_all_reported():
+    pool = big_pool()
+    plaus = {fol.to_text(fol.parse(C1)): 0.7}   # u = 0.3: 0.3 + 3λ ties 4λ at λ = 0.3
+    sel = abduce.select_bruteforce(pool, big_record(), plaus, 0.3)
+    assert len(sel.systems) == 2 and sel.best_cost == pytest.approx(1.2)
+
+
+def test_hull_intervals_match_a_lambda_grid_scan():
+    pool = big_pool()
+    plaus = {fol.to_text(fol.parse(C1)): 0.9}
+    sel = abduce.select_bruteforce(pool, big_record(), plaus, 0.3)
+    hull = abduce.hull_intervals(sel.all_certified, pool, plaus)
+    by_text = {fol.to_text(f): f for f in pool}
+    for lam in (0.05, 0.15, 0.3, 0.9):
+        best = min(sel.all_certified, key=lambda t: abduce.cost([by_text[x] for x in t], plaus, lam))
+        in_hull = [h for h in hull if h["lam_interval"][0] - 1e-9 <= lam <= h["lam_interval"][1] + 1e-9]
+        assert len(in_hull) == 1
+        assert sorted(in_hull[0]["system"]) == sorted(best)
+    # at the boundary lambda = 0.1 both hull vertices are optimal (a reported tie)
+    costs = [abduce.cost([by_text[x] for x in s], plaus, 0.1) for s in sel.all_certified]
+    assert costs[0] == pytest.approx(costs[1])
+    margins = abduce.margin_at(sel.all_certified, pool, plaus, 0.3)
+    assert margins == pytest.approx(0.2)
+
+
+def test_pool_cap_is_enforced():
+    pool = [fol.parse(f"P{i}(a)") for i in range(abduce.MAX_POOL + 1)]
+    with pytest.raises(TooMany):
+        abduce.select(pool, big_record(), {}, 0.3)

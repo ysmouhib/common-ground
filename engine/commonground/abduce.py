@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from . import fol
-from .fol import Formula
+from .fol import And, Exists, Forall, Formula, Iff, Implies, Not, Or, Xor
 from .formalize import ChatClient, extract_json
 
 MAX_CANDIDATES = 40
@@ -439,3 +439,223 @@ def certify_sufficiency(axioms: list[Formula], claims: list[Formula], lean_bin: 
     Takes parsed formulas only; the generated Lean source is checked by lean.assert_generated,
     so no visitor or model text ever reaches Lean."""
     return _lean.certify([(list(axioms), c) for c in claims], lean_bin)
+
+
+# ---------------------------------------------------------------------------
+# Cost and cost-minimal search (CG3-4, design §7). Size is counted on a normal
+# form that splits conjunctions (amendment A3), so a conjunction of the claims
+# cannot win by hiding. Selection is reported with ties, and the hull of
+# (size, implausibility) with each system's λ-interval (amendment A5). The
+# search is cross-checked against brute force in the tests. Soundness: only
+# systems whose every check holds (check_system.certified) can be selected;
+# termination: finite pool, per-check timeout, and a cap on certified checks
+# (TooMany, like argmap.py) — the documented scope is tens of statements.
+
+from .argmap import TooMany
+
+MAX_POOL = 16
+MAX_CHECKS = 4000
+_EPS = 1e-9
+
+
+def nnf(f: Formula) -> Formula:
+    """Negation normal form: ¬ pushed to the atoms (De Morgan, ¬¬, quantifier duals)."""
+    if isinstance(f, Not):
+        inner = f.body
+        if isinstance(inner, Not):
+            return nnf(inner.body)
+        if isinstance(inner, And):
+            return Or(nnf(Not(inner.left)), nnf(Not(inner.right)))
+        if isinstance(inner, Or):
+            return And(nnf(Not(inner.left)), nnf(Not(inner.right)))
+        if isinstance(inner, Forall):
+            return Exists(inner.var, nnf(Not(inner.body)))
+        if isinstance(inner, Exists):
+            return Forall(inner.var, nnf(Not(inner.body)))
+        if isinstance(inner, Implies):
+            return And(nnf(inner.left), nnf(Not(inner.right)))
+        return Not(inner)
+    if isinstance(f, And):
+        return And(nnf(f.left), nnf(f.right))
+    if isinstance(f, Or):
+        return Or(nnf(f.left), nnf(f.right))
+    if isinstance(f, Implies):
+        return Or(nnf(Not(f.left)), nnf(f.right))
+    if isinstance(f, Iff):
+        return And(Or(nnf(Not(f.left)), nnf(f.right)), Or(nnf(f.left), nnf(Not(f.right))))
+    if isinstance(f, Xor):
+        return Or(And(nnf(f.left), nnf(Not(f.right))), And(nnf(Not(f.left)), nnf(f.right)))
+    if isinstance(f, Forall):
+        return Forall(f.var, nnf(f.body))
+    if isinstance(f, Exists):
+        return Exists(f.var, nnf(f.body))
+    return f
+
+
+def split_conjunctions(f: Formula) -> list[Formula]:
+    """NNF, then split top-level conjunctions and conjunctions under ∀ (amendment A3)."""
+    f = nnf(f)
+    if isinstance(f, And):
+        return split_conjunctions(f.left) + split_conjunctions(f.right)
+    if isinstance(f, Forall) and isinstance(f.body, And):
+        return [Forall(f.var, c) for c in split_conjunctions(f.body)]
+    return [f]
+
+
+def normal_form_size(f: Formula) -> int:
+    return len(split_conjunctions(f))
+
+
+def cost(axioms: list[Formula], plausibilities: dict[str, float], lam: float) -> float:
+    """cost(A) = Σ (1 − p(a)) + λ·|A|, size on the conjunction-splitting normal form.
+    Stated claims have p = 1 unless a reviewer replaced the estimate (amendment A4)."""
+    return sum((1.0 - plausibilities.get(fol.to_text(a), 1.0)) + lam * normal_form_size(a) for a in axioms)
+
+
+def _u(axioms: list[Formula], plausibilities: dict[str, float]) -> float:
+    return sum(1.0 - plausibilities.get(fol.to_text(a), 1.0) for a in axioms)
+
+
+def _size(axioms: list[Formula]) -> int:
+    return sum(normal_form_size(a) for a in axioms)
+
+
+@dataclass
+class Selection:
+    """The cost-minimal certified systems at one λ (ties are all reported), plus every
+    certified system found, for the hull report."""
+
+    lam: float
+    best_cost: float
+    systems: list[list[str]]       # fol texts of each cost-minimal certified system
+    all_certified: list[list[str]] # fol texts of every certified system found
+    checks: int                    # how many subsets were certification-checked
+    exhausted: bool                # False when the check cap stopped the search early
+
+    def to_json(self) -> dict:
+        return {"lam": self.lam, "best_cost": self.best_cost, "systems": self.systems,
+                "all_certified": self.all_certified, "checks": self.checks, "exhausted": self.exhausted}
+
+
+def _enumerate(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
+               timeout_ms: int, bnb: bool) -> Selection:
+    if len(pool) > MAX_POOL:
+        raise TooMany(f"pool of {len(pool)} exceeds the cap of {MAX_POOL}")
+    best: float | None = None
+    systems: list[list[str]] = []
+    all_certified: list[list[str]] = []
+    checks = 0
+    exhausted = False
+    order = sorted(range(len(pool)), key=lambda i: fol.to_text(pool[i]))
+
+    def visit(chosen: list[int], prune: bool) -> None:
+        nonlocal best, systems, all_certified, checks, exhausted
+        if not chosen:
+            return
+        axioms = [pool[i] for i in chosen]
+        c = cost(axioms, plausibilities, lam)
+        if prune and best is not None and c > best + _EPS:
+            return  # pruning: adding axioms only raises the cost (charges are positive)
+        if checks >= MAX_CHECKS:
+            exhausted = True
+            return
+        checks += 1
+        if not check_system(axioms, record, timeout_ms).certified:
+            return
+        texts = sorted(fol.to_text(a) for a in axioms)
+        all_certified.append(texts)
+        if best is None or c < best - _EPS:
+            best = c
+            systems = [texts]
+        elif abs(c - best) <= _EPS:
+            systems.append(texts)
+
+    if bnb:
+        def dfs(pos: int, chosen: list[int]) -> None:
+            visit(chosen, prune=True)
+            if exhausted:
+                return
+            for i in range(pos, len(order)):
+                if best is not None:
+                    partial = cost([pool[j] for j in chosen] + [pool[order[i]]], plausibilities, lam)
+                    if partial > best + _EPS:
+                        continue
+                dfs(i + 1, chosen + [order[i]])
+                if exhausted:
+                    return
+        dfs(0, [])
+    else:
+        for mask in range(1, 1 << len(order)):
+            visit([order[b] for b in range(len(order)) if mask >> b & 1], prune=False)
+            if checks >= MAX_CHECKS:
+                exhausted = True
+                break
+    assert best is not None or not all_certified
+    return Selection(lam, best if best is not None else float("inf"), systems, all_certified, checks, exhausted)
+
+
+def select_bruteforce(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
+                     timeout_ms: int = 5000) -> Selection:
+    """Reference selection: every subset is certification-checked (small pools only)."""
+    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=False)
+
+
+def select(pool: list[Formula], record: Record, plausibilities: dict[str, float], lam: float,
+           timeout_ms: int = 5000) -> Selection:
+    """Branch-and-bound selection at one λ; cross-checked against select_bruteforce in tests."""
+    return _enumerate(pool, record, plausibilities, lam, timeout_ms, bnb=True)
+
+
+def hull_intervals(certified: list[list[str]], pool: list[Formula],
+                   plausibilities: dict[str, float]) -> list[dict]:
+    """The lower convex hull of (|A|, u(A)) over the certified systems, each vertex with the
+    λ-interval on which it is cost-minimal (amendment A5, F5). Returns [] when fewer than one system."""
+    by_text = {fol.to_text(f): f for f in pool}
+    points: list[tuple[int, float, list[str]]] = []
+    seen: set[tuple[int, float]] = set()
+    for texts in certified:
+        axioms = [by_text[t] for t in texts]
+        key = (_size(axioms), round(_u(axioms, plausibilities), 12))
+        if key in seen:
+            continue
+        seen.add(key)
+        points.append((key[0], key[1], texts))
+    if not points:
+        return []
+    points.sort(key=lambda p: (p[0], p[1]))
+    # lower convex hull, monotone chain; collinear middle points dropped
+    hull: list[tuple[int, float, list[str]]] = []
+    for p in points:
+        while len(hull) >= 2:
+            (x1, y1, _), (x2, y2, _) = hull[-2], hull[-1]
+            if (x2 - x1) * (p[1] - y1) - (y2 - y1) * (p[0] - x1) <= 0:
+                hull.pop()
+            else:
+                break
+        hull.append(p)
+    out = []
+    for i, (x, y, texts) in enumerate(hull):
+        # cost_i <= cost_j  <=>  lam*(x_i - x_j) <= y_j - y_i; hull is sorted by increasing x
+        lam_lo = 0.0
+        for j in range(i + 1, len(hull)):
+            xj, yj, _ = hull[j]
+            if xj > x:
+                lam_lo = max(lam_lo, (yj - y) / (x - xj))
+        lam_hi = float("inf")
+        for j in range(i):
+            xj, yj, _ = hull[j]
+            if xj < x:
+                lam_hi = min(lam_hi, (yj - y) / (x - xj))
+        out.append({"size": x, "implausibility": y, "system": texts,
+                    "lam_interval": [lam_lo, lam_hi]})
+    return out
+
+
+def margin_at(certified: list[list[str]], pool: list[Formula], plausibilities: dict[str, float],
+              lam: float) -> float | None:
+    """Best cost minus runner-up cost at one λ over the certified systems (None if fewer than two)."""
+    by_text = {fol.to_text(f): f for f in pool}
+    costs = sorted(cost([by_text[t] for t in texts], plausibilities, lam) for texts in certified)
+    if len(costs) < 2:
+        return None
+    return costs[1] - costs[0]
