@@ -14,21 +14,24 @@ function fake(name: string, script: string): string {
   return file;
 }
 afterAll(() => rmSync(directory, { recursive: true, force: true }));
+// Windows cannot start a "#!/bin/sh" file (spawn gives ENOENT), so the four checks that
+// run a stand-in are skipped there. They run on Linux, which is what CI uses.
+const withStandIn = it.skipIf(process.platform === "win32");
 
 describe("running Lean", () => {
-  it("reports the exit code and the diagnostics, without the temporary path", async () => {
+  withStandIn("reports the exit code and the diagnostics, without the temporary path", async () => {
     const accepted = await executeLean(fake("accepts", 'echo "checked $1"'), "theorem t : True := trivial");
     expect(accepted).toEqual({ kind: "finished", code: 0, output: "checked ./Proof.lean" });
     const rejected = await executeLean(fake("rejects", 'echo "error: unsolved goals" >&2; exit 1'), "x");
     expect(rejected).toEqual({ kind: "finished", code: 1, output: "error: unsolved goals" });
   });
 
-  it("gives the source to the program as a file", async () => {
+  withStandIn("gives the source to the program as a file", async () => {
     const run = await executeLean(fake("prints", 'cat "$1"'), "theorem t : True := trivial");
     expect(run).toEqual({ kind: "finished", code: 0, output: "theorem t : True := trivial" });
   });
 
-  it("does not pass the server's environment to the program", async () => {
+  withStandIn("does not pass the server's environment to the program", async () => {
     process.env.FAKE_LEAN_SECRET = "must-not-leak";
     try {
       const run = await executeLean(fake("env", "env"), "x");
@@ -39,7 +42,7 @@ describe("running Lean", () => {
     }
   });
 
-  it("a run that does not finish is not a verdict", async () => {
+  withStandIn("a run that does not finish is not a verdict", async () => {
     const started = Date.now();
     // exec: the shell is replaced by the program, as with the real binary, so the kill reaches it.
     const run = await executeLean(fake("hangs", "exec sleep 30"), "x", 300);

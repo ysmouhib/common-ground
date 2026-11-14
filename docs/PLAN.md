@@ -513,3 +513,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   app/api change). Committed as this session's commit. Escalations: none.
   Next: owner sessions CGR-2..CGR-5; the worker queue stays blocked until
   CGR-5 is ticked.
+- 2026-11-14 — BACKLOG item, at the owner's "next step": the 4 checks in
+  `api/proofVerifier.test.ts` that start a `#!/bin/sh` stand-in are skipped on
+  win32 with the reason in the file (a test-only fix is not possible: Windows
+  starts only real executables without a shell, and `executeLean` must not use
+  one); Linux CI still runs all 43. On this machine `npm test`: exit 0, 39
+  passed, 4 skipped (was 39 passed, 4 failed, exit 1); `npm run check` and
+  `npm run lint` exit 0. New BACKLOG entry: vitest fails every suite when the
+  shell's working directory has a lower-case drive letter — run it from
+  `C:\...`. Engine and e2e not re-run (no engine, api or build change since
+  cc563a3: 170 passed; e2e 33 passed with Lean). Committed as this session's
+  commit. Escalations: none. Next: unchanged — owner sessions CGR-2..CGR-5.
