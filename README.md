@@ -88,7 +88,7 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   about formalization.
 * **The language-model formalizer (`engine/commonground/formalize.py`) has been run
   against one live model only** — deepseek-flash, temperature 0, 13 and 14 November 2026
-  (runs recorded in `results/direct/`, `results/llm/` and `results/llm-4000/`, every reply kept). It is
+  (runs recorded in `results/direct/`, `results/llm/`, `results/llm-4000/` and `results/direct-4000/`, every reply kept). It is
   also tested with scripted clients, a local HTTP stub and a replay of the
   dataset's own formulas. No other model, provider or setting has been benchmarked.
   Reproduce with workflow `model-benchmark`, inputs `base_url=https://api.deepseek.com/v1`,
@@ -99,6 +99,7 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   | model answers directly | 162 of 204 (79.4 %, 95 % Wilson interval 73.3–84.4 %) | 162 of 194 (83.5 %, 77.6–88.1 %) |
   | model formalizes, solver decides | 119 of 204 (58.3 %, 51.5–64.9 %) | 119 of 146 (81.5 %, 74.4–87.0 %) |
   | model formalizes, solver decides, reply limit 4000 | 145 of 204 (71.1 %, 64.5–76.9 %) | 145 of 189 (76.7 %, 70.2–82.2 %) |
+  | model answers directly, reply limit 4000 | 163 of 204 (79.9 %, 73.9–84.8 %) | 163 of 198 (82.3 %, 76.4–87.0 %) |
 
   ```bash
   export LLM_API_KEY=...   # any endpoint that implements POST {base-url}/chat/completions
@@ -121,8 +122,11 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   NoFormalization instead of 58. On the same 204 examples the two reply limits agree on
   170 (115 both right, 55 both wrong); the 4000 limit is right where the 2000 limit is
   wrong on 30 examples and the reverse on 4 (exact McNemar p = 6.2×10⁻⁶). The direct run was
-  recorded at 2000 and was not re-run; the workflow input `max_tokens=4000` reproduces the
-  new row. A run is resumable, names its
+  re-run at a 4000-token reply limit (`results/direct-4000/`): 163 of 204 right (79.9 %), 198
+  answered, 6 Invalid. Paired with `results/llm-4000/` at the same reply limit: both right on
+  136, only direct on 27, only formalizing on 9, neither on 32 (exact McNemar p = 0.0039) —
+  at equal reply limits the direct mode stays ahead. The workflow input `max_tokens=4000`
+  reproduces both 4000-token rows. A run is resumable, names its
   model and settings in `config.json`, and stops instead of scoring a provider
   outage as wrong answers. Providers differ: add `--no-json-mode` or
   `--no-temperature` for one that rejects `response_format=json_object` or any

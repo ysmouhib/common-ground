@@ -16,6 +16,10 @@ format. Versions follow Semantic Versioning.
   2026-11-13, results in `results/direct` and `results/llm`): direct answering
   162/204 (79.4 %), formalize-then-solve 119/204 (58.3 %, 81.5 % when a
   formalization parses); Wilson intervals and exact McNemar in the README.
+- Live deepseek-flash runs at a 4000-token reply limit (2026-11-14,
+  `results/llm-4000/` and `results/direct-4000/`): direct answering 163/204
+  (79.9 %, 82.3 % when it answers, 6 Invalid); paired at the same limit with
+  the formalizing mode, exact McNemar p = 0.0039.
 - Golden corpus skeleton `examples/co2-2021/` (Swiss CO2-law votation, vote
   644): sources, camp definitions, 13 verbatim statements, and a machine-
   checked hand-worked golden reconstruction (`golden.json`).
