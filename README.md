@@ -36,9 +36,9 @@ Web app: `npm ci`, copy `.env.example` to `.env` and set `DATABASE_URL` (MySQL)
 and `REVIEWER_TOKEN`, `npx drizzle-kit push --force`, `npm run dev`.
 
 A live language-model run needs an endpoint you configure — the exact commands
-are under "What has not been shown" below. The paste-your-own-debate flow is
-being built in Phase 6 of [`docs/PLAN.md`](docs/PLAN.md); the engine CLI above
-works today. On a clean machine the engine-only path reaches a first analysis
+are under "What has not been shown" below. The paste-your-own-debate flow is in
+the web app (Phase 6 of [`docs/PLAN.md`](docs/PLAN.md)); the engine CLI above works
+without it.
 in a few minutes; the 10-minute acceptance test for the full release is
 CG9-11 in the plan (not run here).
 
@@ -55,8 +55,8 @@ kernel-checked, solver-checked, or shown as pending — never silently picked.
 | Reconstruct what one camp's claims rest on | `python -m commonground camp record.json --candidates cand.json --lam 0.3 --lean --out out` | `out/report.md`: the selected axioms are **verified sufficient** — e.g. "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)" — with load ranking, negative controls, and — when `--plausibilities` gives ranges — a plausibility-sensitivity section |
 | Compare two camps | `python -m commonground co2 --out co2-out` (bundled CO2 vote), or `crosscamp A.json B.json --candidates a.json b.json --out out` | `crosscamp.md`: provable common ground (two tiers) and the exact fault lines; on the CO2 example the camps are consistent and diverge at the root (top-ranked axiom pair, rank 8) |
 
-The Camps view takes pasted texts and statements now; the report and comparison views are
-still Phase 6 of [`docs/PLAN.md`](docs/PLAN.md). The CLI above works today.
+The Camps, Axiom queue and Compare views all work now (CG6-3/CG6-4); the engine CLI
+above works standalone too.
 
 ## What has been shown, and by what
 
@@ -116,7 +116,7 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   204 examples (52 right only when answering directly, 9 only when formalizing;
   exact McNemar p ≈ 1.8×10⁻⁸): the direct mode is ahead on this dataset, mostly because
   58 of the 204 examples produced no parseable formalization. Both runs limited a reply to
-  2000 tokens (`--max-tokens 2000`, which the workflow still passes by default), and all
+  2000 tokens (`--max-tokens 2000`; the workflow default moved to 4000 on 2026-11-14), and all
   four arguments longer than 1000 characters are among the 58. Re-run on 14 November 2026
   with a 4000-token reply limit (`results/llm-4000/`): 145 of 204 right and 15
   NoFormalization instead of 58. On the same 204 examples the two reply limits agree on
@@ -328,13 +328,13 @@ e2e/                   end-to-end checks against a running build
   written with Claude (Anthropic) in working sessions on 9–10 November 2026,
   following a review of the first version. I directed the work and decide what is
   claimed here.
-* Every number above was produced by the commands shown, with Python 3.13, Z3
-  5.3.3, PySAT 1.9.dev21 and Lean 4.35.0. The CI workflow repeats the run.
-
+* Every number above was produced by the commands shown, on this machine with Python
+  3.12.10, Z3 5.4.1, PySAT 1.9.dev22 and Lean 4.35.0 — the versions each run records in
+  its `summary.json`. The CI workflow repeats the run.
 ## Limits
 
-* One debate, entered by hand. There is no pipeline from prose to statements in
-  the web app.
+* One debate at a time, entered by hand or pasted into the Camps view; the `extract`
+  route turns a pasted text into statements.
 * First-order logic over one kind of object, without arithmetic or modality. Most
   real arguments are not deductive; this tool only sees the part that is.
 * The conflict analysis enumerates all minimal conflicts, which is exponential in
@@ -352,4 +352,4 @@ e2e/                   end-to-end checks against a running build
   was not the source's wording, one stops before its sentence ends and is now
   marked as cut, one date was a day off, and one record's author, publisher and
   date lines now follow what the report prints.
-* This repository has no licence file yet.
+* This repository is MIT-licensed — see [`LICENSE`](LICENSE).
