@@ -211,7 +211,7 @@ number guard; the README evidence tables.
 
 ### Phase 7 — Golden dataset (Swiss CO2-law votation, 13 June 2021, vote 644)
 
-- [ ] **CG7-1** — Corpus skeleton: source list, camp definitions, first
+- [x] **CG7-1** — Corpus skeleton: source list, camp definitions, first
   hand-worked statement lists. Files: `examples/co2-2021/README.md`,
   `examples/co2-2021/statements.json`. Deps: campaign materials from
   swissvotes.ch (owner supplies if web access is unavailable). Done-when:
@@ -421,3 +421,9 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   is a statement span. Full engine suite: exit 0, 169 passed, 0 skipped
   (210 s). Committed as this session's commit. Escalations: none. Next:
   CG7-1.
+- 2026-11-13 — CG7-1: examples/co2-2021/ skeleton committed: statements.json
+  (vote 644 metadata, 6 source URLs incl. the DE/FR official booklets from
+  swissvotes.ch, camp definitions, 13 verbatim DE statements with booklet
+  pages, fetched live and text-extracted with pdftotext) + README.md.
+  Engine untouched; suite remains exit 0, 169 passed (CG2-4 run). Committed as
+  this session's commit. Escalations: none. Next: CG7-2.

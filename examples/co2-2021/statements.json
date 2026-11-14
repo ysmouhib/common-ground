@@ -1,0 +1,127 @@
+{
+  "vote": {
+    "id": 644,
+    "date": "2021-06-13",
+    "title": "Bundesgesetz über die Verminderung von Treibhausgasemissionen (CO2-Gesetz), 4. Vorlage",
+    "outcome": "rejected",
+    "no_share_percent": 51.6,
+    "sources": [
+      {
+        "name": "Offizielles Abstimmungsbuechlein, Deutsch (Argumente beider Komitees)",
+        "url": "https://swissvotes.ch/vote/644.00/brochure-de.pdf"
+      },
+      {
+        "name": "Brochure officielle, Francais",
+        "url": "https://swissvotes.ch/vote/644.00/brochure-fr.pdf"
+      },
+      {
+        "name": "Abstimmungstext (Gesetzestext), Deutsch",
+        "url": "https://swissvotes.ch/vote/644.00/abstimmungstext-de.pdf"
+      },
+      {
+        "name": "Botschaft des Bundesrates zum CO2-Gesetz",
+        "url": "https://swissvotes.ch/vote/644.00/botschaft-de.pdf"
+      },
+      {
+        "name": "Seite admin.ch zum CO2-Gesetz (Ja-Empfehlung)",
+        "url": "https://admin.ch/co2-gesetz"
+      },
+      {
+        "name": "Referendumskomitee (Nein-Empfehlung)",
+        "url": "https://teuer-nutzlos-ungerecht.ch"
+      }
+    ]
+  },
+  "camps": {
+    "yes": {
+      "name": "Bundesrat und Parlament",
+      "role": "Befuerworter der Vorlage",
+      "source_page_de": 64
+    },
+    "no": {
+      "name": "Referendumskomitee (Wirtschaftskomitee Nein zum CO2-Gesetz)",
+      "role": "Gegner der Vorlage",
+      "source_page_de": 63
+    }
+  },
+  "statements": [
+    {
+      "id": "no-1",
+      "camp": "no",
+      "text": "Benzin und Diesel werden 12 Rappen pro Liter teurer.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "no-2",
+      "camp": "no",
+      "text": "Für eine durchschnittliche vierköpfige Familie verteuern all diese zusätzlichen Abgaben je nach Situation den Lebensunterhalt um bis zu Fr. 1000 pro Jahr.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "no-3",
+      "camp": "no",
+      "text": "Das CO2-Gesetz hat keinerlei Einfluss auf das Klima.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "no-4",
+      "camp": "no",
+      "text": "Die Schweiz trägt gerade einmal 0,1% zum weltweiten CO2-Ausstoss bei.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "no-5",
+      "camp": "no",
+      "text": "Das Gesetz trifft vor allem die mittleren und unteren Einkommen; das ist ungerecht und unsozial.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "no-6",
+      "camp": "no",
+      "text": "Das neue CO2-Gesetz ist kein Kompromiss, sondern ein radikales Gesetz, das nur auf Verbote und Vorschriften setzt.",
+      "source": "brochure-de.pdf p. 63"
+    },
+    {
+      "id": "yes-1",
+      "camp": "yes",
+      "text": "Die Schweiz ist vom Klimawandel besonders stark betroffen.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-2",
+      "camp": "yes",
+      "text": "Wenn Gletscher schmelzen und durch Erdrutsche Häuser und Strassen verschüttet werden, führt dies zu hohen Kosten für Bevölkerung und Wirtschaft.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-3",
+      "camp": "yes",
+      "text": "Nichtstun ist deshalb keine Option.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-4",
+      "camp": "yes",
+      "text": "Wie andere Staaten muss auch die Schweiz jetzt ihre Verantwortung wahrnehmen.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-5",
+      "camp": "yes",
+      "text": "Das Gesetz unterstützt klimafreundliche Investitionen; dadurch entstehen Arbeitsplätze mit Zukunft.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-6",
+      "camp": "yes",
+      "text": "Das Gesetz ist fair und sozial.",
+      "source": "brochure-de.pdf p. 64"
+    },
+    {
+      "id": "yes-7",
+      "camp": "yes",
+      "text": "Mit dem Gesetz reduzieren wir die Abhängigkeit von den ausländischen Erdölkonzernen und investieren stattdessen mehr Geld in der Schweiz.",
+      "source": "brochure-de.pdf p. 65"
+    }
+  ]
+}
