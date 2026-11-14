@@ -727,3 +727,175 @@ def baseline_system(record: Record, timeout_ms: int = 5000, lean_bin: str | None
     return {"stated": stated_checks, "minimal_stated": minimal_checks,
             "stated_formulas": [fol.to_text(f) for f in stated],
             "minimal_formulas": [fol.to_text(f) for f in minimal]}
+
+
+# ---------------------------------------------------------------------------
+# Per-camp report (CG4-2, design §2): statements → axioms → load ranking →
+# certificate statuses, as JSON data plus a Markdown rendering. Vocabulary per
+# brief §5 and RESEARCH.md §14.1/§15.3: "verified sufficient", "plausibility
+# estimate", badges SUFFICIENT (kernel-checked) / SOLVER-CHECKED / PENDING;
+# never "probability", "central", "core belief".
+
+import json as _json
+
+from . import load as _load
+from .argmap import enumerate_mus_mss as _enumerate_mus_mss
+
+
+def load_record(path) -> Record:
+    """Read a camp record JSON: {"camp": ..., "documents": [{"id", "text"}],
+    "statements": [{"id", "stance", "fol", "document", "quote", "span": [s, e]}]}."""
+    raw = _json.load(open(path, encoding="utf-8"))
+    docs = [Document(d["id"], d["text"]) for d in raw["documents"]]
+    stmts = [RecordStatement(s["id"], s["stance"], s.get("fol"), s["document"], s["quote"],
+                             (s["span"][0], s["span"][1])) for s in raw["statements"]]
+    return Record(raw["camp"], docs, stmts)
+
+
+def _targets(record: Record) -> list[Formula]:
+    """E⁺: endorsed claims plus the negations of firm rejections."""
+    out = [st.formula() for st in record.statements
+           if st.stance == STANCE_ENDORSED and st.formula() is not None]
+    out += [fol.Not(st.formula()) for st in record.statements
+            if st.stance == STANCE_FIRM and st.formula() is not None]
+    return out
+
+
+def _coverage(record: Record, timeout_ms: int) -> dict:
+    """κ = 1 − m/|E⁺| with m a smallest correction set, plus the minimal conflicts
+    (RESEARCH.md §14.3), computed with the same MARCO enumeration argmap uses."""
+    targets = _targets(record)
+    texts = [fol.to_text(f) for f in targets]
+    by_text = dict(zip(texts, targets))
+
+    def is_sat(subset: frozenset) -> bool | None:
+        answer = _verdict.satisfiable([by_text[t] for t in sorted(subset)], timeout_ms)
+        return {"sat": True, "unsat": False}.get(answer.status)
+
+    muses, msses = _enumerate_mus_mss(texts, is_sat, 2000)
+    m = len(targets) - max((len(s) for s in msses), default=0)
+    return {"kappa": 1.0 - m / len(targets) if targets else 1.0,
+            "smallest_correction_size": m,
+            "minimal_conflicts": [sorted(x) for x in muses]}
+
+
+def report_camp(record: Record, source: CandidateSource, plausibilities: dict[str, float] | None = None,
+                lam: float = 0.3, timeout_ms: int = 5000, lean_bin: str | None = None) -> dict:
+    """The full per-camp report as plain JSON-able data (design §2)."""
+    record.validate()
+    plausibilities = dict(plausibilities or {})
+    pool_result = collect(source, record)
+    stated = _targets(record)
+    pool = stated + [c.formula for c in pool_result.candidates]
+    for c in pool_result.candidates:
+        plausibilities.setdefault(fol.to_text(c.formula), 0.5)  # anchored mid level when unscored
+    # brute force gives the hull all certified systems; beyond 12 pool items the
+    # branch-and-bound search is used and the hull covers what it found
+    if len(pool) <= 12:
+        sel = select_bruteforce(pool, record, plausibilities, lam, timeout_ms)
+        search = "bruteforce"
+    else:
+        sel = select(pool, record, plausibilities, lam, timeout_ms)
+        search = "branch-and-bound"
+    by_text = {fol.to_text(f): f for f in pool}
+    hull = hull_intervals(sel.all_certified, pool, plausibilities)
+    targets = _targets(record)
+    systems = []
+    for texts in sel.systems:
+        axioms = [by_text[t] for t in texts]
+        checks = check_system(axioms, record, timeout_ms, lean_bin)
+        systems.append({"axioms": texts, "cost": cost(axioms, plausibilities, lam),
+                        "certified": checks.certified, "checks": checks.to_json(),
+                        "load": _load.load_vector(axioms, targets, timeout_ms),
+                        "negative_controls": negative_controls(axioms, record, lean_bin, timeout_ms)})
+    base = baseline_system(record, timeout_ms, lean_bin)
+    stated_texts = {fol.to_text(f) for f in stated}
+    abstention = bool(sel.systems) and all(set(s) <= stated_texts for s in sel.systems)
+    return {
+        "camp": record.camp, "lam": lam, "source": source.describe(),
+        "statements": [{"id": st.id, "stance": st.stance, "fol": st.fol_text,
+                        "document": st.document, "span": list(st.span)} for st in record.statements],
+        "pool": {"candidates": [{"fol": c.fol_text, "quotes": [list(q) for q in c.quotes]}
+                                for c in pool_result.candidates],
+                 "dropped": [{"fol": d.fol_text, "reason": d.reason} for d in pool_result.dropped]},
+        "selection": sel.to_json(), "search": search, "hull": hull,
+        "margin_to_runner_up": margin_at(sel.all_certified, pool, plausibilities, lam),
+        "systems": systems,
+        "baseline": {"stated_certified": base["stated"].certified,
+                     "minimal_stated_certified": base["minimal_stated"].certified,
+                     "stated_formulas": base["stated_formulas"],
+                     "minimal_formulas": base["minimal_formulas"]},
+        "coverage": None if sel.all_certified else _coverage(record, timeout_ms),
+        "abstention": abstention,
+    }
+
+
+def render_markdown(report: dict) -> str:
+    """The same report as Markdown. Describes, never diagnoses (brief §5)."""
+    lines = [f"# Camp `{report['camp']}` — reconstructed axiom systems",
+             "",
+             f"λ = {report['lam']}; source: `{report['source'].get('model', '?')}`. "
+             "These axioms are **verified sufficient** to generate this camp's claims — "
+             "a certified deduction, not a claim about what anyone believes.",
+             "",
+             "## Statements (reviewed)", "",
+             "| id | stance | FOL |", "|---|---|---|"]
+    for st in report["statements"]:
+        lines.append(f"| {st['id']} | {st['stance']} | `{st['fol']}` |")
+    lines += ["", "## Unstated candidates proposed", ""]
+    if report["pool"]["candidates"]:
+        lines += ["| FOL | supporting quotes |", "|---|---|"]
+        for c in report["pool"]["candidates"]:
+            lines.append(f"| `{c['fol']}` | {len(c['quotes'])} |")
+    else:
+        lines.append("None proposed.")
+    if report["pool"]["dropped"]:
+        lines += ["", "Dropped before scoring (no parse or no verbatim quote):"]
+        for d in report["pool"]["dropped"]:
+            lines.append(f"- `{d['fol']}` — {d['reason']}")
+    lines += ["", "## Selected systems (cost-minimal, ties reported)", ""]
+    sel = report["selection"]
+    if not sel["systems"]:
+        lines += ["No certified axiom system exists for this record. See coverage below."]
+    for i, system in enumerate(report["systems"], start=1):
+        badge = "SUFFICIENT (kernel-checked)" if any(
+            c["badge"] == BADGE_KERNEL for c in system["checks"]["sufficiency"]) else (
+            "SOLVER-CHECKED (not kernel-certified)" if system["checks"]["sufficiency"]
+            else "PENDING")
+        lines += [f"### System {i} — cost {system['cost']:.4f} — {badge}", "",
+                  "Axioms:", ""]
+        for a in system["axioms"]:
+            lines.append(f"- `{a}`")
+        lines += ["", "Load ranking:", "", "| axiom | load |", "|---|---|"]
+        for row in sorted(system["load"], key=lambda r: -r["load"]):
+            lines.append(f"| `{row['axiom']}` | {row['load']} |")
+        controls = system["negative_controls"]
+        lines += ["", f"Negative controls: {'all passed' if controls['all_passed'] else 'FAILED — see controls'}.",
+                  ""]
+    if report["hull"]:
+        lines += ["## Hull over λ (each system optimal on its interval)", "",
+                  "| size | implausibility | λ-interval |", "|---|---|---|"]
+        for h in report["hull"]:
+            hi = "∞" if h["lam_interval"][1] == float("inf") else f"{h['lam_interval'][1]:.4f}"
+            lines.append(f"| {h['size']} | {h['implausibility']:.4f} | [{h['lam_interval'][0]:.4f}, {hi}] |")
+        lines += [""]
+    if report["margin_to_runner_up"] is not None:
+        lines += [f"Margin to the runner-up at λ = {report['lam']}: {report['margin_to_runner_up']:.4f}", ""]
+    base = report["baseline"]
+    lines += ["## Symbolic baseline (A = E(C), same certified checks)", "",
+              f"Stated system certified: {base['stated_certified']}; "
+              f"minimal stated system certified: {base['minimal_stated_certified']}.", ""]
+    if report["abstention"]:
+        lines += ["## Abstention", "",
+                  "No proposed unstated axiom pays for itself: the selected system is the stated "
+                  "one (A₀), reported as such.", ""]
+    if report["coverage"] is not None:
+        cov = report["coverage"]
+        lines += ["## Coverage (no axiom system exists)", "",
+                  f"Consistent coverage κ = {cov['kappa']:.4f}; smallest correction set: "
+                  f"{cov['smallest_correction_size']} of {len(report['statements'])} statements.",
+                  "These statements cannot all hold together; the minimal conflicts are:", ""]
+        for conflict in cov["minimal_conflicts"]:
+            lines.append("- " + ", ".join(f"`{c}`" for c in conflict))
+        lines += [""]
+    return "\n".join(lines)

@@ -3,6 +3,7 @@
     check     decide one argument given as formulas
     analyze   conflicts, concessions and justifications for a debate file
     extract   extract the statements of text files, with verbatim spans
+    camp      per-camp report: statements -> axioms -> load -> certificates
     folio     run the FOLIO benchmark (reference formalizations, or a language model)
     compare   paired comparison of two language-model runs, as JSON
     report    the same comparison as a Markdown summary
@@ -136,6 +137,37 @@ def _folio(args) -> int:
     return 0
 
 
+def _camp(args) -> int:
+    from . import abduce
+    from .argmap import TooMany
+    try:
+        record = abduce.load_record(args.record)
+        raw = json.loads(Path(args.candidates).read_text(encoding="utf-8"))
+        candidates = [abduce.Candidate(c["fol"],
+                                       [(q["document"], q["text"], (q["span"][0], q["span"][1]))
+                                        for q in c.get("quotes", [])])
+                      for c in raw["candidates"]]
+        plausibilities = (json.loads(Path(args.plausibilities).read_text(encoding="utf-8"))
+                         if args.plausibilities else {})
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"cannot read the inputs: {exc}", file=sys.stderr)
+        return 2
+    lean_bin = lean.find_lean() if args.lean else None
+    try:
+        report = abduce.report_camp(record, abduce.ScriptedSource(candidates), plausibilities,
+                                    args.lam, args.timeout_ms, lean_bin)
+    except TooMany as exc:
+        print(f"input too large for the documented scope: {exc}", file=sys.stderr)
+        return 2
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    (out / "report.md").write_text(abduce.render_markdown(report), encoding="utf-8")
+    print(json.dumps({"out": str(out), "camp": report["camp"], "selected_systems": len(report["systems"]),
+                      "abstention": report["abstention"]}, ensure_ascii=False))
+    return 0
+
+
 def _extract(args) -> int:
     from . import extract as extract_mod
     from .formalize import OpenAICompatible, ProviderError
@@ -198,6 +230,16 @@ def main(argv: list[str] | None = None) -> int:
     analyze.add_argument("debate")
     analyze.add_argument("--out")
     analyze.set_defaults(run=_analyze)
+
+    camp = commands.add_parser("camp", help="per-camp report: statements -> axioms -> load -> certificates")
+    camp.add_argument("record", help="camp record JSON (camp, documents, statements with stances/spans)")
+    camp.add_argument("--candidates", required=True,
+                      help="JSON file of scripted unstated candidates: {\"candidates\": [{\"fol\", \"quotes\": [...]}]}")
+    camp.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate")
+    camp.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
+    camp.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
+    camp.add_argument("--out", required=True, help="output directory: report.json and report.md")
+    camp.set_defaults(run=_camp)
 
     ex = commands.add_parser("extract", help="extract the statements of text files, with verbatim spans")
     ex.add_argument("files", nargs="+", help="text files; each file is one document, id = the path as given")

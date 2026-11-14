@@ -172,7 +172,7 @@ number guard; the README evidence tables.
   `argmap.py` minimal premise sets over each camp's certified system. Files:
   `engine/commonground/load.py`, `engine/tests/test_load.py`. Deps: CG3-5.
   Done-when: pytest exits 0.
-- [ ] **CG4-2** — Per-camp report (CLI): statements → axioms → load ranking →
+- [x] **CG4-2** — Per-camp report (CLI): statements → axioms → load ranking →
   certificate statuses, human-readable and JSON. Files:
   `engine/commonground/__main__.py`, one engine test file. Deps: CG4-1.
   Done-when: pytest exits 0; sample output recorded in the session log.
@@ -660,3 +660,4 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   formulations are asserted equal in test_load.py (3 tests: per-axiom counts, cross-check,
   redundant axiom load 0). Full suite running in background at commit time; test_load +
   test_abduce: 48 passed. Committed as this session's commit. Escalations: none. Next: CG4-2.
+- 2026-11-14 — CG4-2 done: per-camp report + CLI — `report_camp()`/`render_markdown()`/`load_record()` in `engine/commonground/abduce.py`, `camp` subcommand in `__main__.py` (record JSON, --candidates, --plausibilities, --lam, --lean, --out writes report.json + report.md; TooMany exits 2), coverage κ and abstention in the report. 4 tests in test_report.py (unstated system selected + load, abstention, κ<1 on contradictory record, CLI end-to-end). Sample CLI line: `python -m commonground camp record.json --candidates candidates.json --plausibilities plaus.json --lam 0.3 --lean --out out` → `{"camp": "campX", "selected_systems": 1, "abstention": false}`; report.md shows "System 1 — cost 1.0000 — SUFFICIENT (kernel-checked)", load 2/2/2, "Negative controls: all passed." Full suite exit 0, 222 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3. Committed as this session's commit. Escalations: none. Next: CG5-1 (cross-camp design doc).
