@@ -262,7 +262,7 @@ number guard; the README evidence tables.
   Done-when: committed.
 - [x] **CG9-5** — Issue template: research question. Files:
   `.github/ISSUE_TEMPLATE/research.md`. Done-when: committed.
-- [ ] **CG9-6** — `CHANGELOG.md` (Keep a Changelog) and tag `v2.0.0`. Files:
+- [x] **CG9-6** — `CHANGELOG.md` (Keep a Changelog) and tag `v2.0.0`. Files:
   `CHANGELOG.md`. Done-when: committed; tag created (push only with owner
   approval).
 - [ ] **CG9-7** — README release pass: badges (CI, MIT, Python/Node versions),
@@ -451,3 +451,8 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   rules, incl. never inventing citations). Docs-only; suite unchanged (exit 0,
   169 passed). Committed as this session's commit. Escalations: none. Next:
   CG9-6.
+- 2026-11-13 — CG9-6: CHANGELOG.md (Keep a Changelog; Unreleased lists the v2
+  work so far, 0.2.0 the v1 release) added; tag v2.0.0 created LOCALLY only —
+  not pushed (push needs owner approval and CG9-11 acceptance is not met yet).
+  Docs-only; suite unchanged (exit 0, 169 passed). Committed as this session's
+  commit. Escalations: none. Next: CG9-7.
