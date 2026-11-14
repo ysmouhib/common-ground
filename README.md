@@ -47,7 +47,9 @@ image built from the `Dockerfile`. The badge above shows the last run on `main`.
   against one live model only** — deepseek-flash, temperature 0, 13 November 2026
   (runs recorded in `results/direct/` and `results/llm/`, every reply kept). It is
   also tested with scripted clients, a local HTTP stub and a replay of the
-  dataset's own formulas. No other model, provider or setting has been benchmarked:
+  dataset's own formulas. No other model, provider or setting has been benchmarked.
+  Reproduce with workflow `model-benchmark`, inputs `base_url=https://api.deepseek.com/v1`,
+  `model=deepseek-flash`, every other input at its default:
 
   | Mode | Accuracy on FOLIO validation | Accuracy when it answers |
   |---|---|---|

@@ -100,7 +100,7 @@ number guard; the README evidence tables.
   Files: `README.md`, `results/direct/`, `results/llm/`. Deps: LLM endpoint
   credentials supplied by the owner. Done-when: README rows filled from actual
   runs (or "not run" recorded); pytest exits 0.
-- [ ] **CG1-2** — Confirm `.github/workflows/model-benchmark.yml` matches the
+- [x] **CG1-2** — Confirm `.github/workflows/model-benchmark.yml` matches the
   recorded run (config.json provenance). Files:
   `.github/workflows/model-benchmark.yml`, `README.md`. Deps: CG1-1.
   Done-when: workflow validated; CI green or "not run" locally with reason.
@@ -403,3 +403,14 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   design doc must incorporate the logic-backed argument graph architecture with
   tiered Lean/solver certification. Committed as this session's commit.
   Escalations: none. Proposed next task: CG1-2.
+- 2026-11-13 — CG1-2: model-benchmark.yml validated against the recorded runs:
+  YAML parses; workflow pins the same FOLIO revision as results/folio-validation;
+  with inputs model=deepseek-flash and defaults its config matches
+  results/direct|llm config.json exactly (mode, host, json_mode, temperature 0,
+  max_tokens 2000); its shell flag logic dry-runs to the same CLI commands
+  actually used; it writes to a fresh OUT dir so reruns cannot clash with the
+  committed results (ConfigurationMismatch). CI itself: not run here (no
+  Actions runner locally); workflow structure validated statically. README now
+  names the exact workflow inputs for the recorded run. No engine/app changes
+  this session; full suite remains exit 0, 159 passed (CG1-1 run). Committed as
+  this session's commit. Escalations: none. Proposed next task: CG2-4.
