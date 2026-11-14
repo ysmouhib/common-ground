@@ -130,7 +130,7 @@ number guard; the README evidence tables.
 
 ### Phase 3 — The abduction engine (CGR-5 approved 2026-11-14; [PLAN] on the design)
 
-- [ ] **CG3-1 [PLAN]** — Design doc first. Must incorporate the owner-approved
+- [x] **CG3-1 [PLAN]** — Design doc approved by the owner 2026-11-14 (`d89f374`). Must incorporate the owner-approved
   architecture (2026-11-13): a logic-backed argument graph (statements plus
   support/attack edges from CG2-4, entailment edges from `argmap.py`) locates
   candidate foundations via three signals — load/`justifications`, graph position
@@ -141,7 +141,7 @@ number guard; the README evidence tables.
   certificates, negative controls; soundness and termination notes; cites
   `THEORY.md`. Files: `docs/design/abduction.md`. Deps: CGR-5 (approved).
   Done-when: step-by-step plan produced in-session; owner approves before code.
-- [ ] **CG3-2** — LLM-independent candidate-generation interface in
+- [x] **CG3-2** — LLM-independent candidate-generation interface in
   `abduce.py` (scripted clients for tests). Files:
   `engine/commonground/abduce.py`, `engine/tests/test_abduce.py`. Deps: CG3-1.
   Done-when: pytest exits 0.
@@ -615,3 +615,12 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   the stated system A₀. Cites THEORY.md (CGR-5 approved). Docs-only; engine suite
   unchanged (exit 0, 170 passed at 7a8dd93). Committed as this session's commit.
   Escalations: none. Next: owner approves the design, then CG3-2 (`abduce.py`).
+- 2026-11-14 — CG3-1 approved by the owner; CG3-2 done: `engine/commonground/abduce.py`
+  adds Record/RecordStatement (stances endorsed/rejected_firm/rejected_soft, verbatim spans,
+  FOL drafts), Candidate, the CandidateSource protocol with ScriptedSource (tests) and
+  ChatSource (wraps formalize.ChatClient, repair loop), and collect(): every candidate must
+  parse in fol.parse and carry at least one quote whose span matches the source document,
+  else it is dropped with a reason before any plausibility score. 22 tests in
+  test_abduce.py (validation, spans, determinism, fenced JSON, repair loop). Full engine
+  suite: exit 0, 192 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3 (no app/api
+  change). Committed as this session's commit. Escalations: none. Next: CG3-3.
