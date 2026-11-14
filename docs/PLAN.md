@@ -269,7 +269,7 @@ number guard; the README evidence tables.
   quickstart, demo media, links to `THEORY.md` / `RESEARCH.md`. Files:
   `README.md`. Deps: CG9-1..CG9-6. Done-when: quickstart verified on a clean
   clone or "not run" recorded; every badge and claim true.
-- [ ] **CG9-8** — Engine packaging for PyPI; name decision recorded here.
+- [x] **CG9-8** — Engine packaging for PyPI; name decision recorded here.
   Files: `engine/pyproject.toml`, `docs/PLAN.md`. Done-when: build works or
   "not run" recorded.
 - [ ] **CG9-9** — CI publishes the container to GHCR. Files:
@@ -462,3 +462,11 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   path documented). The <10 min clean-clone acceptance (CG9-11) is NOT run —
   stated as such in the README. Docs-only; suite unchanged (exit 0, 169
   passed). Committed as this session's commit. Escalations: none. Next: CG9-8.
+- 2026-11-13 — CG9-8: engine packaging verified: `python -m build engine/`
+  produces commonground_engine-0.2.0 sdist+wheel (exit 0); the wheel installs
+  and imports outside the repo (`import commonground.extract` ok). pyproject
+  gained `license = "MIT"` (PEP 639 expression; classifier removed — they
+  conflict). Name decision: keep `commonground-engine` (already the pyproject
+  name). Publishing to PyPI: NOT done — release action for the owner.
+  Suite unchanged (exit 0, 169 passed). Committed as this session's commit.
+  Escalations: none. Next: CG9-9.

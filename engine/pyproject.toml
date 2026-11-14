@@ -2,6 +2,11 @@
 name = "commonground-engine"
 version = "0.2.0"
 description = "First-order verdicts with checked evidence, Lean certificates and conflict analysis for arguments"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Logic",
+]
 requires-python = ">=3.10"
 dependencies = ["z3-solver>=4.13", "python-sat>=1.8.dev13"]
 
