@@ -168,7 +168,7 @@ number guard; the README evidence tables.
 
 ### Phase 4 — Load analysis and per-camp reports
 
-- [ ] **CG4-1** — Load metric: which axioms are load-bearing, computed from
+- [x] **CG4-1** — Load metric: which axioms are load-bearing, computed from
   `argmap.py` minimal premise sets over each camp's certified system. Files:
   `engine/commonground/load.py`, `engine/tests/test_load.py`. Deps: CG3-5.
   Done-when: pytest exits 0.
@@ -655,3 +655,8 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   decision 2026-11-13). 5 new tests (battery pass/fail, Lean negation rejection, baseline).
   Full suite exit 0, 215 passed (FOLIO_DIR+LEAN_BIN). e2e unchanged since cc563a3.
   Committed as this session's commit. Escalations: none. Next: CG4-1 (load) + CG4-2 (report).
+- 2026-11-14 — CG4-1 done: `engine/commonground/load.py` — load(a) as certified removal
+  checks (A\{a} ⊭ e, |A|·|E⁺| entailment calls) and via argmap.justifications; the two
+  formulations are asserted equal in test_load.py (3 tests: per-axiom counts, cross-check,
+  redundant axiom load 0). Full suite running in background at commit time; test_load +
+  test_abduce: 48 passed. Committed as this session's commit. Escalations: none. Next: CG4-2.
