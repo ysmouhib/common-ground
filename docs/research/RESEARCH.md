@@ -1,8 +1,8 @@
 # Research notes for Common Ground v2 (Phase R)
 
-**Status, 13 November 2026.** Session 1 of 4 (formal core) is complete: RQ1 and RQ3
-have draft answers. Session 2 was started and stopped before its reading was finished;
-its interim results are in section 7, and RQ2 is not written. RQ4, RQ5 and RQ6 are not
+**Status, 14 November 2026.** Sessions 1 and 2 of 4 are complete: RQ1 and RQ3 (formal
+core, sections 2–3) and RQ2 with the terminology decision and the novelty search
+(reconstruction precedent, sections 7–10) have draft answers. RQ4, RQ5 and RQ6 are not
 started. Nothing below has been reviewed by the owner. The input to this file is the source pack, [`sources.md`](sources.md);
 section 4 lists where this file contradicts it and why.
 
@@ -15,7 +15,8 @@ section 4 lists where this file contradicts it and why.
 | `[bib]` | Bibliographic data checked; content not read. Anything said about the content is attributed to a source that was read. |
 | `[unverified]` | Not checked. Excluded from `THEORY.md`. |
 
-Checks used the Crossref REST API and publisher or author pages on 13 November 2026.
+Checks used the Crossref REST API and publisher, proceedings or author pages on 13 and
+14 November 2026.
 For the three core papers the copy read is the authors' preprint, so passages are
 located by section, never by journal page.
 
@@ -152,8 +153,8 @@ structure and behaviour. *J. Experimental & Theoretical Artificial Intelligence*
 Liffiton and Sakallah (§3).
 
 **Doherty, P., Łukaszewicz, W., & Szałas, A. (2001). Computing strongest necessary and
-weakest sufficient conditions of first-order formulas. *Proc. IJCAI-01*, Seattle.**
-Page range unresolved: one index gives 145–154, the authors' project page 145–151.
+weakest sufficient conditions of first-order formulas. *Proc. IJCAI-01*, Seattle,
+145–153.** Pages from the proceedings index at ijcai.org (Session 2).
 `[read]` Abstract and §1 of the copy on the authors' institutional site; the rest
 skimmed. It restates Lin's definitions for first-order formulas, relative to a set P of
 relation symbols (Definitions 1.1, 1.2), and computes the conditions by second-order
@@ -219,15 +220,16 @@ likely true. It dates the principle from Rissanen (1978).
 of Philosophy* 75(2), 76–92. doi:10.2307/2025686.** `[bib]` Source of "simplicity" and
 "consilience" as used by Hobbs et al. (§4.1).
 
-**Ng, H. T., & Mooney, R. J. (1990). The role of coherence in constructing and
-evaluating abductive explanations. Working Notes, AAAI Spring Symposium on Automated
-Abduction.** `[bib]` As listed in Hobbs et al.'s references; a conference paper by the
-same authors, "On the role of coherence in abductive explanation", *Proc. AAAI-90*,
-337–342, appears in a secondary index. Content as reported by Hobbs et al. (§7.3).
+**Ng, H. T., & Mooney, R. J. (1990). On the role of coherence in abductive explanation.
+*Proc. AAAI-90*, 337–342.** `[read]` in Session 2 (abstract, §1, §2, opening of §3.1,
+the coherence metric); see section 8.5. Hobbs et al. cite a different item by the same
+authors and year, "The role of coherence in constructing and evaluating abductive
+explanations", Working Notes, AAAI Spring Symposium on Automated Abduction, which is
+`[bib]` from their reference list only.
 
 **Reiter, R., & de Kleer, J. (1987). Foundations of assumption-based truth maintenance
-systems. *Proc. AAAI-87*.** `[unverified]` Cited by Lin (§5); the index I tried refused
-automated access. **de Kleer, J. (1986). An assumption-based TMS. *Artificial
+systems: Preliminary report. *Proc. AAAI-87*, 183–188.** `[abstract]` in Session 2, from
+AAAI's own copy. Cited by Lin (§5). **de Kleer, J. (1986). An assumption-based TMS. *Artificial
 Intelligence* 28(2), 127–162. doi:10.1016/0004-3702(86)90080-9** is `[bib]`.
 
 ## 2. RQ1. What is an axiom system, and what does sufficiency mean?
@@ -480,8 +482,8 @@ certified systems. A system that is optimal only on a sliver of λ is a fragile 
 - *That the winner is decisive.* Hobbs et al. flag as a shortcoming that their score
   ignores how far the best explanation is ahead (§8.3).
 - *That economy beats coherence.* Ng and Mooney (1990) argued for an explanatory
-  coherence criterion; Hobbs et al. dispute it (§7.3). I have read only the latter's
-  account, so this stays open.
+  coherence criterion; Hobbs et al. dispute it (§7.3). Session 1 had read only the
+  latter's account. Session 2 read Ng and Mooney; see section 8.5, item 4.
 
 ### 3.4 Recommendations
 
@@ -550,83 +552,313 @@ review of the finished `THEORY.md`; none is applied anywhere but in the drafts.
 
 ## 6. Carried to later sessions
 
-- RQ2 and the terminology decision (axiom, warrant, implicit premise): Session 2.
-- The novelty search of pack §I.3 (2025–2026 venues): first task of Session 2.
-- Read Ng and Mooney (1990) and Charniak and Shimony (1994) themselves, and resolve the
-  page range of Doherty et al. (2001) and the Reiter and de Kleer (1987) record.
+Done in Session 2 (sections 7–10): RQ2, the terminology decision, the novelty search,
+Ng and Mooney (1990), the page range of Doherty et al. (2001), the Reiter and de Kleer
+(1987) record. Still open from this list:
+
+- Read Charniak and Shimony (1994) itself (section 7.3).
 - The coverage metric for records with no axiom system (pack §I.1): Session 3, with
   Converse. The existence fact in RQ1 §2.4 is its formal starting point.
 - Whether a language model's plausibility estimate can be read as a probability, and
   the elicitation protocol (pack §I.5): Session 3.
 
-## 7. Session 2, interim state (13 November 2026)
+## 7. Session 2: sources (14 November 2026)
 
-Session 2 was stopped before its reading was finished. This section records what is
-established so far. RQ2, the terminology decision and H1 are **not** written, and
-nothing here has entered `THEORY.md`. The remaining work is listed in
-[`../PLAN.md`](../PLAN.md).
+Session 2 was started on 13 November, stopped, and finished on 14 November 2026. The
+tables below replace the interim state recorded on the 13th. Tags are those of
+section 0; "S2" marks what was checked in this session.
 
 ### 7.1 Classic entries of Themes A, B and C
 
 | Entry | Result |
 |---|---|
-| A1 Toulmin (1958), *The Uses of Argument*, Cambridge University Press | `[bib]` Confirmed through two contemporary reviews indexed by Crossref (*Philosophy* 34(130), 244–245; *The Cambridge Law Journal* 16(2), 251–252), which give publisher, year and "viii + 264" pages. Not read. |
+| A1 Toulmin (1958), *The Uses of Argument*, Cambridge University Press | `[bib]` Confirmed through two contemporary reviews indexed by Crossref (*Philosophy* 34(130), 244–245; *The Cambridge Law Journal* 16(2), 251–252), which give publisher, year and "viii + 264" pages. **Not read.** Everything said about Toulmin below is attributed to a source that was read. |
 | A2 Walton, Reed & Macagno (2008), *Argumentation Schemes*, Cambridge University Press | `[bib]` doi:10.1017/CBO9780511802034. Not read. |
 | B3 Alchourrón, Gärdenfors & Makinson (1985) | `[bib]` **Pack errors:** the second author is P. Gärdenfors, and the title continues ": Partial meet contraction and revision functions". *Journal of Symbolic Logic* 50(2), 510–530, doi:10.2307/2274239. |
-| B4 Nebel (1991), *Artificial Intelligence* 35(2), 203–220 | `[unverified]` **No such record found.** Crossref has Nebel, B. (1992), "Syntax based approaches to belief revision", in *Belief Revision* (Cambridge University Press), 52–88, doi:10.1017/CBO9780511526664.003, which may be what was meant. Not used anywhere. |
-| C1 Baader & Suntisrivaraporn (2008), KR-MED | `[unverified]` CEUR workshop papers are not in Crossref; not yet checked elsewhere. |
-| C1 Schlobach & Cornet (2003) | `[bib]` "Non-standard reasoning services for the debugging of description logic terminologies", *Proc. IJCAI-03*, 355–362 (pages from a secondary index). Journal follow-up: Schlobach, Huang, Cornet & van Harmelen (2007), "Debugging incoherent terminologies", *Journal of Automated Reasoning* 39(3), 317–349, doi:10.1007/s10817-007-9076-z. Whether the 2003 paper coined "pinpointing" is not checked. |
-| C1 Peñaloza, "Explaining axiom pinpointing" | `[bib]` Peñaloza, R. (2019), LNCS, 475–496, doi:10.1007/978-3-030-22102-7_22. The pack's title adds "in description logics". |
+| B4 Nebel (1991) | `[abstract]` S2. **Pack error:** the paper is not in *Artificial Intelligence*. It is Nebel, B. (1991), "Belief revision and default reasoning: Syntax-based approaches", in Allen, Fikes & Sandewall (eds.), *Proc. KR'91*, Morgan Kaufmann, 417–428 (header and abstract of the author's copy, `nebel-kr91.pdf` at uni-freiburg.de). A revised version is Nebel (1992), "Syntax based approaches to belief revision", in *Belief Revision* (Cambridge University Press), 52–88, doi:10.1017/CBO9780511526664.003 `[bib]`. Not used in any argument below. |
+| C1 Baader & Suntisrivaraporn (2008), "Debugging SNOMED CT using axiom pinpointing in the description logic EL+", *Proc. KR-MED 2008*, CEUR-WS Vol-410 | `[abstract]` S2. Listed in the volume's table of contents at ceur-ws.org; abstract, the passage defining the task and the conclusions read in the authors' copy. The task: for a consequence, compute "a minimal subset (all minimal subsets) of the ontology that have this consequence", called MinAs. |
+| C1 Schlobach & Cornet (2003) | `[bib]` "Non-standard reasoning services for the debugging of description logic terminologies", *Proc. IJCAI-03*, 355–362 (pages from a secondary index). Journal follow-up: Schlobach, Huang, Cornet & van Harmelen (2007), "Debugging incoherent terminologies", *Journal of Automated Reasoning* 39(3), 317–349, doi:10.1007/s10817-007-9076-z. Baader & Suntisrivaraporn cite the 2003 paper among the early work on pinpointing; **whether it coined the term is not established** by anything read, so the pack's "coined by" is not repeated. |
+| C1 Peñaloza, "Explaining axiom pinpointing" | `[bib]` Peñaloza, R. (2019), LNCS, 475–496, doi:10.1007/978-3-030-22102-7_22. The pack's title adds "in description logics". Related records seen on Crossref in S2: Baader, Peñaloza & Suntisrivaraporn (2007), "Pinpointing in the description logic EL+", KI 2007, LNCS, 52–67, doi:10.1007/978-3-540-74565-5_7; Baader & Peñaloza (2010), "Axiom pinpointing in general tableaux", *Journal of Logic and Computation* 20(1), 5–34, doi:10.1093/logcom/exn058. Both `[bib]`. |
 | C3 Reiter (1987) | `[bib]` **Pack error:** pages are 57–95, not 1–32. *Artificial Intelligence* 32(1), doi:10.1016/0004-3702(87)90062-2. |
 
-### 7.2 Theme A
+### 7.2 Theme A and the terminology sources
 
 | Entry | Result |
 |---|---|
-| A3 Sviridova, Cabrio & Villata, "Mining implicit arguments for reasoning: A survey" | `[abstract]` *Argument & Computation* 17(1), 3–27, doi:10.1177/19462174251344764. Crossref dates it 2025; the pack says 2026 and names the publisher where the journal belongs. Abstract read through HAL's public API. **Full text not read:** the HAL copy and the publisher's page both refuse automated access, and such checks are not to be worked around. The pack's account of what the survey says is therefore unconfirmed. Needs a copy from the owner. |
-| A4 "Finding the missing link: An algorithmic approach to reconstructing enthymemes" | `[abstract]` plus the opening of each section. **Pack error:** the authors are Saadat-Yazdi, A., & Wagemans, J. H. M. *Argumentation*, online first 30 October 2025, open access, doi:10.1007/s10503-025-09682-z. It is a procedure for a human analyst, built on the Periodic Table of Arguments; the abstract says it "can function as a guideline for human annotation" and is "suitable for implementation" in annotation software. The full text is extracted and not yet read through. |
-| A5 Lawrence & Reed, "Argument mining: A survey" | `[bib]` *Computational Linguistics* 45(4), 765–818, doi:10.1162/coli_a_00364 (Crossref dates it 2020). Copy obtained from the ACL Anthology; not read. |
-| A6 Li, Schlegel, Sun, Batista-Navarro & Nenadic (2025), "Large language models in argument mining: A survey" | `[abstract]` arXiv:2506.16383. The finding the pack quotes from it, on implied claims, is not confirmed yet. |
-| Ennis, R. H. (1982), "Identifying implicit assumptions", *Synthese* 51(1), 61–86, doi:10.1007/BF00413849 | `[bib]` Added as a candidate for the terminology decision. Not read. |
+| A3 Sviridova, Cabrio & Villata, "Mining implicit arguments for reasoning: A survey" | `[abstract]` *Argument & Computation* 17(1), 3–27, doi:10.1177/19462174251344764. Crossref dates it 2025; the pack says 2026 and names the publisher where the journal belongs. **Full text not read:** the HAL copy and the publisher's page refuse automated access, and such refusals are not worked around. The pack's account of what the survey says is unconfirmed, and RQ2 does not rest on it. A copy from the owner would let Session 4 close this. |
+| A4 Saadat-Yazdi & Wagemans (2025), "Finding the missing link: An algorithmic approach to reconstructing enthymemes" | `[abstract]` plus the opening of each section (read on 13 November). **Pack error:** the pack names Wagemans as first author. *Argumentation*, online first 30 October 2025, doi:10.1007/s10503-025-09682-z. A procedure for a human analyst built on the Periodic Table of Arguments; the abstract says it "can function as a guideline for human annotation" and is "suitable for implementation" in annotation software. The publisher's page refused the S2 request, so the read-through planned for this session was not done. |
+| A5 Lawrence & Reed, "Argument mining: A survey" | `[bib]` *Computational Linguistics* 45(4), 765–818, doi:10.1162/coli_a_00364 (Crossref dates it 2020). Not read. |
+| A6 Li, Schlegel, Sun, Batista-Navarro & Nenadic (2025), "Large language models in argument mining: A survey" | `[abstract]` arXiv:2506.16383. The finding the pack quotes from it is Session 4 material (RQ6) and is not confirmed. |
+| Hitchcock, D. (1985). Enthymematic arguments. *Informal Logic* 7(2–3), from p. 83. doi:10.22329/il.v7i2.2707 | `[read]` S2: the opening pages, the passage stating the thesis (pp. 87–88) and the closing page, in the journal's open PDF. Added in S2. |
+| Habernal, Wachsmuth, Gurevych & Stein (2018). The argument reasoning comprehension task: Identification and reconstruction of implicit warrants. *Proc. NAACL-HLT 2018*, 1930–1940. doi:10.18653/v1/N18-1175 | `[abstract]` S2. Added in S2: the dataset (ARCT) on which two of the systems below are evaluated. |
+| Ennis, R. H. (1982), "Identifying implicit assumptions", *Synthese* 51(1), 61–86, doi:10.1007/BF00413849 | `[bib]` Not read, and therefore not used in the terminology decision. |
 
-### 7.3 Novelty search: first pass, and what it already changes
+### 7.3 Carried items from Session 1
 
-*Done.* Fifteen keyword queries on the public arXiv API, limited to submissions since
-June 2024, and title lookups for eight earlier systems. *Not done.* The ACL Anthology
-(ArgMining, ACL, EMNLP), COMMA and AAAI; no paper has been read beyond its abstract.
+| Item | Result |
+|---|---|
+| Doherty, Łukaszewicz & Szałas (2001), page range | **Resolved:** 145–153, per the proceedings index of IJCAI-01 at ijcai.org. The two ranges seen in Session 1 (145–154, 145–151) are both wrong. Section 1.2 is corrected. |
+| Reiter & de Kleer (1987) | `[abstract]` Reiter, R., & de Kleer, J. (1987). Foundations of assumption-based truth maintenance systems: Preliminary report. *Proc. AAAI-87*, 183–188 (page numbers printed in AAAI's own copy, six pages). The abstract defines a clause management system as a generalization of de Kleer's ATMS and characterizes its computation by prime implicants, which is what Lin (§5) cites it for. Section 1.2 is corrected. |
+| Ng & Mooney (1990) | `[read]` Ng, H. T., & Mooney, R. J. (1990). On the role of coherence in abductive explanation. *Proc. AAAI-90*, 337–342. Abstract, §1, §2, the opening of §3.1 and the definition of the metric, in AAAI's own copy. See section 8.5. |
+| Charniak & Shimony (1994) | `[bib]` **Still not read.** The publisher refuses automated access and no open copy was looked for in S2. RQ3's statement about the probabilistic reading of costs therefore still rests on Hobbs et al.'s summary (§8.3). |
 
-| Work | What its abstract says | Bearing on our claim |
+### 7.4 Systems found in the novelty search
+
+*Scope of the search.* (1) Fifteen keyword queries on the public arXiv API, submissions
+since June 2024, and title lookups for eight earlier systems (13 November). (2) The
+tables of contents of the ArgMining workshops of 2025 (39 papers) and 2026 (17 papers)
+in the ACL Anthology, read by title. (3) Seven web searches aimed at ACL, EMNLP, AAAI,
+COMMA and KR in 2025–2026, which led to one IJCAI 2025 paper, one KR 2026 paper and one
+arXiv system. *Not covered:* the full proceedings of ACL, EMNLP and AAAI 2026 were not
+read through, and no programme or proceedings of COMMA 2026 was located.
+
+| Work | Tag | What it does (from the parts read) | Unit of analysis; what certifies |
+|---|---|---|---|
+| Quan, X., Gubelmann, R., & Freitas, A. (2026). Autoformalizing argumentative material inferences. arXiv:2609.16991v1 | `[read]` abstract, introduction, problem definition, Figure 1, conclusion. Not read: method details, experiments, appendices. | GUARD. For a premise–claim pair (T, C) it builds a "strengthened context" of assumptions, definitions and exception conditions, selects a guard set G with G ∪ {T} ⊨ C, and has Isabelle/HOL check the theory, feeding failed proof steps back. A proved completion is accepted only if it also survives two contrastive tests: with the premise replaced by one that should not support the claim, and with the claim replaced by one the premise does not warrant, the theory must become unprovable. Otherwise the system rejects it as leaky or abstains. Evaluated on Debatepedia and ARCT with four language models; the authors attribute 63.5 to 74.3 percent of abstentions to missing guards. | One premise–claim pair. A proof assistant, plus contrastive tests. No human review step appears in the parts read. |
+| Feng, X., & Hunter, A. (2026). Making implicit premises explicit in logical understanding of enthymemes. arXiv:2603.06114v3 | `[read]` abstract, §1, §2.2, §3.1–3.3, §4, opening of §5, §6. | A language model generates one to three intermediate premises for a premise and a claim; an AMR parser and a translator turn each sentence into a propositional formula; atoms are identified with one another when their sentence embeddings are similar above a threshold, with an NLI model as contradiction check; PySAT decides entailment on the result. Evaluated on ARCT and ANLI as a choice between a helpful and an unhelpful candidate. Best F1 for the entailment class on ARCT: 0.58 with three generated steps, 0.21 with the dataset's own premise; thresholds are chosen per dataset and class. The authors state that the experiments "do not evaluate unrestricted generation". | One premise–claim pair. A SAT solver over formulas *relaxed* by embedding similarity: the entailment shown depends on a tuned threshold. |
+| Feng, X., & Hunter, A. (2026). Identifying implicit premises for logical reconstruction of argument graphs. arXiv:2608.18821v1 | `[read]` abstract, §1, discussion. | The same pipeline, used to generate implicit premises that establish a *given* relation (entailment, contradiction, neutral) between a premise and a claim. Evaluated on the Microtext corpus. End-to-end processing of plain text is named as future work. | One edge of an argument graph, with the relation label supplied. |
+| David, V., & Hunter, A. (2025). A logic-based framework for decoding enthymemes in argument maps involving implicitness in premises and claims. *Proc. IJCAI-25*, 4445–4453. doi:10.24963/ijcai.2025/495 | `[read]` abstract, §1, opening of §2, the passage introducing the MaxSAT encoding. | An argument map (nodes with premise and claim text, arcs labelled support, attack or none) is given, together with a knowledge base of default rules. Decoding an enthymeme means choosing, for each node, which default rules are implicit in it. The choice over the whole map is an optimization problem: maximize the number of arcs whose label agrees with the logical relation between the decoded arguments; hard constraints encode the candidates, soft constraints the arcs, and a MaxSAT solver returns a solution. The authors say of earlier proposals that "none consider optimization of decoding". | A whole argument map. Default logic and MaxSAT. The knowledge base of candidate rules is assumed, not obtained from text. |
+| Ben-Naim, J., David, V., & Hunter, A. (2026). Elucidating arguments maps in propositional logic: Addressing enthymemes and their relationships. *Proc. KR 2026*, Main Track, 156–166. doi:10.24963/kr.2026/15 | `[abstract]` | A framework in classical propositional logic with meta-level rules that add or delete premises, edit claims, split and merge arguments, and "gain measures" to direct the choice of rules, so that arguments attack or support one another as argument mining predicts or the user requires. | A whole argument map; an incremental, rule-directed elucidation. |
+| Ku, H. B., Shin, J., Lee, H. J., Na, S., & Jeon, I. (2025). Multi-agent LLM debate unveils the premise left unsaid. *Proc. 12th Argument Mining Workshop*, 58–73. doi:10.18653/v1/2025.argmining-1.6 | `[abstract]` | Implicit-premise recovery as a debate between two language-model agents, evaluated on a binary premise-selection benchmark. | One argument. No formal check. |
+| Stieger, B., Terberger, M., Huber, T., & Niklaus, C. (2026). TruthSplit: Operationalizing conditional validity in arguments through multi-perspective reasoning. arXiv:2606.09251 | `[abstract]` | An interactive system that extracts claims and premises from a text, applies a three-layer NLI approach for "logical and worldview-specific normative consistency", conditions a language model on "structured worldview profiles", and shows value conflicts and assumption gaps between perspectives. | One text read under several worldview profiles. Language-model inference; no solver or prover is mentioned in the abstract. |
+| Komendarczyk, R., Block, W. E., Levendis, J., & Tipler, F. J. (2026). A formalization of Austrian economics. Praxeological foundations. arXiv:2606.18292 | `[abstract]` (13 November) | A hand-made axiomatization of one school's doctrine in many-sorted first-order logic, with a Lean 4 companion whose model serves as a consistency proof. | A body of doctrine, axiomatized by hand and kernel-checked. |
+
+Earlier systems confirmed to exist on arXiv by title only, abstracts not read: DeepA2
+(2110.01509), two papers by Quan and colleagues on refining explanations with a theorem
+prover (2405.01379, 2505.24264) and one on ethical explanations (2402.00745), Ben-Naim
+and colleagues on enthymemes in argument maps (2408.08648), VeriCoT (2511.04662),
+BeliefBank (2109.14723). A system expected under the name NL2FOL returned no title
+match and stays `[unverified]`. Also `[bib]` from S2: Black, E., & Hunter, A. (2012), A
+relevance-theoretic framework for constructing and deconstructing enthymemes, *Journal
+of Logic and Computation* 22(1), 55–78, doi:10.1093/logcom/exp064, cited by the two
+groups above as the abductive account of enthymeme decoding.
+
+## 8. RQ2. Is reconstructing a camp's axioms from text plausible, and what is the precedent?
+
+**Short answer.** Reconstructing unstated premises is an old task in the theory of
+argument and, since 2018, a measured one in language technology; in 2025–2026 it was
+joined to formal checking by at least two groups. That makes our *task* plausible and
+our *novelty claim* narrower than the pack states. What the precedent supports is the
+reconstruction of premises that make a stated inference go through. It does not support
+the recovery of what an author believes, and the one theorist read in full separates the
+two explicitly. The measured accuracy of the generating step is modest, which is the
+empirical case for keeping review and certification in the loop.
+
+### 8.1 The precedent in the theory of argument
+
+Hitchcock (1985) opens with "the tendency of most arguers to leave implicit an
+assumption in virtue of which their conclusion follows from their premisses", and
+credits the theme to Perelman, Toulmin, Hamblin, and van Eemeren and Grootendorst. Three
+points in that paper bear on our design.
+
+1. *What is reconstructed is disputed in kind.* Hitchcock reports that some authorities
+   (he names Bolzano, Ryle, Toulmin and George) "deny that enthymemes have missing
+   premisses", and announces that he will defend the denial (the defence is in a part
+   of the paper not read). Habernal et al. (2018)
+   use Toulmin's word in the same role: a warrant "explains why its claim follows from
+   its premises" and is "usually presupposed and left implicit". Our pool members are
+   first-order sentences used as premises, so we take the other side of this dispute by
+   construction. That is a modelling choice and has to be stated as one.
+2. *There is a precedent for trading generality against plausibility.* Hitchcock's
+   thesis is that an enthymeme "implicitly assumes a universal generalization of its
+   associated conditional over its repeated content expressions, in fact the maximal
+   generalization consistent with plausibility". This is the informal-logic counterpart
+   of RQ3: prefer the more general assumption, up to the point where it stops being
+   plausible. It is stated for one argument and gives no measure of plausibility.
+3. *The assumption of an argument is not the belief of its author.* On his closing page
+   Hitchcock treats "evidence of the arguer's beliefs" as something that may help
+   "resolve ambiguities about the argument's implicit assumption", and lists purposes
+   for which an analyst supplies a premise "somewhat stronger than the assumption
+   implicit in the argument itself". Reconstruction is guided by charity: the presumption
+   that the argument "will become deductively valid if the arguer's assumptions are
+   added as extra premisses". The reconstructed premise is thus an object distinct from
+   both the text and the author's mind. Brief §5 ("verified sufficient", never "their
+   beliefs") is this distinction turned into a language rule.
+
+Toulmin (1958), Walton, Reed and Macagno (2008) and Ennis (1982) are verified as
+records and were not read; nothing here is attributed to them directly.
+
+### 8.2 The precedent in computation
+
+Three lines of work, all in section 7.4.
+
+*A measured task.* Habernal et al. (2018) built a dataset of about 2,000 arguments from
+news comments with crowd-sourced warrants and posed the choice between two candidate
+warrants as a task; their abstract reports that the neural models of the time "do not
+suffice". Ku et al. (2025) report state-of-the-art accuracy on a binary premise-selection
+benchmark with debating language models. So the generation and selection of unstated
+premises is measurable and is not solved.
+
+*Reconstruction joined to a formal check, per argument.* Feng and Hunter (2026) and Quan,
+Gubelmann and Freitas (2026) both have a language model propose the missing premises
+and a symbolic system test whether the claim then follows. They differ in what the test
+is worth. Feng and Hunter identify atoms by embedding similarity before the solver
+runs, so the entailment they report holds for a relaxed formula and moves with a
+threshold. Quan et al. hand an explicit theory to a proof assistant and add tests that
+the proof depends on the original premise and does not prove a contrast claim.
+
+*Reconstruction over a whole argument map, by optimization.* David and Hunter (2025)
+decode all the enthymemes of an argument map at once, choosing implicit default rules
+so as to maximize agreement with the support and attack arcs that argument mining
+produced, with MaxSAT. Ben-Naim, David and Hunter (2026) do the elucidation
+incrementally in propositional logic. These are the nearest formal precedents for the
+argument-graph architecture adopted for Phase 3 (owner decision, 13 November 2026). They
+assume the candidate rules are given; the two 2026 pipelines above are, in Feng and
+Hunter's words, the attempt to supply what "symbolic approaches currently assume".
+
+### 8.3 What is and is not established
+
+Established by sources read:
+
+1. Leaving the licensing assumption unstated is the normal case in argument, and
+   reconstructing it is a recognized analytical task (Hitchcock 1985).
+2. Candidate unstated premises can be generated by a language model and tested
+   symbolically, and when the generator is free, a valid proof is weak evidence: "a
+   system free to add premises can make any claim provable, and a formally valid proof
+   may assert the claim outright, prove it without the original premise, or establish
+   more than the claim itself" (Quan et al. 2026, abstract).
+3. Selecting among decodings of a whole map is an optimization problem with a declared
+   objective (David & Hunter 2025).
+4. The generating step is unreliable enough to need a gate. On ARCT, Feng and Hunter's
+   best F1 for the entailment class is 0.58; Quan et al.'s system abstains rather than
+   accept, and most abstentions are missing premises.
+
+Not established by anything read:
+
+1. *That the reconstructed premises are the author's.* No source read claims this, and
+   Hitchcock distinguishes the two. Whether people's stated positions have the
+   deductive structure a reconstruction presupposes is the Converse question, and
+   belongs to Session 3.
+2. *That a reconstruction is unique or stable.* The per-argument systems return one
+   completion or abstain; none reports the set of alternatives or how the choice varies
+   with a parameter. RQ3's hull report (amendment A5) has no counterpart in them.
+3. *That per-argument accuracy carries over to a whole record.* All measured results are
+   for one premise–claim pair with the candidates or the relation label supplied. Feng
+   and Hunter name unrestricted generation and end-to-end processing as future work.
+4. *That a strict logic can be kept at scale.* Feng and Hunter relax the logic to obtain
+   their results. We keep symbols strict and move the alignment of vocabulary into human
+   review; the price is visible in our own FOLIO runs, where a share of formalizations
+   fail (README). Nothing read shows how that price changes on debate text.
+
+### 8.4 Where Common Ground stands
+
+The pack's claim under A3, that nobody combines the reconstruction of unstated premises
+with formal verification and that "that intersection … is our contribution", is false
+as worded: Feng and Hunter (2026) and Quan et al. (2026) do exactly that, and David and
+Hunter (2025) optimize a reconstruction over a whole map. The differences that remain,
+each stated against the nearest precedent:
+
+| Our design | Nearest precedent | Difference |
 |---|---|---|
-| Feng, X., & Hunter, A. (2026). Making implicit premises explicit in logical understanding of enthymemes. arXiv:2603.06114 | A pipeline: one language model generates intermediate implicit premises from the explicit premise and claim, a second translates the text into logical formulas, and a reasoner based on a SAT solver determines entailment. Evaluated on two enthymeme datasets. | Reconstruction of implicit premises with a formal check exists, for single arguments. |
-| Feng, X., & Hunter, A. (2026). Identifying implicit premises for logical reconstruction of argument graphs. arXiv:2608.18821 | The same idea used to show entailment, contradiction or neutrality between statements when an argument graph is reconstructed. Evaluated on the Microtext corpus. | It exists beyond single arguments, for the argument graph of a text. |
-| Quan, X., Gubelmann, R., & Freitas, A. (2026). Autoformalizing argumentative material inferences. arXiv:2609.16991 | GUARD: language models construct the missing commitments ("guards"), Isabelle/HOL verifies the resulting theory and returns feedback, and a completion is accepted only if the proof passes and survives tests of premise dependence and claim selectivity; the system abstains otherwise. Evaluated on Debatepedia and ARCT. | The closest work found: unstated premises constructed and checked by a proof assistant, on debate data. |
-| Komendarczyk, R., Block, W. E., Levendis, J., & Tipler, F. J. (2026). A formalization of Austrian economics. Praxeological foundations. arXiv:2606.18292 | A hand-made axiomatization of one school's doctrine in many-sorted first-order logic, with theorems derived from it, hidden premises made explicit, and a Lean 4 companion whose model serves as a consistency proof. | A manual precedent for axiomatizing a body of doctrine and kernel-checking it. |
+| Unit: the whole reviewed record of a camp, E⁺ and R_soft; one set A must entail every claim | Quan et al. (pair); David & Hunter (map of separate arguments) | A single jointly sufficient and consistent set for all claims of a camp. Not found. |
+| Rejections constrain the system: A ⊭ r, shown by an explicit countermodel | Quan et al., claim-contrast test: the contrast theory must be unprovable | Theirs is a failed proof search on a generated contrast; ours is a model, for claims the camp itself declined. Failure to prove is not a countermodel (RQ1 §2.5). |
+| Selection among *several* certified systems by a declared cost, reported with its sensitivity | David & Hunter, MaxSAT objective: agreement with mined arcs | A different objective (plausibility and size, not arc agreement), and the alternatives are reported. Not found. |
+| Entailments checked by the Lean kernel; no model text reaches Lean without human approval | Quan et al., Isabelle/HOL on model-written theories | Same kind of guarantee for the deduction. The difference is the human gate and the evidence quote required for every unstated axiom. |
+| Minimal conflicts between two camps' systems (MUS) and provable common ground | TruthSplit (perspective divergence by language-model inference) | Formal conflict sets with certificates. Not found. |
+| Strict symbols; vocabulary aligned in review | Feng & Hunter, embedding-similarity relaxation | A deliberate refusal of the relaxation, at the cost of more failed formalizations. |
 
-Earlier systems confirmed to exist on arXiv by title, abstracts not yet read: DeepA2
-(2110.01509), two papers by Quan and colleagues on refining explanations with a
-theorem prover (2405.01379, 2505.24264) and one on ethical explanations (2402.00745),
-Ben-Naim and colleagues on enthymemes in argument maps (2408.08648), VeriCoT
-(2511.04662), BeliefBank (2109.14723). A system I expected under the name NL2FOL
-returned no title match and stays `[unverified]`.
+**The claim this supports,** to be used in `THEORY.md` and the README: *within the
+search described in section 7.4, we found no system that reconstructs one consistent
+set of first-order axioms jointly sufficient for all reviewed claims of a camp,
+constrained by the camp's rejections, selected by a declared cost among certified
+alternatives, and compared across camps by minimal conflict sets. Every ingredient has a
+precedent, cited above; the combination and the unit of analysis are what is new.* It
+must be worded as "we found no", never as "none exists": three venues were not read
+through and one was not located.
 
-**What this changes.** The pack's claim under A3, that nobody combines the
-reconstruction of unstated premises with formal verification and that "that
-intersection … is our contribution", cannot stand as worded. Two groups published that
-combination in 2026, on enthymeme and debate data, with a SAT solver and with a proof
-assistant.
+### 8.5 Design consequences
 
-**What the search has not found** is a system with our unit of analysis and our
-guarantees: one set of formulas that is jointly sufficient for *all* of a camp's
-reviewed claims, consistent, and constrained by the camp's rejections; a declared
-cost to choose among certified sets; kernel-checked proofs for entailments together
-with explicit countermodels for non-entailments; and the minimal conflicts between
-two camps' sets. "Not found" after keyword searches on one index is weak evidence, and
-the claim stays provisional until the three papers above are read and the venues are
-searched.
+1. *Adopt the contrastive tests as named checks.* Quan et al.'s two tests have exact
+   counterparts in RQ1. Premise dependence is (S4): no proper subset is sufficient, so
+   every axiom is used. Claim selectivity is (S3) plus the excess report of RQ3 §3.4:
+   the system must not entail what the camp declined, and what it entails beyond the
+   record is listed. The Phase 3 design document should name both and cite this
+   precedent. Their "asserts the claim outright" failure is our P4 (a conjunction of the
+   claims as a single axiom); amendment A3 stands.
+2. *Use the discourse graph as a check, not as the objective.* David and Hunter score a
+   decoding by agreement with mined support and attack arcs. The relations extracted in
+   Phase 2 allow the same comparison: a "supports" relation between two statements can
+   be compared with membership in a minimal premise set, an "attacks" relation with
+   joint inconsistency. Report the agreement for the selected system. Making it part of
+   cost(A) would change brief §4 and would let an unreviewed extraction steer a
+   certified result; that needs its own rationale and is not proposed here.
+3. *Abstention is a result.* A record for which no reviewed pool yields a system better
+   than the stated one A₀ should be reported as such. Quan et al. report most of their
+   abstentions as missing premises; our equivalent is "the pool contains no unstated
+   axiom that pays for itself".
+4. *Coherence, read at last.* Ng and Mooney (1990) argue that the simplicity criterion
+   "is not sufficient by itself": with a count of assumptions, "John was happy. The exam
+   was easy." is best explained by assuming John is an optimist, which leaves the two
+   sentences unconnected. Their coherence metric counts, over pairs of observations, the
+   nodes of the proof graph from which both are reached. For us this is the load of
+   brief §4 seen from the other side: an axiom with load above one connects claims. The
+   cost already rewards it (RQ3, P2), and it does so only through the count of axioms.
+   RQ3 §3.3's open item is therefore answered in part: economy and coherence pull the
+   same way when every claim must be derived, which (S2) requires; they can differ in
+   how they rank two systems of equal cost. Reporting, for each selected system, the
+   number of claims each axiom is needed for (the load vector) makes the difference
+   visible without a second criterion.
 
-**A corroboration worth keeping.** The abstract of Quan et al. names the failure modes
-that §3 derived for our cost function: a system free to add premises "can make any
-claim provable", and a valid proof may assert the claim outright, not use the original
-premise, or establish more than the claim. Their acceptance tests, premise dependence
-and claim selectivity, are a direct precedent for amendment A1 and for reporting what
-a system entails beyond the claims. That paper is the first to read.
+## 9. Terminology decision (for the owner's approval)
+
+Brief §3 asks for a decision between "axiom", "warrant" and "implicit premise".
+
+**Proposed.** Keep **axiom** for a member of a certified system. Qualify it by
+provenance: a **stated axiom** is a reviewed claim quoted from the camp's texts; an
+**unstated axiom** is a reviewed candidate that no text states, shown with its evidence
+quotes. Do not use "warrant" or "implicit premise" in the interface. Use them in
+documentation only to relate our objects to the literature.
+
+**Rationale.**
+
+1. *"Axiom" names a role in a deduction and nothing else.* A sentence is an axiom of a
+   system because derivations start from it. The word makes no claim about a mind, which
+   is what brief §5 requires. First use in the interface carries the gloss "a statement
+   the derivations start from; verified sufficient, not a claim about what anyone
+   believes".
+2. *"Warrant" names something else in the sources read.* For Habernal et al. (2018) a
+   warrant belongs to one argument and explains one step. Hitchcock (1985) places
+   Toulmin among those who deny that enthymemes have missing premisses at all. Our
+   objects are premises of a system that serves all of a camp's claims. Using "warrant"
+   would import a per-argument, licence-not-premise meaning that our definition does not
+   have.
+3. *"Implicit" asserts more than we can show.* "Implicit premise" says the premise is in
+   the argument, unspoken. What review and certification establish is weaker and
+   checkable: the sentence is not stated in the texts, and it is sufficient together
+   with the others. "Unstated" says the first and no more; "verified sufficient" says the
+   second. Hitchcock's distinction between the assumption implicit in an argument and a
+   stronger premise supplied by an analyst (section 8.1) is the reason to keep them
+   apart: a cost-minimal system may well contain the second kind.
+4. *One term across the product.* The engine, the brief and the golden corpus already
+   say "axiom".
+
+**Cost of the choice.** "Axiom" can read as self-evident truth. The gloss, the motto
+and the two badges of brief §5 are the mitigation. If the owner prefers a plainer
+word for lay readers, "starting point" is the candidate that loses least.
+
+## 10. Critique of the source pack (Session 2 scope: Theme A, classic entries of B and C, H1, I.3)
+
+| Entry | Finding |
+|---|---|
+| A3 | The entry's "design implication" states the novelty claim, which is false as worded (section 8.4). Date and publisher field wrong (section 7.2). Content unconfirmed: full text not obtained. |
+| A4 | **Wrong first author.** It is Saadat-Yazdi & Wagemans. It describes a procedure for human analysts; the pack's inference that it "supports abduce.py's generate-then-rank design" goes beyond the abstract. The support for generate-then-select found in S2 is David & Hunter (2025) and Quan et al. (2026). |
+| A1, A2 | Records verified, books not read. The pack's sentence that our axiom "is close to Toulmin's backing" is not confirmed by anything read and conflicts with section 9. |
+| B3 | Author initial and title corrected (section 7.1). |
+| B4 | **Wrong venue, volume and pages.** KR'91, 417–428 (section 7.1). |
+| C1 | Record verified. "Coined by Schlobach & Cornet" not established. |
+| C3 | **Wrong pages.** 57–95. |
+| H1 | Restate: reconstructing unstated premises is an established and measured task for single arguments, and has been joined to formal checking; we extend the unit from an argument to a camp's whole record and add selection, rejections and cross-camp conflict sets. "Generalizes" is fair for the unit; it is not a claim that per-argument accuracy carries over. Cite Hitchcock (1985), Habernal et al. (2018), Quan et al. (2026), Feng & Hunter (2026), David & Hunter (2025). |
+| I.3 | Answered in sections 7.4 and 8.4, with the stated limits of the search. |
+| I.7 (d) | One system found (TruthSplit); by its abstract it works by language-model inference under worldview profiles. BeliefBank is confirmed by title only. Belief inference proper (D2, D3) is Session 4. |
+| Pack, missing | The Hunter group's logic-based line (Black & Hunter 2012; David & Hunter 2025; Ben-Naim et al. 2026) is absent from the pack and is the closest formal precedent for the argument-graph architecture. |
+
+## 11. Carried to Sessions 3 and 4
+
+- Session 3: Converse and the question of section 8.3, item 1; the coverage metric;
+  whether a model's plausibility estimate can be read as a probability; elicitation.
+- Session 4: A6, D2, D3, G3 and RQ6; the finding the pack attributes to A6; write H1
+  into `THEORY.md` in the wording of section 10; record the terminology decision there
+  if the owner approves it.
+- Open, any session: full text of A3 and A4 (copies from the owner); Charniak and
+  Shimony (1994) itself; the three venues not read through (ACL, EMNLP, AAAI 2026) and
+  COMMA 2026.

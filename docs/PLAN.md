@@ -75,7 +75,8 @@ number guard; the README evidence tables.
 - [x] **CGR-1** — Session 1, formal core: Lin 2001, Hobbs et al. 1993, Liffiton &
   Sakallah 2008 read and verified; RQ1/RQ3 drafted; 19 supporting sources
   checked. Done in the Phase R session.
-- [ ] **CGR-2** — Session 2, reconstruction precedent (owner): novelty search
+- [x] **CGR-2** — Session 2, reconstruction precedent (done 2026-11-14 in the
+  worker session, assigned by the owner that day; see the session log): novelty search
   2025–2026 (ArgMining, COMMA, ACL, EMNLP, AAAI); A3, A4, A1; answer RQ2;
   terminology decision; verify `[classic, verify]` entries in Themes A, B, C
   (A1, A2, B3, B4, C1 incl. Schlobach & Cornet and Peñaloza, C3); carried
@@ -543,3 +544,23 @@ To resume (owner's research sessions): read `AGENTS.md`, this file,
   (no api/app change; 33 passed with Lean at cc563a3). Committed as this
   session's commit. Escalations: none. Next: nothing ungated is left — owner
   sessions CGR-2..CGR-5, then CG3-1.
+- 2026-11-14 — owner decisions in session: (1) "do all these steps also mine" —
+  the research sessions CGR-2..CGR-4 are assigned to this session, which lifts
+  the AGENTS.md rule that research is off-limits to the worker, for these tasks;
+  CGR-5 stays the owner's sign-off; no push yet. (2) The FOLIO formalizing mode
+  is being re-run at `--max-tokens 4000`; the 2000-token run in `results/llm`
+  is kept as it is and the new run is published next to it ("failed experiments
+  answer questions also").
+- 2026-11-14 — CGR-2 (Phase R session 2) finished: `docs/research/RESEARCH.md`
+  §7–§11 — RQ2 answered, terminology decision proposed (keep "axiom"; "stated" /
+  "unstated"; not "warrant" or "implicit premise" in the interface), novelty
+  search done within a stated scope. The pack's novelty claim is false as
+  worded: Feng & Hunter 2026 and Quan et al. 2026 join premise reconstruction
+  to a formal check per argument, David & Hunter 2025 optimize over a whole
+  argument map; the narrower claim that stands is in §8.4. Four more pack
+  errors corrected in `sources.md` (A4 first author, B3, B4 venue, C3 pages);
+  carried items closed except Charniak & Shimony 1994 (not read) and the full
+  texts of A3 and A4 (publishers refuse automated access — copies from the
+  owner). Not read through: ACL, EMNLP, AAAI 2026; COMMA 2026 not located.
+  Docs-only; suites unchanged (engine 170 passed at 96704be). Committed as this
+  session's commit. Escalations: none. Next: CGR-3 (psychology).

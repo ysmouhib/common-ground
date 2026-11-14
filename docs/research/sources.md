@@ -32,10 +32,12 @@ A taxonomy of stereotypical patterns of inference, each with its characteristic 
 → *Design implication:* use scheme names as candidate-axiom generators (e.g., "argument from consequences" generates axioms of the form "if action a has consequence c and c is bad, then a is bad").
 
 **A3. Sviridova, E., Cabrio, E., & Villata, S. (2026). Mining implicit arguments for reasoning: A survey.** SAGE, DOI `10.1177/19462174251344764`; preprint at https://hal.science/hal-05435118 `[✓ web-verified]` `[M]`
+> **S2 correction.** *Argument & Computation* 17(1), 3–27; Crossref dates it 2025. Abstract read, full text not obtained. The novelty claim in the design implication below is false as worded: see `RESEARCH.md` §7.4 and §8.4.
 The state of the art on enthymemes: detection, reconstruction, and restoration of implicit premises, warrants, and conclusions. Confirms the field's roadmap: argumentation models (Toulmin, Walton) are the tools used for implicit premise reconstruction; Walton's model is used for detection and reconstruction of implicit premises (Rajendran et al.; Chakrabarty et al.), Toulmin's for implicit warrants. This is the single most important paper for our related-work section: it defines what exists so we can position what is new.
 → *Design implication:* novelty claim. Enthymeme reconstruction restores one missing premise for one argument. Nobody reconstructs the *minimal consistent system* behind a whole corpus and verifies it with a theorem prover. That intersection (abductive system reconstruction + formal verification) is our contribution.
 
 **A4. Wagemans, J. et al. Finding the missing link: An algorithmic approach to reconstructing enthymemes. *Argumentation* (2025).** https://link.springer.com/article/10.1007/s10503-025-09682-z `[✓ web-verified]` `[S]`
+> **S2 correction.** The authors are Saadat-Yazdi, A., & Wagemans, J. H. M. (online first 30 October 2025). It is a procedure for human analysts; the design implication below goes beyond the abstract. See `RESEARCH.md` §7.2 and §10.
 A systematic, procedural approach to enthymeme reconstruction built on the Periodic Table of Arguments and the Argument Type Identification Procedure. Important because it is *algorithmic*, not just theoretical: a manual procedure that narrows down candidate missing premises by argument form.
 → *Design implication:* candidate axiom generation should follow a typed procedure per argument form, then rank candidates. This supports abduce.py's generate-then-rank design over free-form LLM generation.
 
@@ -62,10 +64,12 @@ Weighted abduction: interpreting text means finding the lowest-cost explanation,
 → *Design implication:* our `cost(A) = Σ_a (1 − plausibility(a)) + λ·|A|` is weighted abduction with plausibility as the complement of assumption cost, plus a size penalty. Justify λ (≈0.3) as the standard abduction/MDL trade-off between explanation quality and system size; consider calibrating it on the golden corpus rather than fixing it a priori.
 
 **B3. Alchourrón, C., Gärdenfors, D., & Makinson, D. (1985). On the logic of theory change. *Journal of Symbolic Logic*, 50(2), 510-530.** `[classic, verify]` `[R]`
+> **S2 correction.** The second author is P. Gärdenfors; the title continues ": Partial meet contraction and revision functions"; doi:10.2307/2274239. Record verified, not read.
 AGM belief revision: how a rational agent's belief set changes when new information arrives (expansion, contraction, revision). Foundational if we ever model how a speaker's axiom system *should* update when confronted with common ground.
 → *Design implication:* Phase 1+ only. If we later add "what would it take for this speaker to accept that claim" (revision operators), AGM is the framework.
 
 **B4. Nebel, B. (1991). Belief revision and default reasoning. *Artificial Intelligence*, 35(2), 203-220.** `[classic, verify]` `[R]`
+> **S2 correction.** Wrong venue, volume and pages. The paper is Nebel, B. (1991), "Belief revision and default reasoning: Syntax-based approaches", *Proc. KR'91*, Morgan Kaufmann, 417–428. See `RESEARCH.md` §7.1.
 Revision when beliefs are represented as finite bases rather than logically closed sets. Closer to our setting: we work with a finite axiom base A, not a deductive closure.
 → *Design implication:* base revision justifies representing speakers by a finite axiom list instead of a closure; cite when defining our data model.
 
@@ -78,6 +82,7 @@ Minimum Description Length: the best theory is the one that compresses the data 
 ## Theme C. Engineering precedents: pinpointing, minimal unsatisfiability, diagnosis `[answers RQ1, RQ4 partially]`
 
 **C1. Baader, F., & Suntisrivaraporn, B. (2008). Debugging SNOMED CT using axiom pinpointing in the description logic EL+.** Proc. KRMED 2008, CEUR-WS. `[✓ existence web-verified]` `[S]`
+> **S2.** Verified in the table of contents of CEUR-WS Vol-410; abstract and conclusions read. That Schlobach & Cornet (2003) "coined" the term is not established by anything read. See `RESEARCH.md` §7.1.
 Axiom pinpointing in a real, deployed medical ontology: given an entailment, compute the minimal subset of axioms responsible. The term "pinpointing" was coined by Schlobach & Cornet (2003) `[classic, verify]`; survey in Peñaloza, R., *Explaining axiom pinpointing in description logics* `[classic, verify]` `[R]`.
 → *Design implication:* when a speaker's claims are inconsistent, pinpointing is how we find the *root axioms responsible*, rather than blaming a random surface claim. This is the precedent for our "root-axiom divergence" output.
 
@@ -87,6 +92,7 @@ The MARCO family of algorithms for computing MUSes (minimal unsatisfiable subset
 → *Design implication:* our reduced-disagreement feature (find the minimal set of mutually incompatible endorsed claims) is an MUS computation over the union of the camps' axiom systems. Cite this as the algorithmic basis; also note the "MUS relaxation" explanation style for users.
 
 **C3. Reiter, R. (1987). A theory of diagnosis from first principles. *Artificial Intelligence*, 32(1), 1-32.** `[classic, verify]` `[R]`
+> **S2 correction.** Pages are 57–95; doi:10.1016/0004-3702(87)90062-2. Record verified, not read.
 Model-based diagnosis: given a system and an observation that contradicts it, compute the minimal sets of components whose faultiness explains the inconsistency. Structurally identical to our problem: given axioms and a rejected claim, compute the minimal axiom sets whose *absence or difference* explains the rejection.
 → *Design implication:* cite when defining "explanation of disagreement": a disagreement is explained by a minimal differing axiom set (a hitting-set problem over the two camps' axiom systems).
 
@@ -204,3 +210,4 @@ Session 4 (evaluation): A6, D2, D3, G3 skim; answer RQ6; define the Phase 7 gold
 ## K. Verification log
 
 - **Session 1, 2026-11-13.** B1, B2, B5 and C2 checked and corrected in place above. Two entries tagged "web-verified" (B1, C2) carried errors, so that tag is not to be relied on in later sessions. Findings, the RQ1 and RQ3 drafts, and the sources added for Themes B and C are in [`RESEARCH.md`](RESEARCH.md); the draft definitions are in [`THEORY.md`](THEORY.md). The note under D1 and question I.6 conflate firm/soft rejection with proved/unproved; see `RESEARCH.md` §2.5.
+- **Session 2, 13–14 November 2026.** A3, A4, B3, B4, C1 and C3 checked and corrected in place above (A1, A2, A5, A6 verified as records). Four more pack errors: A4's first author, B3's author initial and title, B4's venue and pages, C3's pages. The novelty claim under A3 does not hold as worded: reconstruction of unstated premises with a formal check was published by two groups in 2026, and optimization over a whole argument map in 2025. RQ2, the terminology decision, the systems found and the limits of the search are in `RESEARCH.md` §7–§10. A3 and A4 still need full texts from the owner.
