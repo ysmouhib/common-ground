@@ -163,8 +163,9 @@ def test_a_search_stopped_by_the_budget_is_reported_incomplete_never_as_abstenti
 
 
 def test_branch_and_bound_hull_is_labelled_partial():
-    # 13 pool items: report_camp switches to branch-and-bound, whose pruning skips systems that
-    # cost more at this λ — so its hull cannot claim intervals for other values of λ
+    # 13 pool items = 8192 subsets: with a budget below that, report_camp uses branch-and-bound,
+    # whose pruning skips systems that cost more at this λ — so its hull cannot claim intervals
+    # for other values of λ
     people = ["socrates", "plato", "aristotle", "zeno", "thales", "solon"]
     text = " ".join(f"{p} is human. {p} is mortal." for p in people)
     statements = []
@@ -179,7 +180,7 @@ def test_branch_and_bound_hull_is_labelled_partial():
     quote = "socrates is human."
     everyone = "∀x (Human(x) ∧ Mortal(x))"   # one axiom that entails all twelve claims
     source = abduce.ScriptedSource([abduce.Candidate(everyone, [("dp", quote, (text.index(quote), text.index(quote) + len(quote)))])])
-    report = abduce.report_camp(record, source, {everyone: 0.9}, lam=0.3)
+    report = abduce.report_camp(record, source, {everyone: 0.9}, lam=0.3, max_checks=4000)
     assert report["search"] == "branch-and-bound" and report["search_complete"]
     assert report["selection"]["systems"] == [[fol.to_text(fol.parse(everyone))]] and report["abstention"] is False
     assert report["hull_complete"] is False

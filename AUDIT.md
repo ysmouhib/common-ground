@@ -61,8 +61,9 @@ reported alongside, never silently substituted.
   seconds and are what `test_golden.py` asserts. Status: recorded; revisit if the CLI
   run (CG7-4) needs the full search on this pool. **Measured 2026-11-14:** the search
   finishes after 10,044 checks, about 15 minutes on this machine (Python 3.12.10, Z3
-  5.4.1, `--timeout-ms 3000`); the default cap of 4000 stops it before that, so `co2`
-  without `--max-checks` still reports this camp as SEARCH INCOMPLETE. The whole
+  5.4.1, `--timeout-ms 3000`); the default cap was 4000 until 2026-11-14, which stopped it
+  before that, and is 12000 since (owner decision 2026-11-14), so `co2` without
+  `--max-checks` now completes this camp in about 15 minutes. The whole
   command (both searches, 12,092 checks, and the cross-camp analysis) took about 20
   minutes. Since 2026-11-14 a search the cap
   stopped is labelled in the report itself (`search_complete: false`, `abstention:

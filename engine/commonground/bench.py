@@ -198,7 +198,7 @@ def reference(data_file: Path, out_dir: Path, lean_bin: str | None, timeout_ms: 
 
 
 def abduction(data_file: Path, out_dir: Path, limit: int | None = None, timeout_ms: int = 5000,
-              lean_bin: str | None = None, lam: float = 0.3, max_checks: int = 4000) -> dict:
+              lean_bin: str | None = None, lam: float = 0.3, max_checks: int = 12000) -> dict:
     """Hide-premise abduction benchmark on FOLIO validation (CG8-1).
 
     Per example the conclusion is the camp's only endorsed claim and the pool is the

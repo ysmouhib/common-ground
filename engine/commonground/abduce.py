@@ -534,7 +534,9 @@ import math
 from .argmap import TooMany
 
 MAX_POOL = 16
-MAX_CHECKS = 4000
+# default certification-check budget: 12000 completes the CO2 `yes` search, which was
+# measured at 10,044 checks (AUDIT-4, results/co2-exhaustive/)
+MAX_CHECKS = 12000
 _EPS = 1e-9
 
 

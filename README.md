@@ -232,8 +232,8 @@ budget stopped is never reported as cost-minimal. The exhaustive search was run 
 both camps (recorded 2026-11-14 in `results/co2-exhaustive/`, `--max-checks 70000
 --timeout-ms 3000`, about 20 minutes: 2,048 checks for `no`, 10,044 for `yes`, none
 undecided): at λ=0.3 each camp's stated system is the only cost-minimal one, so both
-reports say so (abstention) — see `AUDIT.md` (AUDIT-3). The default cap of 4000 checks is
-enough for `no` and not for `yes`. Divergences between the pipeline and the
+The default cap is 12000 checks (raised from 4000 on 2026-11-14), which finishes
+both searches — about 20 minutes on this machine.
 hand-worked golden are audited in `AUDIT.md`, never silently substituted.
 
 ## The web app

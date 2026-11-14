@@ -414,9 +414,10 @@ def main(argv: list[str] | None = None) -> int:
     camp.add_argument("--plausibilities", help="optional JSON object mapping FOL text to a plausibility estimate: a number in [0, 1] or a [min, max] range")
     camp.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     camp.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
-    camp.add_argument("--max-checks", type=int, default=4000,
-                      help="budget of certification checks (default 4000); a search it stops is reported "
-                           "as incomplete, never as cost-minimal")
+    camp.add_argument("--max-checks", type=int, default=12000,
+                      help="budget of certification checks (default 12000, enough to finish the CO2 "
+                           "`yes` search, AUDIT-4); a search it stops is reported as incomplete, never "
+                           "as cost-minimal")
     camp.add_argument("--out", required=True, help="output directory: report.json and report.md")
     camp.set_defaults(run=_camp)
 
@@ -428,8 +429,8 @@ def main(argv: list[str] | None = None) -> int:
     xc.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     xc.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     xc.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")
-    xc.add_argument("--max-checks", type=int, default=4000,
-                    help="budget of certification checks per camp (default 4000); a search it stops is "
+    xc.add_argument("--max-checks", type=int, default=12000,
+                    help="budget of certification checks per camp (default 12000); a search it stops is "
                          "reported as incomplete, never as cost-minimal")
     xc.add_argument("--out", required=True,
                     help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
@@ -442,8 +443,9 @@ def main(argv: list[str] | None = None) -> int:
     co2.add_argument("--lam", type=float, default=0.3, help="cost weight of one axiom (default 0.3)")
     co2.add_argument("--lean", action="store_true", help="also ask the Lean kernel to certify sufficiency")
     co2.add_argument("--timeout-ms", type=int, default=5000, help="solver limit per satisfiability question")
-    co2.add_argument("--max-checks", type=int, default=4000,
-                    help="cap on certification checks per camp (default 4000; see AUDIT.md AUDIT-4)")
+    co2.add_argument("--max-checks", type=int, default=12000,
+                    help="cap on certification checks per camp (default 12000, enough for the CO2 `yes` "
+                         "search; see AUDIT.md AUDIT-4)")
     co2.add_argument("--out", required=True,
                      help="output directory: <camp>/report.{json,md} per camp, plus crosscamp.{json,md}")
     co2.set_defaults(run=_co2)
@@ -467,8 +469,8 @@ def main(argv: list[str] | None = None) -> int:
     fol.add_argument("--out", required=True)
     fol.add_argument("--mode", choices=("reference", "llm", "direct", "abduction"), default="reference")
     fol.add_argument("--lam", type=float, default=0.3, help="abduction mode: cost weight of one axiom (default 0.3)")
-    fol.add_argument("--max-checks", type=int, default=4000,
-                     help="abduction mode: cap on certification checks per example (default 4000)")
+    fol.add_argument("--max-checks", type=int, default=12000,
+                     help="abduction mode: cap on certification checks per example (default 12000)")
     fol.add_argument("--lean", action="store_true", help="reference mode: certify verdicts with Lean")
     fol.add_argument("--base-url")
     fol.add_argument("--model")
